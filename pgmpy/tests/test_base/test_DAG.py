@@ -1397,3 +1397,68 @@ class TestPDAG(unittest.TestCase):
                 ]
             ),
         )
+    def test_pdag_equality(self):
+        """Test the `__eq__` method, which compares both graph structure and variable-role mappings to allow comparison of two models."""
+        pdag = PDAG(
+            directed_ebunch=[("A", "C"), ("D", "C")],
+            undirected_ebunch=[("B", "A"), ("B", "D")],
+            latents=["A"],
+            roles={"exposure": "A", "adjustment": "D", "outcome": "C"},
+        )
+
+        # When the models are the same
+        other1 = PDAG(
+            directed_ebunch=[("A", "C"), ("D", "C")],
+            undirected_ebunch=[("B", "A"), ("B", "D")],
+            latents=["A"],
+            roles={"exposure": "A", "adjustment": "D", "outcome": "C"},
+        )
+        # When the models differ
+        other2 = DAG(
+            ebunch=[("A", "C"), ("D", "C")],
+            latents=["A"],
+            roles={"exposure": "A", "adjustment": "D", "outcome": "C"},
+        )
+        # When the directed_ebunch variables differ between models
+        other3 = PDAG(
+            directed_ebunch=[("A", "C"), ("D", "C"), ("C", "E")], 
+            undirected_ebunch=[("B", "A"), ("B", "D")],
+            latents=["A"],
+            roles={"exposure": "A", "adjustment": "D", "outcome": "C"},
+        )
+        # When the directed_ebunch variables differ between models
+        other4 = PDAG(
+            directed_ebunch=[("A", "D"), ("D", "C")], 
+            undirected_ebunch=[("B", "A"), ("B", "D")],
+            latents=["A"],
+            roles={"exposure": "A", "adjustment": "D", "outcome": "C"},
+        )
+        # When the undirected_ebunch variables differ between models
+        other5 = PDAG(
+            directed_ebunch=[("A", "C"), ("D", "C")], 
+            undirected_ebunch=[("B", "A"), ("B", "D"), ("C", "E")],
+            latents=["A"],
+            roles={"exposure": "A", "adjustment": "D", "outcome": "C"},
+        )
+        # When the latents variables differ between models
+        other6 = PDAG(
+            directed_ebunch=[("A", "C"), ("D", "C")], 
+            undirected_ebunch=[("B", "A"), ("B", "D")],
+            latents=["B"],
+            roles={"exposure": "A", "adjustment": "D", "outcome": "C"},
+        )
+        # When the roles variables differ between models
+        other7 = PDAG(
+            directed_ebunch=[("A", "C"), ("D", "C")], 
+            undirected_ebunch=[("B", "A"), ("B", "D")],
+            latents=["A"],
+            roles={"exposure": "B", "adjustment": "D", "outcome": "C"},
+        )
+
+        self.assertEqual(pdag.__eq__(other1), True)
+        self.assertEqual(pdag.__eq__(other2), False)
+        self.assertEqual(pdag.__eq__(other3), False)
+        self.assertEqual(pdag.__eq__(other4), False)
+        self.assertEqual(pdag.__eq__(other5), False)
+        self.assertEqual(pdag.__eq__(other6), False)
+        self.assertEqual(pdag.__eq__(other7), False)
