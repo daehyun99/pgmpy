@@ -918,6 +918,7 @@ class TestPDAG(unittest.TestCase):
         )
         self.pdag_role = PDAG(
             directed_ebunch=[("A", "C"), ("D", "C")],
+            undirected_ebunch=[("B", "A"), ("B", "D")],
             roles={"exposure": "A", "adjustment": "D", "outcome": "C"},
         )
 
@@ -1139,7 +1140,7 @@ class TestPDAG(unittest.TestCase):
         self.assertEqual(set(pdag_copy.nodes()), {"A", "B", "C", "D"})
         self.assertEqual(pdag_copy.directed_edges, set([("A", "C"), ("D", "C")]))
         self.assertEqual(pdag_copy.undirected_edges, set([("B", "A"), ("B", "D")]))
-        self.assertEqual(pdag_copy.latents, set(["A", "D"]))
+        self.assertEqual(pdag_copy.latents, set())
         self.assertEqual(pdag_copy.get_role("exposure"), ["A"])
         self.assertEqual(pdag_copy.get_role("adjustment"), ["D"])
         self.assertEqual(pdag_copy.get_role("outcome"), ["C"])
