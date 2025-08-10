@@ -2206,3 +2206,28 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
         <AGraph <Swig Object of type 'Agraph_t *' at 0x7fdea4cde040>>
         """
         return nx.nx_agraph.to_agraph(self)
+    
+    def __eq__(self, other):
+        """
+        Checks if two PDAGs are equal. Two PDAGs are considered equal if they
+        have the same nodes, edges, latent variables, and variable roles.
+
+        Parameters
+        ----------
+        other: PDAG object, DAG object
+            The other PDAG to compare with.
+
+        Returns
+        -------
+        bool
+            True if the PDAGs are equal, False otherwise.
+        """
+        if not isinstance(other, PDAG):
+            return False
+
+        return (
+            set(self.nodes()) == set(other.nodes())
+            and set(self.edges()) == set(other.edges())
+            and self.latents == other.latents
+            and self.get_role_dict() == other.get_role_dict()
+        )
