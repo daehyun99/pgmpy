@@ -2223,7 +2223,7 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
 
         Parameters
         ----------
-        other: PDAG object, DAG object
+        other: PDAG object
             The other PDAG to compare with.
 
         Returns
@@ -2236,7 +2236,8 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
 
         return (
             set(self.nodes()) == set(other.nodes())
-            and set(self.edges()) == set(other.edges())
+            and set(self.directed_edges) == set(other.directed_edges)
+            and set(self.undirected_edges) == set(other.undirected_edges)
             and self.latents == other.latents
             and self.get_role_dict() == other.get_role_dict()
         )
