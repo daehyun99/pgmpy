@@ -1802,9 +1802,18 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
         undirected_ebunch: list, array-like of 2-tuples
             List of undirected edges in the PDAG.
 
-        latents: list, array-like
-            List of nodes which are latent variables.
+        latents : set of nodes (default: empty set)
+            A set of latent variables in the graph. These are not observed
+            variables but are used to represent unobserved confounding or
+            other latent structures.
 
+        roles : dict, optional (default: None)
+            A dictionary mapping roles to node names.
+            The keys are roles, and the values are role names (strings or iterables of str).
+            If provided, this will automatically assign roles to the nodes in the graph.
+            Passing a key-value pair via ``roles`` is equivalent to calling
+            ``with_role(role, variables)`` for each key-value pair in the dictionary.
+        
         Returns
         -------
         An instance of the PDAG object.
