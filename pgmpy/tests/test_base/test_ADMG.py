@@ -49,8 +49,9 @@ class TestADMGInitialization:
 
     def test_initialization_with_roles(self):
         """Test initialization with roles variables."""
+        directed_edges = [("A", "C"), ("B", "C")]
         roles = {"exposure": ("A", "B"), "outcome": ["C"]}
-        admg = ADMG(roles=roles)
+        admg = ADMG(directed_ebunch=directed_edges, roles=roles)
 
         assert set(admg.get_role("exposure")) == set(["A", "B"])
         assert admg.get_role("outcome") == ["C"]
@@ -337,7 +338,9 @@ class TestADMGSeparation:
         assert not self.admg.is_mseparated("A", "B")
 
         # Test with conditional set
-        # separated = self.admg.is_mseparated("A", "D", conditional_set={"C"}) # temp
+        separated = self.admg.is_mseparated("A", "D", conditional_set={"C"})
+        assert separated is True
+        assert self.admg.is_mseparated("A", "D", conditional_set=set()) is False
         # This depends on the specific graph structure and d-separation rules
 
     def test_is_m_connected(self):
