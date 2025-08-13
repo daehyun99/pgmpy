@@ -15,7 +15,7 @@ class TestADMGInitialization:
         assert len(admg.nodes) == 0
         assert len(admg.edges) == 0
         assert len(admg.latents) == 0
-        assert len(admg.roles) == 0
+        assert len(admg.get_roles()) == 0
 
     def test_initialization_with_directed_edges(self):
         """Test initialization with directed edges."""
@@ -52,10 +52,10 @@ class TestADMGInitialization:
         roles = {"exposure": ("A", "B"), "outcome": ["C"]}
         admg = ADMG(roles=roles)
 
-        assert set(admg.get_role("exposure")) == set({"A", "B"})
-        assert admg.get_role("outcome") == {"C"}
-        assert admg.get_roles() == {"C"}
-        assert admg.get_role_dict() == {"exposure": ("A", "B"), "outcome": ["C"]}
+        assert set(admg.get_role("exposure")) == set(["A", "B"])
+        assert admg.get_role("outcome") == ["C"]
+        assert set(admg.get_roles()) == set(["exposure", "outcome"])
+        assert admg.get_role_dict() == {"exposure": ["A", "B"], "outcome": ["C"]}
 
 
 class TestADMGEdgeOperations:
@@ -221,7 +221,8 @@ class TestADMGGraphOperations:
         self.admg = ADMG()
         self.admg.add_directed_edges([("A", "B"), ("B", "C"), ("D", "E")])
         self.admg.add_bidirected_edges([("A", "D"), ("B", "E")])
-        self.admg.roles = {"exposure": ["A", "B"], "outcome": ("C")}
+        self.admg.with_role("exposure", ["A", "B"], inplace=True)
+        self.admg.with_role("outcome", ("C"), inplace=True)
 
     def test_get_ancestral_graph(self):
         """Test getting ancestral graph of a subset of nodes."""
