@@ -313,13 +313,13 @@ class TestADMGGraphOperations:
             roles={"exposure": ("A"), "outcome": ["C"]},
         )
 
-        self.assertEqual(self.admg.__eq__(other1), True)
-        self.assertEqual(self.admg.__eq__(other2), False)
-        self.assertEqual(self.admg.__eq__(other3), False)
-        self.assertEqual(self.admg.__eq__(other4), False)
-        self.assertEqual(self.admg.__eq__(other5), False)
-        self.assertEqual(self.admg.__eq__(other6), False)
-        self.assertEqual(self.admg.__eq__(other7), False)
+        assert self.admg.__eq__(other1) == True
+        assert self.admg.__eq__(other2) != False
+        assert self.admg.__eq__(other3) != False
+        assert self.admg.__eq__(other4) != False
+        assert self.admg.__eq__(other5) != False
+        assert self.admg.__eq__(other6) != False
+        assert self.admg.__eq__(other7) != False
 
 
 class TestADMGSeparation:
