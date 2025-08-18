@@ -618,3 +618,37 @@ class ADMG(_GraphRolesMixin, MultiDiGraph):
             return m_connected_set & nodes_v_set
 
         return m_connected_set
+
+    def __eq__(self, other):
+        """
+        Checks if two ADMGs are equal. Two ADMGs are considered equal if they
+        have the same nodes, edges, latent variables, and variable roles.
+
+        Parameters
+        ----------
+        other: ADMG object
+            The other ADMG to compare with.
+
+        Returns
+        -------
+        bool
+            True if the ADMGs are equal, False otherwise.
+        """
+        if not isinstance(other, ADMG):
+            return False
+
+        # Check edges type ('directed' or 'bidirected')
+        if set(self.edges()) == set(other.edges()):
+            for edges in self.edges():
+                self_type = self.get_edge_data(edges[0], edges[1], 0)["type"]
+                other_type = other.get_edge_data(edges[0], edges[1], 0)["type"]
+                if self_type != other_type:
+                    return False
+        else:
+            return False
+
+        return (
+            set(self.nodes()) == set(other.nodes())
+            and self.latents == other.latents
+            and self.get_role_dict() == other.get_role_dict()
+        )
