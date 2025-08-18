@@ -637,18 +637,19 @@ class ADMG(_GraphRolesMixin, MultiDiGraph):
         if not isinstance(other, ADMG):
             return False
 
-        # Check edges type ('directed' or 'bidirected')
-        if set(self.edges()) == set(other.edges()):
-            for edges in self.edges():
-                self_type = self.get_edge_data(edges[0], edges[1], 0)["type"]
-                other_type = other.get_edge_data(edges[0], edges[1], 0)["type"]
-                if self_type != other_type:
-                    return False
-        else:
+        if (
+            set(self.nodes()) != set(other.nodes())
+            or self.latents != other.latents
+            or self.get_role_dict() != other.get_role_dict()
+            or set(self.edges()) != set(other.edges())
+        ):
             return False
 
-        return (
-            set(self.nodes()) == set(other.nodes())
-            and self.latents == other.latents
-            and self.get_role_dict() == other.get_role_dict()
-        )
+        # Check edges type more details ('directed' or 'bidirected').
+        for u, v in self.edges():
+            if (
+                self.get_edge_data(u, v, 0)["type"]
+                != other.get_edge_data(u, v, 0)["type"]
+            ):
+                return False
+        return True
