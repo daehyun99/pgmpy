@@ -1544,6 +1544,32 @@ class TestPDAG(unittest.TestCase):
         self.assertEqual(pdag.__eq__(other6), False)
         self.assertEqual(pdag.__eq__(other7), False)
 
+    def test_add_node(self):
+        """Test adding a single node."""
+        pdag = PDAG()
+        pdag.add_node("A")
+        pdag.add_node("B")
+        pdag.add_node("C", latent=True)
+        pdag.add_node("D", latent=True)
+
+        assert set(pdag.nodes()) == {"A", "B", "C", "D"}
+        assert set(pdag.latents) == {"C", "D"}
+
+    def test_add_nodes_from(self):
+        """Test adding multiple nodes at once."""
+        pdag = PDAG()
+        pdag.add_nodes_from(["A", "B"])
+        pdag.add_nodes_from(set(["C", "D"]))
+        pdag.add_nodes_from(["E", "F"], latent=[False, True])
+        pdag.add_nodes_from(["G", "H"], latent=True)
+        pdag.add_nodes_from(set(["I", "J"]), latent=True)
+
+        assert set(pdag.nodes()) == {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"}
+        assert set(pdag.latents) == {"F", "G", "H", "I", "J"}
+
+        with self.assertRaises(IndexError):
+            pdag.add_nodes_from(["K", "L"], latent=[True])
+
 
 class TestDAGConversion(unittest.TestCase):
     """Test for DAG to_lavaan and to_dagitty conversion methods"""
