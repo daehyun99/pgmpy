@@ -2367,3 +2367,75 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
             and self.latents == other.latents
             and self.get_role_dict() == other.get_role_dict()
         )
+
+    def add_node(
+        self,
+        node: Hashable,
+        latent: bool = False,
+        **kwargs,
+    ):
+        """
+        Adds a single node to the Graph.
+
+        Parameters
+        ----------
+        node: str, int, or any hashable python object.
+            The node to add to the graph.
+
+        latent: boolean (default: False)
+            Specifies whether the variable is latent or not.
+
+        Examples
+        --------
+        >>> from pgmpy.base import PDAG
+        >>> pdag = PDAG()
+        >>> pdag.add_node(node="A")
+        >>> pdag.add_node(node="B", latent=True)
+        >>> sorted(pdag.nodes())
+        ['A', 'B']
+        >>> pdag.latents
+        {'B'}
+        """
+        if latent:
+            self.latents.add(node)
+
+        super().add_node(node, **kwargs)
+
+    def add_nodes_from(
+        self,
+        nodes: Iterable[Hashable],
+        latent: Sequence[bool] | bool = False,
+    ):
+        """
+        Add multiple nodes to the Graph.
+
+        Parameters
+        ----------
+        nodes: iterable container
+            A container (list, dict, set) of nodes (str, int or any hashable python
+            object).
+
+        latent: bool or list of bool (default: False)
+            If bool, specifies if all nodes are latent.
+            If list of bool, specifies for each node whether it is latent or not.
+            The length of the list must be equal to the number of nodes.
+
+        Examples
+        --------
+        >>> from pgmpy.base import PDAG
+        >>> pdag = PDAG()
+        >>> pdag.add_nodes_from(nodes=["A", "B"])
+        >>> pdag.add_nodes_from(nodes=["C", "D"], latent=True)
+        >>> pdag.add_nodes_from(nodes=["E", "F"], latent=[False, True])
+        >>> sorted(pdag.nodes())
+        ['A', 'B', 'C', 'D', 'E', 'F']
+        >>> pdag.latents
+        {'C', 'D', 'F'}
+        """
+        nodes = list(nodes)
+
+        if isinstance(latent, bool):
+            latent = [latent] * len(nodes)
+
+        for index in range(len(nodes)):
+            self.add_node(node=nodes[index], latent=latent[index])
