@@ -1570,6 +1570,16 @@ class TestPDAG(unittest.TestCase):
         with self.assertRaises(IndexError):
             pdag.add_nodes_from(["K", "L"], latent=[True])
 
+    def test_add_edge_not_implemented(self):
+        """Test that generic add_edge raises NotImplementedError."""
+        pdag = PDAG()
+
+        with self.assertRaisesRegex(
+            NotImplementedError,
+            "Use `add_directed_edges` or `add_undirected_edges` to add edges.",
+        ):
+            pdag.add_edge("A", "B")
+
 
 class TestDAGConversion(unittest.TestCase):
     """Test for DAG to_lavaan and to_dagitty conversion methods"""
