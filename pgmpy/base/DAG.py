@@ -2450,5 +2450,5 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
         Raises an error if trying to add a regular edge.
         """
         raise NotImplementedError(
-            "Use add_directed_edge or add_undirected_edge to add edges."
+            "Use `add_directed_edges` or `add_undirected_edges` to add edges."
         )

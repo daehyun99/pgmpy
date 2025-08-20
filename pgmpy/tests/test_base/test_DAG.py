@@ -1574,7 +1574,10 @@ class TestPDAG(unittest.TestCase):
         """Test that generic add_edge raises NotImplementedError."""
         pdag = PDAG()
 
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaisesRegex(
+            NotImplementedError,
+            "Use `add_directed_edges` or `add_undirected_edges` to add edges.",
+        ):
             pdag.add_edge("A", "B")
 
 
