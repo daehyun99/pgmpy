@@ -1567,6 +1567,9 @@ class TestPDAG(unittest.TestCase):
         assert set(pdag.nodes()) == {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"}
         assert set(pdag.latents) == {"F", "G", "H", "I", "J"}
 
+        with self.assertRaises(IndexError):
+            pdag.add_nodes_from(["K", "L"], latent=[True])
+
 
 class TestDAGConversion(unittest.TestCase):
     """Test for DAG to_lavaan and to_dagitty conversion methods"""

@@ -2376,6 +2376,25 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
     ):
         """
         Adds a single node to the Graph.
+
+        Parameters
+        ----------
+        node: str, int, or any hashable python object.
+            The node to add to the graph.
+
+        latent: boolean (default: False)
+            Specifies whether the variable is latent or not.
+
+        Examples
+        --------
+        >>> from pgmpy.base import PDAG
+        >>> pdag = PDAG()
+        >>> pdag.add_node(node="A")
+        >>> pdag.add_node(node="B", latent=True)
+        >>> sorted(pdag.nodes())
+        ['A', 'B']
+        >>> pdag.latents
+        {'B'}
         """
         if latent:
             self.latents.add(node)
@@ -2389,6 +2408,29 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
     ):
         """
         Add multiple nodes to the Graph.
+
+        Parameters
+        ----------
+        nodes: iterable container
+            A container (list, dict, set) of nodes (str, int or any hashable python
+            object).
+
+        latent: bool or list of bool (default: False)
+            If bool, specifies if all nodes are latent.
+            If list of bool, specifies for each node whether it is latent or not.
+            The length of the list must be equal to the number of nodes.
+
+        Examples
+        --------
+        >>> from pgmpy.base import PDAG
+        >>> pdag = PDAG()
+        >>> pdag.add_nodes_from(nodes=["A", "B"])
+        >>> pdag.add_nodes_from(nodes=["C", "D"], latent=True)
+        >>> pdag.add_nodes_from(nodes=["E", "F"], latent=[False, True])
+        >>> sorted(pdag.nodes())
+        ['A', 'B', 'C', 'D', 'E', 'F']
+        >>> pdag.latents
+        {'C', 'D', 'F'}
         """
         nodes = list(nodes)
 
