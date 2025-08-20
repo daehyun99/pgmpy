@@ -74,6 +74,17 @@ class ADMG(_GraphRolesMixin, MultiDiGraph):
 
         latent: boolean (default: False)
             Specifies whether the variable is latent or not.
+
+        Examples
+        --------
+        >>> from pgmpy.base import ADMG
+        >>> admg = ADMG()
+        >>> admg.add_node(node="A")
+        >>> admg.add_node(node="B", latent=True)
+        >>> sorted(admg.nodes())
+        ['A', 'B']
+        >>> admg.latents
+        {'B'}
         """
         if latent:
             self.latents.add(node)
@@ -96,6 +107,18 @@ class ADMG(_GraphRolesMixin, MultiDiGraph):
         latent: bool, list, tuple (default=False)
             A container of boolean. The value at index i tells whether the
             node at index i is latent or not.
+
+        Examples
+        --------
+        >>> from pgmpy.base import ADMG
+        >>> admg = ADMG()
+        >>> admg.add_nodes_from(nodes=["A", "B"])
+        >>> admg.add_nodes_from(nodes=["C", "D"], latent=True)
+        >>> admg.add_nodes_from(nodes=["E", "F"], latent=[False, True])
+        >>> sorted(admg.nodes())
+        ['A', 'B', 'C', 'D', 'E', 'F']
+        >>> admg.latents
+        {'C', 'D', 'F'}
         """
         nodes = list(nodes)
 
