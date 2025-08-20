@@ -2439,3 +2439,16 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
 
         for index in range(len(nodes)):
             self.add_node(node=nodes[index], latent=latent[index])
+
+    def add_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        **kwargs,
+    ):
+        """
+        Raises an error if trying to add a regular edge.
+        """
+        raise NotImplementedError(
+            "Use add_directed_edge or add_undirected_edge to add edges."
+        )
