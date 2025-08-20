@@ -2367,3 +2367,33 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
             and self.latents == other.latents
             and self.get_role_dict() == other.get_role_dict()
         )
+
+    def add_node(
+        self,
+        node: Hashable,
+        latent: bool = False,
+        **kwargs,
+    ):
+        """
+        Adds a single node to the Graph.
+        """
+        if latent:
+            self.latents.add(node)
+
+        super().add_node(node, **kwargs)
+
+    def add_nodes_from(
+        self,
+        nodes: Iterable[Hashable],
+        latent: Sequence[bool] | bool = False,
+    ):
+        """
+        Add multiple nodes to the Graph.
+        """
+        nodes = list(nodes)
+
+        if isinstance(latent, bool):
+            latent = [latent] * len(nodes)
+
+        for index in range(len(nodes)):
+            self.add_node(node=nodes[index], latent=latent[index])
