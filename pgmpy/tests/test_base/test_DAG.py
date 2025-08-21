@@ -1580,6 +1580,58 @@ class TestPDAG(unittest.TestCase):
         ):
             pdag.add_edge("A", "B")
 
+    def test_add_directed_edges(self):
+        """Test adding multiple directed_edges"""
+        pdag = PDAG()
+        pdag.add_directed_edges([("A", "B"), ("C", "B")])
+        pdag.add_directed_edges([("C", "D")])
+
+        assert set(pdag.edges()) == {("A", "B"), ("C", "D"), ("C", "B")}
+        assert pdag.directed_edges == {("A", "B"), ("C", "D"), ("C", "B")}
+        assert pdag.undirected_edges == set()
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Can't add since one of nodes is None.",
+        ):
+            pdag.add_directed_edges([(None, "C")])
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Adding this edge would create a cycle in the graph.",
+        ):
+            pdag.add_directed_edges([("D", "C")])
+
+    def test_add_undirected_edges(self):
+        """Test adding multiple undirected_edges"""
+        pdag = PDAG()
+        pdag.add_undirected_edges([("A", "B"), ("C", "B")])
+        pdag.add_undirected_edges([("C", "D")])
+
+        assert set(pdag.edges()) == {
+            ("B", "C"),
+            ("C", "D"),
+            ("B", "A"),
+            ("D", "C"),
+            ("C", "B"),
+            ("A", "B"),
+        }
+        assert pdag.directed_edges == set()
+        assert pdag.undirected_edges == {
+            ("B", "C"),
+            ("C", "D"),
+            ("B", "A"),
+            ("D", "C"),
+            ("C", "B"),
+            ("A", "B"),
+        }
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Can't add since one of nodes is None.",
+        ):
+            pdag.add_undirected_edges([(None, "C")])
+
 
 class TestDAGConversion(unittest.TestCase):
     """Test for DAG to_lavaan and to_dagitty conversion methods"""

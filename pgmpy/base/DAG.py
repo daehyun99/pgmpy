@@ -2452,3 +2452,58 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
         raise NotImplementedError(
             "Use `add_directed_edges` or `add_undirected_edges` to add edges."
         )
+
+    def add_directed_edges(self, ebunch):
+        """
+        Adds directed edges (u -> v) to the PDAG.
+
+        Parameters
+        ----------
+        ebunch : list of tuple
+            List of directed edges, where each tuple is (u, v).
+
+        Examples
+        --------
+        >>> from pgmpy.base import PDAG
+        >>> pdag = PDAG()
+        >>> pdag.add_directed_edges([("A", "B"), ("B", "C")])
+        >>> sorted(pdag.edges())
+        [('A', 'B'), ('C', 'B')]
+        """
+        for u, v in ebunch:
+            if u is None or v is None:
+                raise ValueError("Can't add since one of nodes is None.")
+
+            super().add_edge(u, v)
+            self.directed_edges.add((u, v))
+
+            only_dag = self._directed_graph()
+            if not nx.is_directed_acyclic_graph(only_dag):
+                super().remove_edge(u, v)
+                raise ValueError("Adding this edge would create a cycle in the graph.")
+
+    def add_undirected_edges(self, ebunch):
+        """
+        Adds undirected edges (u - v) to the PDAG.
+
+        Parameters
+        ----------
+        ebunch : list of tuple
+            List of undirected edges, where each tuple is (u, v).
+
+        Examples
+        --------
+        >>> from pgmpy.base import PDAG
+        >>> pdag = PDAG()
+        >>> pdag.add_undirected_edges([("A", "B"), ("C", "B")])
+        >>> sorted(pdag.edges())
+        [('A', 'B'), ('B', 'A'), ('B', 'C'), ('C', 'B')]
+        """
+        for u, v in ebunch:
+            if u is None or v is None:
+                raise ValueError("Can't add since one of nodes is None.")
+
+            super().add_edge(u, v)
+            super().add_edge(v, u)
+            self.undirected_edges.add((u, v))
+            self.undirected_edges.add((v, u))
