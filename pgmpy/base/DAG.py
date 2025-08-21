@@ -2480,6 +2480,7 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
             only_dag = self._directed_graph()
             if not nx.is_directed_acyclic_graph(only_dag):
                 super().remove_edge(u, v)
+                self.directed_edges.remove((u, v))
                 raise ValueError("Adding this edge would create a cycle in the graph.")
 
     def add_undirected_edges(self, ebunch):
