@@ -2469,6 +2469,8 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
         >>> pdag.add_directed_edges([("A", "B"), ("B", "C")])
         >>> sorted(pdag.edges())
         [('A', 'B'), ('C', 'B')]
+        >>> sorted(pdag.directed_edges)
+        [('A', 'B'), ('C', 'B')]
         """
         for u, v in ebunch:
             if u is None or v is None:
@@ -2499,6 +2501,8 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
         >>> pdag.add_undirected_edges([("A", "B"), ("C", "B")])
         >>> sorted(pdag.edges())
         [('A', 'B'), ('B', 'A'), ('B', 'C'), ('C', 'B')]
+        >>> sorted(pdag.undirected_edges)
+        [('A', 'B'), ('C', 'B')]
         """
         for u, v in ebunch:
             if u is None or v is None:
@@ -2507,4 +2511,3 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
             super().add_edge(u, v)
             super().add_edge(v, u)
             self.undirected_edges.add((u, v))
-            self.undirected_edges.add((v, u))

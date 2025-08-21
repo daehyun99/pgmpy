@@ -1609,21 +1609,18 @@ class TestPDAG(unittest.TestCase):
         pdag.add_undirected_edges([("C", "D")])
 
         assert set(pdag.edges()) == {
+            ("A", "B"),
+            ("B", "A"),
+            ("C", "B"),
             ("B", "C"),
             ("C", "D"),
-            ("B", "A"),
             ("D", "C"),
-            ("C", "B"),
-            ("A", "B"),
         }
         assert pdag.directed_edges == set()
         assert pdag.undirected_edges == {
-            ("B", "C"),
-            ("C", "D"),
-            ("B", "A"),
-            ("D", "C"),
-            ("C", "B"),
             ("A", "B"),
+            ("C", "B"),
+            ("C", "D"),
         }
 
         with self.assertRaisesRegex(
