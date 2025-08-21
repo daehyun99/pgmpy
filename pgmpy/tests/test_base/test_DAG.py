@@ -1570,6 +1570,65 @@ class TestPDAG(unittest.TestCase):
         with self.assertRaises(IndexError):
             pdag.add_nodes_from(["K", "L"], latent=[True])
 
+    def test_add_edge_not_implemented(self):
+        """Test that generic add_edge raises NotImplementedError."""
+        pdag = PDAG()
+
+        with self.assertRaisesRegex(
+            NotImplementedError,
+            "Use `add_directed_edges` or `add_undirected_edges` to add edges.",
+        ):
+            pdag.add_edge("A", "B")
+
+    def test_add_directed_edges(self):
+        """Test adding multiple directed_edges"""
+        pdag = PDAG()
+        pdag.add_directed_edges([("A", "B"), ("C", "B")])
+        pdag.add_directed_edges([("C", "D")])
+
+        assert set(pdag.edges()) == {("A", "B"), ("C", "D"), ("C", "B")}
+        assert pdag.directed_edges == {("A", "B"), ("C", "D"), ("C", "B")}
+        assert pdag.undirected_edges == set()
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Can't add since one of nodes is None.",
+        ):
+            pdag.add_directed_edges([(None, "C")])
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Adding this edge would create a cycle in the graph.",
+        ):
+            pdag.add_directed_edges([("D", "C")])
+
+    def test_add_undirected_edges(self):
+        """Test adding multiple undirected_edges"""
+        pdag = PDAG()
+        pdag.add_undirected_edges([("A", "B"), ("C", "B")])
+        pdag.add_undirected_edges([("C", "D")])
+
+        assert set(pdag.edges()) == {
+            ("A", "B"),
+            ("B", "A"),
+            ("C", "B"),
+            ("B", "C"),
+            ("C", "D"),
+            ("D", "C"),
+        }
+        assert pdag.directed_edges == set()
+        assert pdag.undirected_edges == {
+            ("A", "B"),
+            ("C", "B"),
+            ("C", "D"),
+        }
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Can't add since one of nodes is None.",
+        ):
+            pdag.add_undirected_edges([(None, "C")])
+
 
 class TestDAGConversion(unittest.TestCase):
     """Test for DAG to_lavaan and to_dagitty conversion methods"""
