@@ -1651,17 +1651,19 @@ class TestPDAG(unittest.TestCase):
         """Test the initialization of a PDAG object using two different methods"""
         # SetUP pdag1
         pdag1 = PDAG(
-            directed_ebunch=[("A", "C"), ("D", "C")],
+            directed_ebunch=[("A", "C")],
+            undirected_ebunch=[("D", "C")],
             latents=["F"],
         )
         # SetUP pdag2
         pdag2 = PDAG()
         pdag2.add_nodes_from(["A", "C", "D"])
-        pdag2.add_directed_edges([("A", "C"), ("D", "C")])
+        pdag2.add_directed_edges([("A", "C")])
+        pdag2.add_undirected_edges([("D", "C")])
         pdag2.add_node("F", latent=True)
 
         self.assertEqual(set(pdag1.nodes()), {"A", "C", "D", "F"})
-        self.assertEqual(set(pdag1.edges()), {("A", "C"), ("D", "C")})
+        self.assertEqual(set(pdag1.edges()), {("A", "C"), ("C", "D"), ("D", "C")})
         self.assertEqual(pdag1.latents, {"F"})
         self.assertEqual(pdag1, pdag2)
 
