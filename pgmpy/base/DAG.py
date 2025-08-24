@@ -128,7 +128,11 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
 
         self._check_cycles()
 
-        self.latents = set(latents)
+        self.latents = set()
+
+        if latents:
+            for latent in latents:
+                self.add_node(node=latent, latent=True)
 
         if roles is None:
             roles = {}

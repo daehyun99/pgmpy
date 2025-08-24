@@ -734,6 +734,26 @@ class TestDAGCreation(unittest.TestCase):
         )
         self.assertIsNotNone(daft_plot)
 
+    def test__init__(self):
+        """Test the initialization of a DAG object using two different methods"""
+        # SetUP dag1
+        dag1 = DAG(
+            ebunch=[("A", "B"), ("B", "C"), ("D", "E")],
+            latents=["F"],
+        )
+        # SetUP dag2
+        dag2 = DAG()
+        dag2.add_nodes_from(["A", "B", "C", "D", "E"])
+        dag2.add_edges_from([("A", "B"), ("B", "C"), ("D", "E")])
+        dag2.add_node("F", latent=True)
+
+        self.assertEqual(set(dag1.nodes()), {"A", "B", "C", "D", "E", "F"})
+        self.assertEqual(set(dag1.nodes()), set(dag2.nodes()))
+        self.assertEqual(set(dag1.edges()), {("A", "B"), ("B", "C"), ("D", "E")})
+        self.assertEqual(set(dag1.edges()), set(dag2.edges()))
+        self.assertEqual(dag1.latents, {"F"})
+        self.assertEqual(dag1.latents, dag2.latents)
+
 
 class TestDAGParser(unittest.TestCase):
     def test_from_lavaan(self):
