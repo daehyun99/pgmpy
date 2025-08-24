@@ -734,7 +734,7 @@ class TestDAGCreation(unittest.TestCase):
         )
         self.assertIsNotNone(daft_plot)
 
-    def test__init__(self):
+    def test_initialization_and_node_edge_addition(self):
         """Test the initialization of a DAG object using two different methods"""
         # SetUP dag1
         dag1 = DAG(
@@ -748,11 +748,9 @@ class TestDAGCreation(unittest.TestCase):
         dag2.add_node("F", latent=True)
 
         self.assertEqual(set(dag1.nodes()), {"A", "B", "C", "D", "E", "F"})
-        self.assertEqual(set(dag1.nodes()), set(dag2.nodes()))
         self.assertEqual(set(dag1.edges()), {("A", "B"), ("B", "C"), ("D", "E")})
-        self.assertEqual(set(dag1.edges()), set(dag2.edges()))
         self.assertEqual(dag1.latents, {"F"})
-        self.assertEqual(dag1.latents, dag2.latents)
+        self.assertEqual(dag1, dag2)
 
 
 class TestDAGParser(unittest.TestCase):
@@ -1648,6 +1646,24 @@ class TestPDAG(unittest.TestCase):
             "Can't add since one of nodes is None.",
         ):
             pdag.add_undirected_edges([(None, "C")])
+
+    def test_initialization_and_node_edge_addition(self):
+        """Test the initialization of a PDAG object using two different methods"""
+        # SetUP pdag1
+        pdag1 = PDAG(
+            directed_ebunch=[("A", "C"), ("D", "C")],
+            latents=["F"],
+        )
+        # SetUP pdag2
+        pdag2 = PDAG()
+        pdag2.add_nodes_from(["A", "C", "D"])
+        pdag2.add_directed_edges([("A", "C"), ("D", "C")])
+        pdag2.add_node("F", latent=True)
+
+        self.assertEqual(set(pdag1.nodes()), {"A", "C", "D", "F"})
+        self.assertEqual(set(pdag1.edges()), {("A", "C"), ("D", "C")})
+        self.assertEqual(pdag1.latents, {"F"})
+        self.assertEqual(pdag1, pdag2)
 
 
 class TestDAGConversion(unittest.TestCase):

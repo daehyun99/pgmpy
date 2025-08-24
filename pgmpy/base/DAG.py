@@ -130,9 +130,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
 
         self.latents = set()
 
-        if latents:
-            for latent in latents:
-                self.add_node(node=latent, latent=True)
+        self.add_nodes_from(nodes=latents, latent=True)
 
         if roles is None:
             roles = {}
@@ -1951,7 +1949,7 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
         Examples
         --------
         """
-        self.latents = set(latents)
+        self.latents = set()
         self.directed_edges = set(directed_ebunch)
         self.undirected_edges = set(undirected_ebunch)
 
@@ -1960,6 +1958,8 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
                 set([(Y, X) for (X, Y) in self.undirected_edges])
             )
         )
+
+        self.add_nodes_from(nodes=latents, latent=True)
 
         if roles is None:
             roles = {}
