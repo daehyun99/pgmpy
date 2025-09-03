@@ -284,7 +284,6 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
     def add_node(
         self,
         node: Hashable,
-        weight: Optional[float] = None,
         latent: bool = False,
         **kwargs,
     ):
@@ -296,12 +295,6 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         node: str, int, or any hashable python object.
             The node to add to the graph.
 
-        weight: int, float
-            The weight of the node.
-
-        latent: boolean (default: False)
-            Specifies whether the variable is latent or not.
-
         Examples
         --------
         >>> from pgmpy.base import DAG
@@ -309,31 +302,12 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         >>> G.add_node(node="A")
         >>> sorted(G.nodes())
         ['A']
-
-        Adding a node with some weight.
-
-        >>> G.add_node(node="B", weight=0.3)
-
-        The weight of these nodes can be accessed as:
-
-        >>> G.nodes["B"]
-        {'weight': 0.3}
-        >>> G.nodes["A"]
-        {'weight': None}
         """
-
-        # Check for networkx 2.0 syntax
-        if isinstance(node, tuple) and len(node) == 2 and isinstance(node[1], dict):
-            node, attrs = node
-            if attrs.get("weight", None) is not None:
-                attrs["weight"] = weight
-        else:
-            attrs = {"weight": weight}
 
         if latent:
             self.latents.add(node)
 
-        super().add_node(node, weight=weight, **kwargs)
+        super().add_node(node, **kwargs)
 
     def add_nodes_from(
         self,
