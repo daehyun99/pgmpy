@@ -284,7 +284,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
     def add_node(
         self,
         node: Hashable,
-        latent: bool = False,
+        weight: Optional[float] = None,
         **kwargs,
     ):
         """
@@ -295,6 +295,8 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         node: str, int, or any hashable python object.
             The node to add to the graph.
 
+        weight: int, float
+            The weight of the node.
         Examples
         --------
         >>> from pgmpy.base import DAG
@@ -304,16 +306,12 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         ['A']
         """
 
-        if latent:
-            self.latents.add(node)
-
-        super().add_node(node, **kwargs)
+        super().add_node(node, weight=weight, **kwargs)
 
     def add_nodes_from(
         self,
         nodes: Iterable[Hashable],
         weights: Optional[list[float] | tuple[float]] = None,
-        latent: Sequence[bool] | bool = False,
     ):
         """
         Add multiple nodes to the Graph.
@@ -330,9 +328,6 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
             A container of weights (int, float). The weight value at index i
             is associated with the variable at index i.
 
-        latent: bool, list, tuple (default=False)
-            A container of boolean. The value at index i tells whether the
-            node at index i is latent or not.
 
         Examples
         --------
@@ -354,21 +349,16 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         """
         nodes = list(nodes)
 
-        if isinstance(latent, bool):
-            latent = [latent] * len(nodes)
-
         if weights:
             if len(nodes) != len(weights):
                 raise ValueError(
                     "The number of elements in nodes and weights" "should be equal."
                 )
             for index in range(len(nodes)):
-                self.add_node(
-                    node=nodes[index], weight=weights[index], latent=latent[index]
-                )
+                self.add_node(node=nodes[index], weight=weights[index])
         else:
             for index in range(len(nodes)):
-                self.add_node(node=nodes[index], latent=latent[index])
+                self.add_node(node=nodes[index])
 
     def add_edge(self, u: Hashable, v: Hashable, weight: Optional[int | float] = None):
         """

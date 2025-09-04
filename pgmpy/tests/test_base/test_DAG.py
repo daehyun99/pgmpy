@@ -80,17 +80,9 @@ class TestDAGCreation(unittest.TestCase):
         self.assertListEqual(list(self.graph.nodes()), ["a"])
         self.assertEqual(self.graph.latents, set())
 
-        self.graph = DAG()
-        self.graph.add_node("a", latent=True)
-        self.assertListEqual(list(self.graph.nodes()), ["a"])
-        self.assertEqual(self.graph.latents, set(["a"]))
-
     def test_add_node_nonstring(self):
         self.graph = DAG()
         self.graph.add_node(1)
-
-        self.graph = DAG()
-        self.graph.add_node(1, latent=True)
 
     def test_add_nodes_from_string(self):
         self.graph = DAG()
@@ -98,38 +90,18 @@ class TestDAGCreation(unittest.TestCase):
         self.assertListEqual(sorted(self.graph.nodes()), ["a", "b", "c", "d"])
         self.assertEqual(self.graph.latents, set())
 
-        self.graph = DAG()
-        self.graph.add_nodes_from(["a", "b", "c", "d"], latent=True)
-        self.assertListEqual(sorted(self.graph.nodes()), ["a", "b", "c", "d"])
-        self.assertEqual(self.graph.latents, set(["a", "b", "c", "d"]))
-
-        self.graph = DAG()
-        self.graph.add_nodes_from(
-            ["a", "b", "c", "d"], latent=[True, False, True, False]
-        )
-        self.assertListEqual(sorted(self.graph.nodes()), ["a", "b", "c", "d"])
-        self.assertEqual(self.graph.latents, set(["a", "c"]))
-
     def test_add_nodes_from_non_string(self):
         self.graph = DAG()
         self.graph.add_nodes_from([1, 2, 3, 4])
 
-        self.graph = DAG()
-        self.graph.add_nodes_from([1, 2, 3, 4], latent=True)
-
-        self.graph = DAG()
-        self.graph.add_nodes_from([1, 2, 3, 4], latent=[True, False, False, False])
+        # TODO: What needs to be resolved before merging PR #2338
+        # This test function do not have assert
 
     def test_add_node_weight(self):
         self.graph = DAG()
         self.graph.add_node("weighted_a", weight=0.3)
         self.assertEqual(self.graph.nodes["weighted_a"]["weight"], 0.3)
         self.assertEqual(self.graph.latents, set())
-
-        self.graph = DAG()
-        self.graph.add_node("weighted_a", weight=0.3, latent=True)
-        self.assertEqual(self.graph.nodes["weighted_a"]["weight"], 0.3)
-        self.assertEqual(self.graph.latents, set(["weighted_a"]))
 
     def test_add_nodes_from_weight(self):
         self.graph = DAG()
@@ -138,21 +110,6 @@ class TestDAGCreation(unittest.TestCase):
         self.assertEqual(self.graph.nodes["weighted_c"]["weight"], 0.6)
 
         self.graph = DAG()
-        self.graph.add_nodes_from(
-            ["weighted_b", "weighted_c"], weights=[0.5, 0.6], latent=True
-        )
-        self.assertEqual(self.graph.nodes["weighted_b"]["weight"], 0.5)
-        self.assertEqual(self.graph.nodes["weighted_c"]["weight"], 0.6)
-        self.assertEqual(self.graph.latents, set(["weighted_b", "weighted_c"]))
-
-        self.graph = DAG()
-        self.graph.add_nodes_from(
-            ["weighted_b", "weighted_c"], weights=[0.5, 0.6], latent=[True, False]
-        )
-        self.assertEqual(self.graph.nodes["weighted_b"]["weight"], 0.5)
-        self.assertEqual(self.graph.nodes["weighted_c"]["weight"], 0.6)
-        self.assertEqual(self.graph.latents, set(["weighted_b"]))
-
         self.graph.add_nodes_from(["e", "f"])
         self.assertEqual(self.graph.nodes["e"]["weight"], None)
         self.assertEqual(self.graph.nodes["f"]["weight"], None)
