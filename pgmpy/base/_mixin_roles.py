@@ -90,15 +90,19 @@ class _GraphRolesMixin:
         else:
             new_graph = self
 
-        for var in variables:
-            if var not in new_graph:
-                if new_graph.__module__ == "pgmpy.models.SEM":
-                    new_graph.add_node(var, role=role)
-                else:
+        is_sem_graph = new_graph.__module__ == "pgmpy.models.SEM"
+        if not is_sem_graph:
+            for var in variables:
+                if var not in new_graph:
                     raise ValueError(f"Variable '{var}' not found in the graph.")
-            else:
-                new_graph.add_node(var, role=role)
-
+                else:
+                    new_graph.add_node(var, role=role)
+        else:
+            for var in variables:
+                if var not in new_graph.graph:
+                    raise ValueError(f"Variable '{var}' not found in the graph.")
+                else:
+                    new_graph.add_node(var, role=role)
         return new_graph
 
     def without_role(self, role: str, variables=None, inplace=False):
