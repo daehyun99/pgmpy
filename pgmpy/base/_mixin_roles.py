@@ -149,3 +149,14 @@ class _GraphRolesMixin:
                 f"role defined, but {problem_str}."
             )
         return True
+
+    @property
+    def latents(self):
+        if self.has_role("latents"):
+            return set(self.get_role("latents"))
+        else:
+            return set()
+
+    @latents.setter
+    def latents(self, variables):
+        self.with_role(role="latents", variables=variables, inplace=True)

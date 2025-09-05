@@ -1506,7 +1506,7 @@ class TestPDAG(unittest.TestCase):
         )
         # Case2: When the models differ
         other2 = DAG(
-            ebunch=[("A", "C"), ("D", "C")],
+            ebunch=[("A", "C"), ("D", "C"), ("B", "C")],
             latents=["B"],
             roles={"exposure": "A", "adjustment": "D", "outcome": "C"},
         )
