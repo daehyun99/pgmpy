@@ -1603,6 +1603,57 @@ class TestPDAG(unittest.TestCase):
         self.assertEqual(pdag.__eq__(other6), False)
         self.assertEqual(pdag.__eq__(other7), False)
 
+    def test_latents_with_role(self):
+        self.pdag1 = PDAG(
+            directed_ebunch=[("X", "Y")],
+            undirected_ebunch=[
+                ("A", "B"),
+                ("B", "C"),
+                ("C", "D"),
+                ("D", "E"),
+                ("E", "F"),
+            ],
+            latents=["A"],
+            roles={"exposure": "X", "outcome": "Y", "latents": "B"},
+        )
+        self.pdag1.with_role(role="latents", variables="C", inplace=True)
+        self.pdag1.with_role(role="latents", variables=["D", "E"], inplace=True)
+        self.pdag1 = self.pdag1.with_role(role="latents", variables="F", inplace=False)
+
+        self.assertEqual(self.pdag1.latents, {"A", "B", "C", "D", "E", "F"})
+        self.assertEqual(
+            set(self.pdag1.get_role("latents")), {"A", "B", "C", "D", "E", "F"}
+        )
+
+        with self.assertRaisesRegex(ValueError, "Variable 'G' not found in the graph."):
+            self.pdag1.with_role(role="latents", variables="G", inplace=True)
+
+    def test_latnets_without_role(self):
+        self.pdag1 = PDAG(
+            directed_ebunch=[("X", "Y")],
+            undirected_ebunch=[
+                ("A", "B"),
+                ("B", "C"),
+                ("C", "D"),
+                ("D", "E"),
+                ("E", "F"),
+            ],
+            latents=["A", "B", "C"],
+            roles={"exposure": "X", "outcome": "Y", "latents": ("D", "E", "F")},
+        )
+
+        self.pdag1.without_role(role="latents", variables="A", inplace=True)
+        self.pdag1.without_role(role="latents", variables=["B", "C"], inplace=True)
+        self.pdag1 = self.pdag1.without_role(
+            role="latents", variables="D", inplace=False
+        )
+        self.pdag1 = self.pdag1.without_role(
+            role="latents", variables=["E", "F"], inplace=False
+        )
+
+        self.assertEqual(self.pdag1.latents, set())
+        self.assertEqual(set(self.pdag1.get_role("latents")), set())
+
 
 class TestDAGConversion(unittest.TestCase):
     """Test for DAG to_lavaan and to_dagitty conversion methods"""
