@@ -22,7 +22,8 @@ class TestAncestralBase(unittest.TestCase):
             ("B", "X", "-", ">"),
             ("C", "Y", ">", "-"),
         ]
-        self.graph = AncestralBase(ebunch=edges)
+        latents = ["A"]
+        self.graph = AncestralBase(ebunch=edges, latents=latents)
 
     def test_init_empty(self):
         """Test initialization with no edges."""
@@ -165,3 +166,20 @@ class TestAncestralBase(unittest.TestCase):
 
         self.assertEqual(graph["X_0"]["X_1"]["marks"], {"X_0": ">", "X_1": "-"})
         self.assertEqual(graph["X_1"]["X_2"]["marks"], {"X_1": ">", "X_2": "-"})
+
+    def test_latents_with_role(self):
+        self.graph.with_role(role="latents", variables="B", inplace=True)
+        self.graph.with_role(role="latents", variables=["C", "D"], inplace=True)
+
+        self.assertEqual(self.graph.latents, {"A", "B", "C", "D"})
+        self.assertEqual(set(self.graph.get_role("latents")), {"A", "B", "C", "D"})
+
+        with self.assertRaisesRegex(ValueError, "Variable 'K' not found in the graph."):
+            self.graph.with_role(role="latents", variables="K", inplace=True)
+
+    def test_latnets_without_role(self):
+        self.graph.without_role(role="latents", variables="A", inplace=True)
+        self.graph.without_role(role="latents", variables=["B", "C", "D"], inplace=True)
+
+        self.assertEqual(self.graph.latents, set())
+        self.assertEqual(set(self.graph.get_role("latents")), set())

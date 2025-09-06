@@ -4,8 +4,10 @@ from typing import Hashable, Iterable, Optional
 import networkx as nx
 import numpy as np
 
+from pgmpy.base._mixin_roles import _GraphRolesMixin
 
-class AncestralBase(nx.Graph):
+
+class AncestralBase(_GraphRolesMixin, nx.Graph):
     def __init__(
         self,
         ebunch: Optional[Iterable[tuple[Hashable, Hashable]]] = None,
