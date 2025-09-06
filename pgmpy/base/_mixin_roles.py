@@ -159,6 +159,23 @@ class _GraphRolesMixin:
 
     @property
     def latents(self):
+        """
+        Property
+        --------
+        latents : set of nodes (default: empty set)
+            A set of latent variables in the graph. These are not observed
+            variables but are used to represent unobserved confounding or
+            other latent structures.
+
+        Examples
+        --------
+        Create a DAG with latents and check the latents value.
+
+        >>> from pgmpy.base import DAG
+        >>> G = DAG(ebunch=[("a", "b")], latents="a")
+        >>> G.latents
+        {'a'}
+        """
         if self.has_role("latents"):
             return set(self.get_role("latents"))
         else:

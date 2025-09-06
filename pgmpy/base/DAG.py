@@ -116,6 +116,39 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
     ['X']
     >>> G.get_role("adjustment")
     ['U', 'M']
+
+    **Latents:**
+        Latent variables can be managed using the `latents` parameter at
+        initialization or by assigning the "latents" role to nodes. The
+        `latents` parameter is a convenient shortcut for `roles={'latents': ...}`.
+
+    Create a graph with initial latent variables 'U' and 'V':
+
+    >>> from pgmpy.base import DAG
+    >>> G = DAG(
+    ...     ebunch=[("U", "X"), ("X", "M"), ("M", "Y"), ("U", "Y"), ("V", "M")],
+    ...     latents={"U", "V"},
+    ... )
+    >>> sorted(G.latents)
+    ['U', 'V']
+
+    Add a new latent variable 'Z' using the role system:
+
+    >>> G.add_node("Z")
+    >>> G.with_role(role="latents", variables="Z", inplace=True)
+    >>> sorted(G.latents)
+    ['U', 'V', 'Z']
+
+    You can also check for latents using the `get_role` method:
+
+    >>> sorted(G.get_role(role="latents"))
+    ['U', 'V', 'Z']
+
+    Remove a latent variable from the role:
+
+    >>> G.without_role(role="latents", variables="V", inplace=True)
+    >>> sorted(G.latents)
+    ['U', 'Z']
     """
 
     def __init__(
