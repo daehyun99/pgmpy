@@ -57,6 +57,50 @@ class TestADMGInitialization:
         assert set(admg.get_roles()) == set(["exposure", "outcome"])
         assert admg.get_role_dict() == {"exposure": ["A", "B"], "outcome": ["C"]}
 
+    def test_latents_with_role(self):
+        admg = ADMG(
+            directed_ebunch=[("X", "Y")],
+            bidirected_ebunch=[
+                ("A", "B"),
+                ("B", "C"),
+                ("C", "D"),
+                ("D", "E"),
+                ("E", "F"),
+            ],
+            latents=["A"],
+            roles={"exposure": "X", "outcome": "Y", "latents": "B"},
+        )
+        admg.with_role(role="latents", variables="C", inplace=True)
+        admg.with_role(role="latents", variables=["D", "E", "F"], inplace=True)
+
+        assert admg.latents == {"A", "B", "C", "D", "E", "F"}
+        assert set(admg.get_role("latents")) == {"A", "B", "C", "D", "E", "F"}
+
+        with pytest.raises(ValueError, match="Variable 'G' not found in the graph."):
+            admg.with_role(role="latents", variables="G", inplace=True)
+
+    def test_latnets_without_role(self):
+        admg = ADMG(
+            directed_ebunch=[("X", "Y")],
+            bidirected_ebunch=[
+                ("A", "B"),
+                ("B", "C"),
+                ("C", "D"),
+                ("D", "E"),
+                ("E", "F"),
+            ],
+            latents=["A", "B", "C"],
+            roles={"exposure": "X", "outcome": "Y", "latents": ("D", "E", "F")},
+        )
+
+        admg.without_role(role="latents", variables="A", inplace=True)
+        admg.without_role(
+            role="latents", variables=["B", "C", "D", "E", "F"], inplace=True
+        )
+
+        assert admg.latents == set()
+        assert set(admg.get_role("latents")) == set()
+
 
 class TestADMGNodeOperations:
     """Test node addition and validation."""
