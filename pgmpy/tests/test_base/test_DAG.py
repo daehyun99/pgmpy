@@ -744,6 +744,55 @@ class TestDAGCreation(unittest.TestCase):
         dag2 = dag2.with_role("outcome", "D")
         self.assertEqual(hash(dag1), hash(dag2))
 
+    def test_latents_with_role(self):
+        self.dag1 = DAG(
+            ebunch=[
+                ("X", "Y"),
+                ("A", "B"),
+                ("B", "C"),
+                ("C", "D"),
+                ("D", "E"),
+                ("E", "F"),
+            ],
+            latents=["A"],
+            roles={"exposure": "X", "outcome": "Y", "latents": "B"},
+        )
+        self.dag1.with_role(role="latents", variables="C", inplace=True)
+        self.dag1.with_role(role="latents", variables=["D", "E"], inplace=True)
+        self.dag1 = self.dag1.with_role(role="latents", variables="F", inplace=False)
+
+        self.assertEqual(self.dag1.latents, {"A", "B", "C", "D", "E", "F"})
+        self.assertEqual(
+            set(self.dag1.get_role("latents")), {"A", "B", "C", "D", "E", "F"}
+        )
+
+        with self.assertRaisesRegex(ValueError, "Variable 'G' not found in the graph."):
+            self.dag1.with_role(role="latents", variables="G", inplace=True)
+
+    def test_latnets_without_role(self):
+        self.dag1 = DAG(
+            ebunch=[
+                ("X", "Y"),
+                ("A", "B"),
+                ("B", "C"),
+                ("C", "D"),
+                ("D", "E"),
+                ("E", "F"),
+            ],
+            latents=["A", "B", "C"],
+            roles={"exposure": "X", "outcome": "Y", "latents": ("D", "E", "F")},
+        )
+
+        self.dag1.without_role(role="latents", variables="A", inplace=True)
+        self.dag1.without_role(role="latents", variables=["B", "C"], inplace=True)
+        self.dag1 = self.dag1.without_role(role="latents", variables="D", inplace=False)
+        self.dag1 = self.dag1.without_role(
+            role="latents", variables=["E", "F"], inplace=False
+        )
+
+        self.assertEqual(self.dag1.latents, set())
+        self.assertEqual(set(self.dag1.get_role("latents")), set())
+
 
 class TestDAGParser(unittest.TestCase):
     def test_from_lavaan(self):
