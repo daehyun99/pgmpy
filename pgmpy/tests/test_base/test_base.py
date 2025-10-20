@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pgmpy.base import AncestralBase
+from pgmpy.base import CoreGraph
 
 
 @pytest.fixture
@@ -19,18 +19,18 @@ def base_graph():
         ("B", "X", "-", ">"),
         ("C", "Y", ">", "-"),
     ]
-    return AncestralBase(ebunch=edges)
+    return CoreGraph(ebunch=edges)
 
 
-class TestAncestralBase:
+class TestCoreGraph:
     def test_init_empty(self):
-        graph = AncestralBase()
+        graph = CoreGraph()
         assert len(graph.nodes) == 0
         assert len(graph.edges) == 0
 
     def test_init_with_edges(self):
         edges = [("A", "B", "-", ">"), ("B", "C", ">", "-")]
-        graph = AncestralBase(ebunch=edges)
+        graph = CoreGraph(ebunch=edges)
         assert len(graph.nodes) == 3
         assert len(graph.edges) == 2
         assert graph["A"]["B"]["marks"] == {"A": "-", "B": ">"}
@@ -49,7 +49,7 @@ class TestAncestralBase:
             base_graph.add_edge("A", "B", "z", "w")
 
     def test_add_edges_from(self):
-        graph = AncestralBase()
+        graph = CoreGraph()
         edges = [("A", "B", "-", ">"), ("B", "C", ">", "-"), ("A", "C", "o", "o")]
         graph.add_edges_from(edges)
 
@@ -112,7 +112,7 @@ class TestAncestralBase:
 
     def test_adjacency_matrix(self):
         edges = [("A", "B", "-", ">"), ("B", "C", ">", "-")]
-        graph = AncestralBase(ebunch=edges)
+        graph = CoreGraph(ebunch=edges)
         M, node_index = graph.adjacency_matrix
 
         expected = np.array([[0, ">", 0], ["-", 0, "-"], [0, ">", 0]], dtype=object)
@@ -123,14 +123,14 @@ class TestAncestralBase:
         assert set(node_index.keys()) == {"A", "B", "C"}
 
     def test_adjacency_matrix_empty_graph(self):
-        graph = AncestralBase()
+        graph = CoreGraph()
         M, node_index = graph.adjacency_matrix
         assert M.shape == (0, 0)
         assert len(node_index) == 0
 
     def test_adjacency_matrix_setter(self):
         M = np.array([[0, ">", 0], ["-", 0, ">"], [0, "-", 0]], dtype=object)
-        graph = AncestralBase()
+        graph = CoreGraph()
         graph.adjacency_matrix = M
 
         assert len(graph.nodes) == 3
@@ -143,14 +143,14 @@ class TestAncestralBase:
     def test_init_with_roles(self):
         edges = [("A", "B", "-", ">"), ("B", "C", ">", "-")]
         roles = {"exposure": "A", "outcome": "C"}
-        graph = AncestralBase(ebunch=edges, roles=roles)
+        graph = CoreGraph(ebunch=edges, roles=roles)
 
         assert graph.nodes["A"]["role"] == "exposure"
         assert graph.nodes["C"]["role"] == "outcome"
         assert "role" not in graph.nodes["B"]
 
     def test_with_role_method(self):
-        graph = AncestralBase([("A", "B", "-", ">")])
+        graph = CoreGraph([("A", "B", "-", ">")])
         graph = graph.with_role("instrument", "A")
         assert graph.nodes["A"]["role"] == "instrument"
 
@@ -161,7 +161,7 @@ class TestAncestralBase:
     def test_copy_preserves_roles(self):
         edges = [("A", "B", "-", ">"), ("A", "C", "-", ">")]
         roles = {"exposure": "A", "outcome": "B"}
-        graph = AncestralBase(ebunch=edges, roles=roles)
+        graph = CoreGraph(ebunch=edges, roles=roles)
         new_graph = graph.copy()
 
         assert new_graph.nodes["A"]["role"] == "exposure"
@@ -170,9 +170,9 @@ class TestAncestralBase:
     def test_equality_with_roles(self):
         edges = [("A", "B", "-", ">")]
         roles = {"exposure": "A"}
-        g1 = AncestralBase(edges, roles=roles)
-        g2 = AncestralBase(edges, roles=roles)
-        g3 = AncestralBase(edges, roles={"outcome": "A"})
+        g1 = CoreGraph(edges, roles=roles)
+        g2 = CoreGraph(edges, roles=roles)
+        g3 = CoreGraph(edges, roles={"outcome": "A"})
 
         assert g1 == g2
         assert g1 != g3

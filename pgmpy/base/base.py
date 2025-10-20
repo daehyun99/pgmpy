@@ -7,7 +7,7 @@ import numpy as np
 from pgmpy.base._mixin_roles import _GraphRolesMixin
 
 
-class AncestralBase(nx.Graph, _GraphRolesMixin):
+class CoreGraph(nx.Graph, _GraphRolesMixin):
     def __init__(
         self,
         ebunch: Optional[Iterable[tuple[Hashable, Hashable]]] = None,
@@ -49,9 +49,9 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
+        >>> from pgmpy.base import CoreGraph
         >>> edges = [("A", "B", "-", ">"), ("B", "C", ">", "-")]
-        >>> graph = AncestralBase(ebunch=edges)
+        >>> graph = CoreGraph(ebunch=edges)
         >>> list(graph.edges(data=True))
         [('A', 'B', {'marks': {'A': '-', 'B': '>'}}),
          ('B', 'C', {'marks': {'B': '>', 'C': '-'}})]
@@ -65,7 +65,7 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         At construction:
 
-        >>> g = AncestralBase(
+        >>> g = CoreGraph(
         ...     ebunch=[("L", "A", "-", ">"), ("B", "C", "-", ">")],
         ...     latents={"L"},
         ...     roles={"exposure": "A", "outcome": "B"},
@@ -112,9 +112,9 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
+        >>> from pgmpy.base import CoreGraph
         >>> edges = [("A", "B", "-", ">"), ("B", "C", ">", "-")]
-        >>> graph = AncestralBase(ebunch=edges)
+        >>> graph = CoreGraph(ebunch=edges)
         >>> M, node_index = graph.adjacency_matrix
         >>> print(M)
         [[0 '>' 0]
@@ -157,9 +157,9 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
+        >>> from pgmpy.base import CoreGraph
         >>> M = np.array([[0, ">", 0], ["-", 0, ">"], [0, "-", 0]], dtype=object)
-        >>> graph = AncestralBase()
+        >>> graph = CoreGraph()
         >>> graph.adjacency_matrix = M
         >>> print(graph.nodes)
         ['X_0', 'X_1', 'X_2']
@@ -206,8 +206,8 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
-        >>> g = AncestralBase()
+        >>> from pgmpy.base import CoreGraph
+        >>> g = CoreGraph()
 
         # Directed edge A → B
         >>> g.add_edge("A", "B", "-", ">")
@@ -247,8 +247,8 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
-        >>> g = AncestralBase()
+        >>> from pgmpy.base import CoreGraph
+        >>> g = CoreGraph()
         >>> edges = [("A", "B", "-", ">"), ("B", "C", ">", "-"), ("C", "D", "o", "o")]
         >>> g.add_edges_from(edges)
         >>> list(g.edges(data=True))
@@ -281,9 +281,9 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
+        >>> from pgmpy.base import CoreGraph
         >>> edges = [("A", "B", "-", ">"), ("B", "C", ">", "-"), ("C", "D", "o", "o")]
-        >>> graph = AncestralBase(ebunch=edges)
+        >>> graph = CoreGraph(ebunch=edges)
         >>> print(graph.get_neighbors("B"))
         {'A', 'C'}
         >>> print(graph.get_neighbors("B", u_type=">"))
@@ -326,9 +326,9 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
+        >>> from pgmpy.base import CoreGraph
         >>> edges = [("A", "B", "-", ">"), ("C", "B", "-", ">"), ("B", "D", "-", ">")]
-        >>> graph = AncestralBase(ebunch=edges)
+        >>> graph = CoreGraph(ebunch=edges)
         >>> print(graph.get_parents("B"))
         {'A', 'C'}
         >>> print(graph.get_parents("D"))
@@ -354,9 +354,9 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
+        >>> from pgmpy.base import CoreGraph
         >>> edges = [("A", "B", "-", ">"), ("A", "C", "-", ">"), ("B", "D", "-", ">")]
-        >>> graph = AncestralBase(ebunch=edges)
+        >>> graph = CoreGraph(ebunch=edges)
         >>> print(graph.get_children("A"))
         {'B', 'C'}
         >>> print(graph.get_children("B"))
@@ -382,9 +382,9 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
+        >>> from pgmpy.base import CoreGraph
         >>> edges = [("A", "B", ">", ">"), ("A", "C", "-", ">"), ("C", "D", ">", ">")]
-        >>> graph = AncestralBase(ebunch=edges)
+        >>> graph = CoreGraph(ebunch=edges)
         >>> print(graph.get_spouses("A"))
         {'B'}
         >>> print(graph.get_spouses("C"))
@@ -410,14 +410,14 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
+        >>> from pgmpy.base import CoreGraph
         >>> edges = [
         ...     ("A", "B", "-", ">"),
         ...     ("B", "C", "-", ">"),
         ...     ("C", "D", "-", ">"),
         ...     ("E", "C", "-", ">"),
         ... ]
-        >>> graph = AncestralBase(ebunch=edges)
+        >>> graph = CoreGraph(ebunch=edges)
         >>> print(graph.get_ancestors("D"))
         {'A', 'B', 'C', 'D', 'E'}
         >>> print(graph.get_ancestors("C"))
@@ -453,14 +453,14 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
+        >>> from pgmpy.base import CoreGraph
         >>> edges = [
         ...     ("A", "B", "-", ">"),
         ...     ("B", "C", "-", ">"),
         ...     ("C", "D", "-", ">"),
         ...     ("B", "E", "-", ">"),
         ... ]
-        >>> graph = AncestralBase(ebunch=edges)
+        >>> graph = CoreGraph(ebunch=edges)
         >>> print(graph.get_descendants("A"))
         {'A', 'B', 'C', 'D', 'E'}
         >>> print(graph.get_descendants("B"))
@@ -503,14 +503,14 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import AncestralBase
+        >>> from pgmpy.base import CoreGraph
         >>> edges = [
         ...     ("A", "B", "-", ">"),
         ...     ("B", "C", "-", ">"),
         ...     ("A", "D", "o", "o"),
         ...     ("D", "E", "o", "o"),
         ... ]
-        >>> graph = AncestralBase(ebunch=edges)
+        >>> graph = CoreGraph(ebunch=edges)
         >>> print(graph.get_reachable_nodes("A", v_type=">"))
         {'A', 'B', 'C'}
         >>> print(graph.get_reachable_nodes("A", u_type="o", v_type="o"))
@@ -565,7 +565,7 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
         >>> mag1 == mag3
         False
         """
-        if not isinstance(other, AncestralBase):
+        if not isinstance(other, CoreGraph):
             return False
 
         self_edges = {
@@ -590,7 +590,7 @@ class AncestralBase(nx.Graph, _GraphRolesMixin):
 
         Returns
         -------
-        AncestralBase
+        CoreGraph
             A new instance of the same class as self with all properties copied.
         """
         ebunch = [

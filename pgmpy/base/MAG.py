@@ -2,10 +2,10 @@ from typing import Hashable, Iterable, Optional
 
 import networkx as nx
 
-from pgmpy.base import AncestralBase
+from pgmpy.base import CoreGraph
 
 
-class MAG(AncestralBase):
+class MAG(CoreGraph):
     """
     Class for representing Maximal Ancestral Graphs (MAGs).
 
