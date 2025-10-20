@@ -15,7 +15,7 @@ class CoreGraph(nx.Graph, _GraphRolesMixin):
         roles=None,
     ):
         """
-        Ancestral graph base class.
+        Base graph class.
         Internally, each edge is stored with an attribute dictionary
         called ``marks``. The ``marks`` dict maps the two endpoint
         nodes to their respective marks, for example:
@@ -530,39 +530,39 @@ class CoreGraph(nx.Graph, _GraphRolesMixin):
 
     def __eq__(self, other):
         """
-        Checks if two MAGs are equal. Two MAGs are equal if they have the same
+        Checks if two CoreGraphs are equal. Two CoreGraphs are equal if they have the same
         nodes, edges(including marks), latent variables, and variable roles
 
         Parameters
         ----------
-        other: MAG object
-            The other MAG to compare with
+        other: CoreGraph object
+            The other CoreGraph to compare with
 
         Returns
         -------
         bool
-            True if the MAGs are equal, False otherwise
+            True if the CoreGraphs are equal, False otherwise
 
         Examples
         --------
-        >>> from pgmpy.base import MAG
-        >>> mag1 = MAG(
+        >>> from pgmpy.base import CoreGraph
+        >>> G1 = CoreGraph(
         ...     ebunch=[("X", "Y", "-", ">"), ("Y", "Z", "-", ">")],
-        ...     latents={"L"},
+        ...     latents={"Y"},
         ...     roles={"exposure": "X"},
         ... )
-        >>> mag2 = MAG(
+        >>> G2 = CoreGraph(
         ...     ebunch=[("X", "Y", "-", ">"), ("Y", "Z", "-", ">")],
-        ...     latents={"L"},
+        ...     latents={"Y"},
         ...     roles={"exposure": "X"},
         ... )
-        >>> mag1 == mag2
+        >>> G1.__eq__(G2)
         True
 
-        >>> mag3 = MAG(
-        ...     ebunch=[("X", "Y", "-", ">")], latents={"L"}, roles={"exposure": "X"}
+        >>> G3 = CoreGraph(
+        ...     ebunch=[("X", "Y", "-", ">")], latents={"Y"}, roles={"exposure": "X"}
         ... )
-        >>> mag1 == mag3
+        >>> G1.__eq__(G3)
         False
         """
         if not isinstance(other, CoreGraph):
@@ -597,12 +597,12 @@ class CoreGraph(nx.Graph, _GraphRolesMixin):
             (u, v, data["marks"][u], data["marks"][v])
             for u, v, data in self.edges(data=True)
         ]
-        ancestral_base = self.__class__(
+        coregraph_base = self.__class__(
             ebunch=ebunch,
             latents=self.latents.copy(),
         )
 
         for role, vars in self.get_role_dict().items():
-            ancestral_base.with_role(role=role, variables=vars, inplace=True)
+            coregraph_base.with_role(role=role, variables=vars, inplace=True)
 
-        return ancestral_base
+        return coregraph_base
