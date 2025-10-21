@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from collections import deque
 from typing import Hashable, Iterable, Optional
 
@@ -5,7 +6,6 @@ import networkx as nx
 import numpy as np
 
 from pgmpy.base._mixin_roles import _GraphRolesMixin
-from abc import ABC, abstractmethod
 
 
 class CoreGraphABC(ABC):
