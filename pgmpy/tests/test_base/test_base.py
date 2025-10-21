@@ -179,3 +179,11 @@ class TestCoreGraph:
 
         assert g1 == g2
         assert g1 != g3
+
+    def test_is_directed(self):
+        graph = CoreGraph()
+        assert graph.is_directed() == False
+
+    def test_is_multigraph(self):
+        graph = CoreGraph()
+        assert graph.is_multigraph() == True

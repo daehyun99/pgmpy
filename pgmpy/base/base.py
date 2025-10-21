@@ -5,9 +5,27 @@ import networkx as nx
 import numpy as np
 
 from pgmpy.base._mixin_roles import _GraphRolesMixin
+from abc import ABC, abstractmethod
 
 
-class CoreGraph(nx.MultiGraph, _GraphRolesMixin):
+class CoreGraphABC(ABC):
+    """
+    An abstract class that all graphs must implement.
+    It must be the first class inherited by all graphs.
+    """
+
+    @abstractmethod
+    def is_directed(self):
+        """Returns True if graph is directed, False otherwise."""
+        pass
+
+    @abstractmethod
+    def is_multigraph(self):
+        """Returns True if graph is a multigraph, False otherwise."""
+        pass
+
+
+class CoreGraph(CoreGraphABC, nx.MultiGraph, _GraphRolesMixin):
     def __init__(
         self,
         ebunch: Optional[Iterable[tuple[Hashable, Hashable]]] = None,
@@ -606,3 +624,11 @@ class CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             coregraph_base.with_role(role=role, variables=vars, inplace=True)
 
         return coregraph_base
+
+    def is_directed(self):
+        """Returns True if graph is directed, False otherwise."""
+        return False
+
+    def is_multigraph(self):
+        """Returns True if graph is a multigraph, False otherwise."""
+        return True
