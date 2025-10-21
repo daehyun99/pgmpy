@@ -7,7 +7,7 @@ import numpy as np
 from pgmpy.base._mixin_roles import _GraphRolesMixin
 
 
-class CoreGraph(nx.Graph, _GraphRolesMixin):
+class CoreGraph(nx.MultiGraph, _GraphRolesMixin):
     def __init__(
         self,
         ebunch: Optional[Iterable[tuple[Hashable, Hashable]]] = None,
@@ -259,7 +259,7 @@ class CoreGraph(nx.Graph, _GraphRolesMixin):
         for u, v, u_mark, v_mark in ebunch:
             self.add_edge(u, v, u_mark, v_mark)
 
-    def get_neighbors(self, node, u_type=None, v_type=None):
+    def get_neighbors(self, node, key=0, u_type=None, v_type=None):
         """
         Get neighbors of a node with optional edge mark constraints.
 
@@ -299,8 +299,8 @@ class CoreGraph(nx.Graph, _GraphRolesMixin):
         for neighbor in nx.all_neighbors(self, node):
 
             node_mark, neighbor_mark = (
-                self.edges[node, neighbor]["marks"][node],
-                self.edges[node, neighbor]["marks"][neighbor],
+                self.edges[node, neighbor, key]["marks"][node],
+                self.edges[node, neighbor, key]["marks"][neighbor],
             )
 
             if (u_type is None or node_mark == u_type) and (

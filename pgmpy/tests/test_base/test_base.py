@@ -31,10 +31,11 @@ class TestCoreGraph:
     def test_init_with_edges(self):
         edges = [("A", "B", "-", ">"), ("B", "C", ">", "-")]
         graph = CoreGraph(ebunch=edges)
+        key = 0
         assert len(graph.nodes) == 3
         assert len(graph.edges) == 2
-        assert graph["A"]["B"]["marks"] == {"A": "-", "B": ">"}
-        assert graph["B"]["C"]["marks"] == {"B": ">", "C": "-"}
+        assert graph["A"]["B"][key]["marks"] == {"A": "-", "B": ">"}
+        assert graph["B"]["C"][key]["marks"] == {"B": ">", "C": "-"}
 
     def test_add_edge_same_node_error(self, base_graph):
         with pytest.raises(ValueError):
@@ -52,12 +53,13 @@ class TestCoreGraph:
         graph = CoreGraph()
         edges = [("A", "B", "-", ">"), ("B", "C", ">", "-"), ("A", "C", "o", "o")]
         graph.add_edges_from(edges)
+        key = 0
 
         assert len(graph.edges) == 3
         assert len(graph.nodes) == 3
-        assert graph["A"]["B"]["marks"] == {"A": "-", "B": ">"}
-        assert graph["B"]["C"]["marks"] == {"B": ">", "C": "-"}
-        assert graph["A"]["C"]["marks"] == {"A": "o", "C": "o"}
+        assert graph["A"]["B"][key]["marks"] == {"A": "-", "B": ">"}
+        assert graph["B"]["C"][key]["marks"] == {"B": ">", "C": "-"}
+        assert graph["A"]["C"][key]["marks"] == {"A": "o", "C": "o"}
 
     def test_get_neighbors_basic(self, base_graph):
         all_nodes_except_A = {"B", "C", "D", "E", "F", "G", "H", "I", "J"}
@@ -132,13 +134,14 @@ class TestCoreGraph:
         M = np.array([[0, ">", 0], ["-", 0, ">"], [0, "-", 0]], dtype=object)
         graph = CoreGraph()
         graph.adjacency_matrix = M
+        key = 0
 
         assert len(graph.nodes) == 3
-        assert len(graph.edges) == 2
+        assert len(graph.edges) == 4
         assert graph.has_edge("X_0", "X_1")
         assert graph.has_edge("X_1", "X_2")
-        assert graph["X_0"]["X_1"]["marks"] == {"X_0": ">", "X_1": "-"}
-        assert graph["X_1"]["X_2"]["marks"] == {"X_1": ">", "X_2": "-"}
+        assert graph["X_0"]["X_1"][key]["marks"] == {"X_0": ">", "X_1": "-"}
+        assert graph["X_1"]["X_2"][key]["marks"] == {"X_1": ">", "X_2": "-"}
 
     def test_init_with_roles(self):
         edges = [("A", "B", "-", ">"), ("B", "C", ">", "-")]

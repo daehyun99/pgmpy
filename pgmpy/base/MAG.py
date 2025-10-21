@@ -97,7 +97,7 @@ class MAG(CoreGraph):
                     )
         super().__init__(ebunch=ebunch, latents=latents, roles=roles)
 
-    def _is_collider(self, u, c, v):
+    def _is_collider(self, u, c, v, key=0):
         """
         Check if a node is a collider in a path u - c - v.
 
@@ -132,8 +132,8 @@ class MAG(CoreGraph):
         if not (self.has_edge(u, c) and self.has_edge(c, v)):
             return False
 
-        mark_uc_at_c = self.edges[u, c]["marks"][c]
-        mark_cv_at_c = self.edges[c, v]["marks"][c]
+        mark_uc_at_c = self.edges[u, c, key]["marks"][c]
+        mark_cv_at_c = self.edges[c, v, key]["marks"][c]
 
         return mark_uc_at_c == ">" and mark_cv_at_c == ">"
 
@@ -194,7 +194,7 @@ class MAG(CoreGraph):
 
         return is_inducing
 
-    def is_visible_edge(self, u, v) -> bool:
+    def is_visible_edge(self, u, v, key=0) -> bool:
         """
         Check if a directed edge u -> v is visible in the MAG.
 
@@ -232,7 +232,7 @@ class MAG(CoreGraph):
         """
         if not self.has_edge(u, v):
             return False
-        marks = self.edges[u, v]["marks"]
+        marks = self.edges[u, v, key]["marks"]
         if marks.get(u) != "-" or marks.get(v) != ">":
             return False
 
@@ -243,7 +243,7 @@ class MAG(CoreGraph):
                 continue
 
             if self.has_edge(c, u):
-                cm = self.edges[c, u]["marks"]
+                cm = self.edges[c, u, key]["marks"]
                 if cm.get(u) == ">":
                     return True
 
@@ -254,7 +254,7 @@ class MAG(CoreGraph):
                 last = path[-2]
                 if not self.has_edge(last, u):
                     continue
-                if self.edges[last, u]["marks"][u] != ">":
+                if self.edges[last, u, key]["marks"][u] != ">":
                     continue
 
                 valid = True
@@ -267,8 +267,8 @@ class MAG(CoreGraph):
 
                     if not (
                         self.has_edge(curr_node, v)
-                        and self.edges[curr_node, v]["marks"].get(curr_node) == "-"
-                        and self.edges[curr_node, v]["marks"].get(v) == ">"
+                        and self.edges[curr_node, v, key]["marks"].get(curr_node) == "-"
+                        and self.edges[curr_node, v, key]["marks"].get(v) == ">"
                     ):
                         valid = False
                         break
