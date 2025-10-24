@@ -107,6 +107,12 @@ class CoreGraph(_CoreGraphABC, nx.MultiGraph, _GraphRolesMixin):
 
     """
 
+    # The Constants should be removed once Issue #2383 is merged.
+    # And this Constants must be implemented in each graph model that inherits from `CoreGraph`.
+    ALLOWED_EDGES = {"temp"}
+    IS_DIRECTED = False
+    IS_MULTIGRAPH = True
+
     def __init__(
         self,
         ebunch: Optional[Iterable[tuple[Hashable, Hashable]]] = None,
@@ -129,6 +135,13 @@ class CoreGraph(_CoreGraphABC, nx.MultiGraph, _GraphRolesMixin):
         # set the roles to the vertices as networkx attributes
         for role, vars in roles.items():
             self.with_role(role=role, variables=vars, inplace=True)
+
+    def _graph_type_marker(self):
+        """
+        The method should be removed once Issue #2383 is merged.
+        And this method must be implemented in each graph model that inherits from `CoreGraph`.
+        """
+        return "CoreGraph"
 
     def is_directed(self):
         """Returns True if graph is directed, False otherwise."""
