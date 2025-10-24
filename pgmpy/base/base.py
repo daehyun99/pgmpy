@@ -23,7 +23,7 @@ class CoreGraphABC(ABC):
         pass
 
 
-class CoreGraph(CoreGraphABC, nx.MultiDiGraph, _GraphRolesMixin):
+class CoreGraph(CoreGraphABC, nx.MultiGraph, _GraphRolesMixin):
     """
     Base graph class.
 
