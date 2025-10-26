@@ -1,5 +1,3 @@
-import inspect
-from abc import ABC, abstractmethod
 from typing import Hashable, Iterable, Optional
 
 import networkx as nx
@@ -7,43 +5,7 @@ import networkx as nx
 from pgmpy.base._mixin_roles import _GraphRolesMixin
 
 
-class _CoreGraphABC(ABC):
-    """
-    An abstract class.
-
-    Inheriting from `CoreGraph` automatically includes inheritance from `_CoreGraphABC`.
-    """
-
-    # Constants that the graph class must implement.
-    ALLOWED_EDGES = None
-    IS_DIRECTED = None
-    IS_MULTIGRAPH = None
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-
-        if inspect.isabstract(cls):
-            return
-
-        if cls.IS_DIRECTED is None:
-            raise TypeError("IS_DIRECTED must be defined.")
-
-        if cls.IS_MULTIGRAPH is None:
-            raise TypeError("IS_MULTIGRAPH must be defined.")
-
-        if cls.ALLOWED_EDGES is None:
-            raise TypeError("ALLOWED_EDGES must be defined.")
-
-    @abstractmethod
-    def _graph_type_marker(self):
-        """
-        This is a pure virtual method to prevent this class (and CoreGraph) from being instantiated directly.
-        Concrete classes like DAG, PDAG, etc., must implement it.
-        """
-        pass
-
-
-class CoreGraph(_CoreGraphABC, nx.MultiGraph, _GraphRolesMixin):
+class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
     """
     Base graph class.
 
@@ -107,11 +69,7 @@ class CoreGraph(_CoreGraphABC, nx.MultiGraph, _GraphRolesMixin):
 
     """
 
-    # The Constants should be removed once Issue #2383 is merged.
-    # And this Constants must be implemented in each graph model that inherits from `CoreGraph`.
-    ALLOWED_EDGES = {"temp"}
-    IS_DIRECTED = False
-    IS_MULTIGRAPH = True
+    SUPPORTED_EDGE_TYPES = ["--", "-*", "*-", "->", "<-", "*>", "<*", "<>", "**"]
 
     def __init__(
         self,
@@ -136,26 +94,11 @@ class CoreGraph(_CoreGraphABC, nx.MultiGraph, _GraphRolesMixin):
         for role, vars in roles.items():
             self.with_role(role=role, variables=vars, inplace=True)
 
-    def _graph_type_marker(self):
-        """
-        The method should be removed once Issue #2383 is merged.
-        And this method must be implemented in each graph model that inherits from `CoreGraph`.
-        """
-        return "CoreGraph"
-
-    def is_directed(self):
-        """Returns True if graph is directed, False otherwise."""
-        return self.IS_DIRECTED
-
-    def is_multigraph(self):
-        """Returns True if graph is a multigraph, False otherwise."""
-        return self.IS_MULTIGRAPH
-
     def add_edge(
         self,
-        u: Hashable,  # Source node
-        v: Hashable,  # Destination node
-        type: tuple,  # (type at u, type at v) - type can be one of `-`, `>`, `o`
+        u: Hashable,
+        v: Hashable,
+        type: str,
         **kwargs,
     ):
         """

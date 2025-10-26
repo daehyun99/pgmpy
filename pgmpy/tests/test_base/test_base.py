@@ -2,12 +2,12 @@
 
 import unittest
 
-from pgmpy.base import CoreGraph
+from pgmpy.base import _CoreGraph
 
 
 class TestCoreGraph(unittest.TestCase):
     def setUp(self):
-        self.graph = CoreGraph()
+        self.graph = _CoreGraph()
 
     def test_init_empty(self):
         """Test the initialization of an empty `CoreGraph`"""
@@ -31,9 +31,9 @@ class TestCoreGraph(unittest.TestCase):
         assert self.graph1.latents == ...
         assert self.graph1.get_role_dict() == ...
 
-        # Task2: Test the initialization of a `CoreGraph` with edges.
+        # Task2: Test the initialization of a `_CoreGraph` with edges.
         # edges = ...
-        # graph2 = CoreGraph()
+        # graph2 = _CoreGraph()
 
         assert len(self.graph2.nodes) == ...
         assert len(self.graph2.edges) == ...
@@ -42,9 +42,9 @@ class TestCoreGraph(unittest.TestCase):
         assert self.graph2.latents == ...
         assert self.graph2.get_role_dict() == ...
 
-        # Task3: Test the initialization of a `CoreGraph` with exposures.
+        # Task3: Test the initialization of a `_CoreGraph` with exposures.
         # exposures = ...
-        # graph3 = CoreGraph()
+        # graph3 = _CoreGraph()
 
         assert len(self.graph3.nodes) == ...
         assert len(self.graph3.edges) == ...
@@ -53,9 +53,9 @@ class TestCoreGraph(unittest.TestCase):
         assert self.graph3.latents == ...
         assert self.graph3.get_role_dict() == ...
 
-        # Task4: Test the initialization of a `CoreGraph` with outcomes.
+        # Task4: Test the initialization of a `_CoreGraph` with outcomes.
         # outcomes = ...
-        # graph4 = CoreGraph()
+        # graph4 = _CoreGraph()
 
         assert len(self.graph4.nodes) == ...
         assert len(self.graph4.edges) == ...
@@ -64,9 +64,9 @@ class TestCoreGraph(unittest.TestCase):
         assert self.graph4.latents == ...
         assert self.graph4.get_role_dict() == ...
 
-        # Task5: Test the initialization of a `CoreGraph` with latents.
+        # Task5: Test the initialization of a `_CoreGraph` with latents.
         # latents = ...
-        # graph5 = CoreGraph()
+        # graph5 = _CoreGraph()
 
         assert len(self.graph5.nodes) == ...
         assert len(self.graph5.edges) == ...
@@ -75,9 +75,9 @@ class TestCoreGraph(unittest.TestCase):
         assert self.graph5.latents == ...
         assert self.graph5.get_role_dict() == ...
 
-        # Task6: Test the initialization of a `CoreGraph` with roles.
+        # Task6: Test the initialization of a `_CoreGraph` with roles.
         # roles = ...
-        # graph6 = CoreGraph()
+        # graph6 = _CoreGraph()
 
         assert len(self.graph6.nodes) == ...
         assert len(self.graph6.edges) == ...
@@ -86,8 +86,8 @@ class TestCoreGraph(unittest.TestCase):
         assert self.graph6.latents == ...
         assert self.graph6.get_role_dict() == ...
 
-        # Task7: Test the initialization of a `CoreGraph` with values.
-        # graph7 = CoreGraph()
+        # Task7: Test the initialization of a `_CoreGraph` with values.
+        # graph7 = _CoreGraph()
 
         assert len(self.graph7.nodes) == ...
         assert len(self.graph7.edges) == ...
@@ -103,109 +103,109 @@ class TestCoreGraph(unittest.TestCase):
         assert self.graph.is_multigraph() == True
 
     def test_add_edge(self):
-        """Test the `add_edge` method of the `CoreGraph` class."""
-        # Task1: Test adding the direct edge of a `CoreGraph`.
+        """Test the `add_edge` method of the `_CoreGraph` class."""
+        # Task1: Test adding the direct edge of a `_CoreGraph`.
         ...
 
-        # Task2: Test adding the undirect edge of a `CoreGraph`.
+        # Task2: Test adding the undirect edge of a `_CoreGraph`.
         ...
 
-        # Task3: Test adding the bidirect edge of a `CoreGraph`.
+        # Task3: Test adding the bidirect edge of a `_CoreGraph`.
         ...
 
-        # Task4: Test adding the unknown edge of a `CoreGraph`.
+        # Task4: Test adding the unknown edge of a `_CoreGraph`.
         ...
 
-        # Task5: Test adding multiedges of a `CoreGraph`.
+        # Task5: Test adding multiedges of a `_CoreGraph`.
         ...
 
-        # Task6: Test failing add edge of a `CoreGraph`.
+        # Task6: Test failing add edge of a `_CoreGraph`.
         ...
 
     def test_add_edges_from(self):
-        """Test the `add_edges_from` method of the `CoreGraph` class."""
-        # Task1: Test adding the direct edges of a `CoreGraph`.
+        """Test the `add_edges_from` method of the `_CoreGraph` class."""
+        # Task1: Test adding the direct edges of a `_CoreGraph`.
         ...
 
-        # Task2: Test adding the undirect edges of a `CoreGraph`.
+        # Task2: Test adding the undirect edges of a `_CoreGraph`.
         ...
 
-        # Task3: Test adding the bidirect edges of a `CoreGraph`.
+        # Task3: Test adding the bidirect edges of a `_CoreGraph`.
         ...
 
-        # Task4: Test adding the unknown edges of a `CoreGraph`.
+        # Task4: Test adding the unknown edges of a `_CoreGraph`.
         ...
 
-        # Task5: Test adding the various edge of a `CoreGraph`.
+        # Task5: Test adding the various edge of a `_CoreGraph`.
         ...
 
-        # Task6: Test adding multiedges of a `CoreGraph`.
+        # Task6: Test adding multiedges of a `_CoreGraph`.
         ...
 
-        # Task7: Test failing add edges of a `CoreGraph`.
+        # Task7: Test failing add edges of a `_CoreGraph`.
         ...
 
     def test_remove_edge(self):
-        """Test the `remove_edge` method of the `CoreGraph` class."""
-        # Task1: Test removing the direct edge of a `CoreGraph`.
+        """Test the `remove_edge` method of the `_CoreGraph` class."""
+        # Task1: Test removing the direct edge of a `_CoreGraph`.
         ...
 
-        # Task2: Test removing the undirect edge of a `CoreGraph`.
+        # Task2: Test removing the undirect edge of a `_CoreGraph`.
         ...
 
-        # Task3: Test removing the bidirect edge of a `CoreGraph`.
+        # Task3: Test removing the bidirect edge of a `_CoreGraph`.
         ...
 
-        # Task4: Test removing the unknown edge of a `CoreGraph`.
+        # Task4: Test removing the unknown edge of a `_CoreGraph`.
         ...
 
-        # Task5: Test removing multiedges of a `CoreGraph`.
+        # Task5: Test removing multiedges of a `_CoreGraph`.
         ...
 
-        # Task6: Test failing remove edge of a `CoreGraph`.
+        # Task6: Test failing remove edge of a `_CoreGraph`.
         ...
 
     def test_remove_edges_from(self):
-        """Test the `remove_edges_from` method of the `CoreGraph` class."""
-        # Task1: Test removing the direct edges of a `CoreGraph`.
+        """Test the `remove_edges_from` method of the `_CoreGraph` class."""
+        # Task1: Test removing the direct edges of a `_CoreGraph`.
         ...
 
-        # Task2: Test removing the undirect edges of a `CoreGraph`.
+        # Task2: Test removing the undirect edges of a `_CoreGraph`.
         ...
 
-        # Task3: Test removing the bidirect edges of a `CoreGraph`.
+        # Task3: Test removing the bidirect edges of a `_CoreGraph`.
         ...
 
-        # Task4: Test removing the unknown edges of a `CoreGraph`.
+        # Task4: Test removing the unknown edges of a `_CoreGraph`.
         ...
 
-        # Task5: Test removing the various edge of a `CoreGraph`.
+        # Task5: Test removing the various edge of a `_CoreGraph`.
         ...
 
-        # Task6: Test removing multiedges of a `CoreGraph`.
+        # Task6: Test removing multiedges of a `_CoreGraph`.
         ...
 
-        # Task7: Test failing remove edges of a `CoreGraph`.
+        # Task7: Test failing remove edges of a `_CoreGraph`.
         ...
 
     def test_equality(self):
-        """Test the `__eq__` method of the `CoreGraph` class."""
-        # Task1: Test the `__eq__` method of the empty `CoreGraph` class.
+        """Test the `__eq__` method of the `_CoreGraph` class."""
+        # Task1: Test the `__eq__` method of the empty `_CoreGraph` class.
         ...
 
-        # Task2: Test the `__eq__` method of the `CoreGraph` class with values.
+        # Task2: Test the `__eq__` method of the `_CoreGraph` class with values.
         ...
 
-        # Task3: Test faling the `__eq__` method of the `CoreGraph` class.
+        # Task3: Test faling the `__eq__` method of the `_CoreGraph` class.
         ...
 
     def test_copy(self):
-        """Test the `copy` method of the `CoreGraph` class."""
-        # Task1: Test the `copy` method of the empty `CoreGraph` class.
+        """Test the `copy` method of the `_CoreGraph` class."""
+        # Task1: Test the `copy` method of the empty `_CoreGraph` class.
         ...
 
-        # Task2: Test the `copy` method of the `CoreGraph` class with values.
+        # Task2: Test the `copy` method of the `_CoreGraph` class with values.
         ...
 
-        # Task3: Test faling the `copy` method of the `CoreGraph` class.
+        # Task3: Test faling the `copy` method of the `_CoreGraph` class.
         ...
