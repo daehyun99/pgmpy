@@ -4,6 +4,7 @@ import unittest
 
 import pytest
 
+import pgmpy.tests.help_functions as hf
 from pgmpy.base import _CoreGraph
 
 
@@ -13,90 +14,52 @@ class TestCoreGraph(unittest.TestCase):
 
     def test_init_empty(self):
         """Test the initialization of an empty `_CoreGraph`"""
-        assert len(self.graph.nodes) == 0
-        assert len(self.graph.edges) == 0
-        assert self.graph.exposures == set()
-        assert self.graph.outcomes == set()
-        assert self.graph.latents == set()
-        assert self.graph.get_role_dict() == {}
+        hf.check_graph_status(self.graph, 0, 0, set(), set(), set(), {})
 
     def test_init_with_values(self):
         """Test the initialization of a `_CoreGraph` with values"""
         # Task1: Test the initialization of a `_CoreGraph` with nodes.
         # nodes = ...
-        # graph1 = _CoreGraph()
+        graph1 = _CoreGraph()
 
-        assert len(self.graph1.nodes) == ...
-        assert len(self.graph1.edges) == ...
-        assert self.graph1.exposures == ...
-        assert self.graph1.outcomes == ...
-        assert self.graph1.latents == ...
-        assert self.graph1.get_role_dict() == ...
+        hf.check_graph_status(graph1, ..., ..., ..., ..., ..., ...)
 
         # Task2: Test the initialization of a `_CoreGraph` with edges.
         # edges = ...
-        # graph2 = _CoreGraph()
+        graph2 = _CoreGraph()
 
-        assert len(self.graph2.nodes) == ...
-        assert len(self.graph2.edges) == ...
-        assert self.graph2.exposures == ...
-        assert self.graph2.outcomes == ...
-        assert self.graph2.latents == ...
-        assert self.graph2.get_role_dict() == ...
-
+        hf.check_graph_status(graph2, ..., ..., ..., ..., ..., ...)
         # Task3: Test the initialization of a `_CoreGraph` with exposures.
         # exposures = ...
-        # graph3 = _CoreGraph()
+        graph3 = _CoreGraph()
 
-        assert len(self.graph3.nodes) == ...
-        assert len(self.graph3.edges) == ...
-        assert self.graph3.exposures == ...
-        assert self.graph3.outcomes == ...
-        assert self.graph3.latents == ...
-        assert self.graph3.get_role_dict() == ...
-
+        hf.check_graph_status(graph3, ..., ..., ..., ..., ..., ...)
         # Task4: Test the initialization of a `_CoreGraph` with outcomes.
         # outcomes = ...
-        # graph4 = _CoreGraph()
+        graph4 = _CoreGraph()
 
-        assert len(self.graph4.nodes) == ...
-        assert len(self.graph4.edges) == ...
-        assert self.graph4.exposures == ...
-        assert self.graph4.outcomes == ...
-        assert self.graph4.latents == ...
-        assert self.graph4.get_role_dict() == ...
-
+        hf.check_graph_status(graph4, ..., ..., ..., ..., ..., ...)
         # Task5: Test the initialization of a `_CoreGraph` with latents.
         # latents = ...
-        # graph5 = _CoreGraph()
+        graph5 = _CoreGraph()
 
-        assert len(self.graph5.nodes) == ...
-        assert len(self.graph5.edges) == ...
-        assert self.graph5.exposures == ...
-        assert self.graph5.outcomes == ...
-        assert self.graph5.latents == ...
-        assert self.graph5.get_role_dict() == ...
+        hf.check_graph_status(graph5, ..., ..., ..., ..., ..., ...)
 
         # Task6: Test the initialization of a `_CoreGraph` with roles.
         # roles = ...
-        # graph6 = _CoreGraph()
+        graph6 = _CoreGraph()
 
-        assert len(self.graph6.nodes) == ...
-        assert len(self.graph6.edges) == ...
-        assert self.graph6.exposures == ...
-        assert self.graph6.outcomes == ...
-        assert self.graph6.latents == ...
-        assert self.graph6.get_role_dict() == ...
+        hf.check_graph_status(graph6, ..., ..., ..., ..., ..., ...)
 
         # Task7: Test the initialization of a `_CoreGraph` with values.
-        # graph7 = _CoreGraph()
+        graph7 = _CoreGraph()
 
-        assert len(self.graph7.nodes) == ...
-        assert len(self.graph7.edges) == ...
-        assert self.graph7.exposures == ...
-        assert self.graph7.outcomes == ...
-        assert self.graph7.latents == ...
-        assert self.graph7.get_role_dict() == ...
+        hf.check_graph_status(graph7, ..., ..., ..., ..., ..., ...)
+
+        # Task8: Test failing the initialization of a `_CoreGraph` with values.
+        graph8 = _CoreGraph()
+
+        hf.check_graph_status(graph8, ..., ..., ..., ..., ..., ...)
 
     def test_add_edge(self):
         """Test the `add_edge` method of the `_CoreGraph` class."""
@@ -110,12 +73,7 @@ class TestCoreGraph(unittest.TestCase):
 
         # assert graph1["A"]["C"] # Task1-3: Test edgeview
 
-        assert len(graph1.nodes) == 3  # Task1-4: Test `_CoreGraph()`
-        assert len(graph1.edges) == 2
-        assert graph1.exposures == set()
-        assert graph1.outcomes == set()
-        assert graph1.latents == set()
-        assert graph1.get_role_dict() == {}
+        hf.check_graph_status(graph1, 3, 2, set(), set(), set(), {})
 
         # Task2: Test adding the undirect edge of a `_CoreGraph`.
         graph2 = _CoreGraph()
@@ -127,12 +85,7 @@ class TestCoreGraph(unittest.TestCase):
 
         # assert graph2["A"]["C"] # Task2-3: Test edgeview
 
-        assert len(graph2.nodes) == 3  # Task2-4: Test `_CoreGraph()`
-        assert len(graph2.edges) == 2
-        assert graph2.exposures == set()
-        assert graph2.outcomes == set()
-        assert graph2.latents == set()
-        assert graph2.get_role_dict() == {}
+        hf.check_graph_status(graph2, 3, 2, set(), set(), set(), {})
 
         # Task3: Test adding the bidirect edge of a `_CoreGraph`.
         graph3 = _CoreGraph()
@@ -144,12 +97,7 @@ class TestCoreGraph(unittest.TestCase):
 
         # assert graph3["A"]["C"] # Task3-3: Test edgeview
 
-        assert len(graph3.nodes) == 3  # Task3-4: Test `_CoreGraph()`
-        assert len(graph3.edges) == 2
-        assert graph3.exposures == set()
-        assert graph3.outcomes == set()
-        assert graph3.latents == set()
-        assert graph3.get_role_dict() == {}
+        hf.check_graph_status(graph3, 3, 2, set(), set(), set(), {})
 
         # Task4: Test adding the unknown edge of a `_CoreGraph`.
         graph4 = _CoreGraph()
@@ -164,12 +112,7 @@ class TestCoreGraph(unittest.TestCase):
 
         # assert graph4["A"]["C"] # Task4-3: Test edgeview
 
-        assert len(graph4.nodes) == 8  # Task4-4: Test `_CoreGraph()`
-        assert len(graph4.edges) == 5
-        assert graph4.exposures == set()
-        assert graph4.outcomes == set()
-        assert graph4.latents == set()
-        assert graph4.get_role_dict() == {}
+        hf.check_graph_status(graph4, 8, 5, set(), set(), set(), {})
 
         # Task5: Test adding multiedges of a `_CoreGraph`.
         graph5 = _CoreGraph()
@@ -182,12 +125,7 @@ class TestCoreGraph(unittest.TestCase):
 
         # assert graph5["A"]["C"] # Task5-3: Test edgeview
 
-        assert len(graph5.nodes) == 2  # Task5-4: Test `_CoreGraph()`
-        assert len(graph5.edges) == 4
-        assert graph5.exposures == set()
-        assert graph5.outcomes == set()
-        assert graph5.latents == set()
-        assert graph5.get_role_dict() == {}
+        hf.check_graph_status(graph5, 2, 4, set(), set(), set(), {})
 
         # Task6: Test failing add edge of a `_CoreGraph`.
         graph6 = _CoreGraph()
@@ -205,12 +143,7 @@ class TestCoreGraph(unittest.TestCase):
 
         # assert graph6["A"]["B"] # Task6-3: Test edgeview
 
-        assert len(graph6.nodes) == 0  # Task6-4: Test `_CoreGraph()`
-        assert len(graph6.edges) == 0
-        assert graph6.exposures == set()
-        assert graph6.outcomes == set()
-        assert graph6.latents == set()
-        assert graph6.get_role_dict() == {}
+        hf.check_graph_status(graph6, 0, 0, set(), set(), set(), {})
 
     def test_add_edges_from(self):
         """Test the `add_edges_from` method of the `_CoreGraph` class."""
