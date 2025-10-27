@@ -69,7 +69,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
     """
 
-    SUPPORTED_EDGE_TYPES = ["--", "-*", "*-", "->", "<-", "*>", "<*", "<>", "**"]
+    SUPPORTED_EDGE_TYPES = ["--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"]
 
     def __init__(
         self,

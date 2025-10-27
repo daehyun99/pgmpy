@@ -101,11 +101,11 @@ class TestCoreGraph(unittest.TestCase):
 
         # Task4: Test adding the unknown edge of a `_CoreGraph`.
         graph4 = _CoreGraph()
-        graph4.add_edge("A", "C", "-*")  # Task4-1: Add edge
-        graph4.add_edge("C", "B", "*-")
-        graph4.add_edge("D", "E", "*>")
-        graph4.add_edge("E", "F", "<*")
-        graph4.add_edge("G", "H", "**")
+        graph4.add_edge("A", "C", "-o")  # Task4-1: Add edge
+        graph4.add_edge("C", "B", "o-")
+        graph4.add_edge("D", "E", "o>")
+        graph4.add_edge("E", "F", "<o")
+        graph4.add_edge("G", "H", "o")
 
         assert graph4.has_edge("A", "C") == True  # Task4-2: Test `has_edge()`
         assert graph4.has_edge("C", "B") == True
@@ -119,7 +119,7 @@ class TestCoreGraph(unittest.TestCase):
         graph5.add_edge("A", "B", "->")  # Task5-1: Add edge
         graph5.add_edge("A", "B", "<>")
         graph5.add_edge("A", "B", "--")
-        graph5.add_edge("A", "B", "**")
+        graph5.add_edge("A", "B", "oo")
 
         assert graph5.has_edge("A", "B") == True  # Task5-2: Test `has_edge()`
 
