@@ -19,10 +19,10 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
     Examples
     --------
-    Create an empty CoreGraph with no nodes and no edges.
+    Create an empty _CoreGraph with no nodes and no edges.
 
-    >>> from pgmpy.base import CoreGraph
-    >>> G = CoreGraph()
+    >>> from pgmpy.base import _CoreGraph
+    >>> G = _CoreGraph()
 
     Edges and vertices can be passed to the constructor as an edge list.
 
@@ -109,8 +109,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import CoreGraph
-        >>> G = CoreGraph()
+        >>> from pgmpy.base import _CoreGraph
+        >>> G = _CoreGraph()
 
         """
         super().add_edge(u, v)
@@ -124,8 +124,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import CoreGraph
-        >>> G = CoreGraph()
+        >>> from pgmpy.base import _CoreGraph
+        >>> G = _CoreGraph()
 
         """
         ...
@@ -139,8 +139,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import CoreGraph
-        >>> G = CoreGraph()
+        >>> from pgmpy.base import _CoreGraph
+        >>> G = _CoreGraph()
 
         """
         ...
@@ -154,8 +154,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import CoreGraph
-        >>> G = CoreGraph()
+        >>> from pgmpy.base import _CoreGraph
+        >>> G = _CoreGraph()
 
         """
         ...
@@ -169,8 +169,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import CoreGraph
-        >>> G = CoreGraph()
+        >>> from pgmpy.base import _CoreGraph
+        >>> G = _CoreGraph()
 
         """
         ...
@@ -184,8 +184,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import CoreGraph
-        >>> G = CoreGraph()
+        >>> from pgmpy.base import _CoreGraph
+        >>> G = _CoreGraph()
 
         """
         ...
