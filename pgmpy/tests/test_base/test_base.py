@@ -1,20 +1,33 @@
 #!/usr/bin/env python3
 
-import unittest
-
 import pytest
 
-import pgmpy.tests.help_functions as hf
 from pgmpy.base import _CoreGraph
 
 
-class TestCoreGraph(unittest.TestCase):
-    def setUp(self):
-        self.graph = _CoreGraph()
+def check_graph_status(
+    graph,
+    node_count: int,
+    edge_count: int,
+    exposures: set,
+    outcomes: set,
+    latents: set,
+    roles: dict,
+):
+    """Common graph state checking function."""
+    assert len(graph.nodes) == node_count
+    assert len(graph.edges) == edge_count
+    assert graph.exposures == exposures
+    assert graph.outcomes == outcomes
+    assert graph.latents == latents
+    assert graph.get_role_dict() == roles
 
+
+class TestCoreGraph:
     def test_init_empty(self):
         """Test the initialization of an empty `_CoreGraph`"""
-        hf.check_graph_status(self.graph, 0, 0, set(), set(), set(), {})
+        graph = _CoreGraph()
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     def test_init_with_values(self):
         """Test the initialization of a `_CoreGraph` with values"""
@@ -23,7 +36,7 @@ class TestCoreGraph(unittest.TestCase):
         graph1 = _CoreGraph(ebunch=edges)
 
         assert sorted(graph1.nodes) == ["A", "B", "C"]
-        hf.check_graph_status(graph1, 3, 2, set(), set(), set(), {})
+        check_graph_status(graph1, 3, 2, set(), set(), set(), {})
 
         # Task2: Test the initialization of a `_CoreGraph` with edges.
         edges = [("A", "B", "--"), ("A", "B", "-o"), ("B", "C", "<>")]
@@ -34,35 +47,35 @@ class TestCoreGraph(unittest.TestCase):
             ("A", "B", {"type": "-o"}),
             ("B", "C", {"type": "<>"}),
         ]
-        hf.check_graph_status(graph2, 3, 3, set(), set(), set(), {})
+        check_graph_status(graph2, 3, 3, set(), set(), set(), {})
 
         # Task3: Test the initialization of a `_CoreGraph` with exposures.
         edges = [("A", "B", "->")]
         graph3 = _CoreGraph(ebunch=edges, exposures=["A"])
 
         assert sorted(graph3.exposures) == ["A"]
-        hf.check_graph_status(graph3, 2, 1, ["A"], set(), set(), {"exposures": ["A"]})
+        check_graph_status(graph3, 2, 1, ["A"], set(), set(), {"exposures": ["A"]})
 
         # Task4: Test the initialization of a `_CoreGraph` with outcomes.
         edges = [("A", "B", "->")]
         graph4 = _CoreGraph(ebunch=edges, outcomes=["B"])
 
         assert sorted(graph4.outcomes) == ["B"]
-        hf.check_graph_status(graph4, 2, 1, set(), ["B"], set(), {"outcomes": ["B"]})
+        check_graph_status(graph4, 2, 1, set(), ["B"], set(), {"outcomes": ["B"]})
 
         # Task5: Test the initialization of a `_CoreGraph` with latents.
         edges = [("A", "B", "->")]
         graph5 = _CoreGraph(ebunch=edges, latents=["A"])
 
         assert sorted(graph5.latents) == ["A"]
-        hf.check_graph_status(graph5, 2, 1, set(), set(), ["A"], {"latents": ["A"]})
+        check_graph_status(graph5, 2, 1, set(), set(), ["A"], {"latents": ["A"]})
 
         # Task6: Test the initialization of a `_CoreGraph` with roles.
         edges = [("A", "B", "->")]
         graph6 = _CoreGraph(ebunch=edges, roles={"test_role": ["A"]})
 
         assert sorted(graph6.get_roles()) == ["test_role"]
-        hf.check_graph_status(graph6, 2, 1, set(), set(), set(), {"test_role": ["A"]})
+        check_graph_status(graph6, 2, 1, set(), set(), set(), {"test_role": ["A"]})
 
         # Task7: Test the initialization of a `_CoreGraph` with values.
         edges = [("A", "B", "->"), ("B", "C", "oo")]
@@ -74,7 +87,7 @@ class TestCoreGraph(unittest.TestCase):
             roles={"test_role": ["A"]},
         )
 
-        hf.check_graph_status(
+        check_graph_status(
             graph7,
             3,
             2,
@@ -115,7 +128,7 @@ class TestCoreGraph(unittest.TestCase):
             roles = {"test_role1": "A", "test_role2": "C", "test_role3": "B"}
             graph8 = _CoreGraph(ebunch=edges, roles=roles)
 
-        hf.check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
     def test_add_edge(self):
         """Test the `add_edge` method of the `_CoreGraph` class."""
@@ -132,7 +145,7 @@ class TestCoreGraph(unittest.TestCase):
             ("C", "B", {"type": "<-"}),
         ]
 
-        hf.check_graph_status(graph1, 3, 2, set(), set(), set(), {})
+        check_graph_status(graph1, 3, 2, set(), set(), set(), {})
 
         # Task2: Test adding the undirect edge of a `_CoreGraph`.
         graph2 = _CoreGraph()
@@ -147,7 +160,7 @@ class TestCoreGraph(unittest.TestCase):
             ("C", "B", {"type": "--"}),
         ]
 
-        hf.check_graph_status(graph2, 3, 2, set(), set(), set(), {})
+        check_graph_status(graph2, 3, 2, set(), set(), set(), {})
 
         # Task3: Test adding the bidirect edge of a `_CoreGraph`.
         graph3 = _CoreGraph()
@@ -162,7 +175,7 @@ class TestCoreGraph(unittest.TestCase):
             ("C", "B", {"type": "<>"}),
         ]
 
-        hf.check_graph_status(graph3, 3, 2, set(), set(), set(), {})
+        check_graph_status(graph3, 3, 2, set(), set(), set(), {})
 
         # Task4: Test adding the unknown edge of a `_CoreGraph`.
         graph4 = _CoreGraph()
@@ -170,7 +183,7 @@ class TestCoreGraph(unittest.TestCase):
         graph4.add_edge("C", "B", "o-")
         graph4.add_edge("D", "E", "o>")
         graph4.add_edge("E", "F", "<o")
-        graph4.add_edge("G", "H", "o")
+        graph4.add_edge("G", "H", "oo")
 
         assert graph4.has_edge("A", "C") == True  # Task4-2: Test `has_edge()`
         assert graph4.has_edge("C", "B") == True
@@ -180,10 +193,10 @@ class TestCoreGraph(unittest.TestCase):
             ("C", "B", {"type": "o-"}),
             ("D", "E", {"type": "o>"}),
             ("E", "F", {"type": "<o"}),
-            ("G", "H", {"type": "o"}),
+            ("G", "H", {"type": "oo"}),
         ]
 
-        hf.check_graph_status(graph4, 8, 5, set(), set(), set(), {})
+        check_graph_status(graph4, 8, 5, set(), set(), set(), {})
 
         # Task5: Test adding multiedges of a `_CoreGraph`.
         graph5 = _CoreGraph()
@@ -203,7 +216,7 @@ class TestCoreGraph(unittest.TestCase):
             ("A", "B", {"type": "oo"}),
         ]
 
-        hf.check_graph_status(graph5, 2, 4, set(), set(), set(), {})
+        check_graph_status(graph5, 2, 4, set(), set(), set(), {})
 
         # Task6: Test failing add edge of a `_CoreGraph`.
         graph6 = _CoreGraph()
@@ -221,7 +234,7 @@ class TestCoreGraph(unittest.TestCase):
 
         assert sorted(graph6.edges(data=True)) == []  # Task6-3: Test edgeview
 
-        hf.check_graph_status(graph6, 0, 0, set(), set(), set(), {})
+        check_graph_status(graph6, 0, 0, set(), set(), set(), {})
 
     def test_add_edges_from(self):
         """Test the `add_edges_from` method of the `_CoreGraph` class."""
