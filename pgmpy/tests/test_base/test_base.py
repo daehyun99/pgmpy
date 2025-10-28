@@ -103,6 +103,16 @@ class TestCoreGraph:
         )
 
         # Task8: Test failing the initialization of a `_CoreGraph` with values.
+        graph8 = _CoreGraph(ebunch=edges)
+
+        with pytest.raises(ValueError):  # invalid `u`, `v` value
+            edges = [("A", "B", "->"), (None, "A", "->"), ("B", "C", "->")]
+            graph8 = _CoreGraph(ebunch=edges)
+
+        with pytest.raises(ValueError):  # invalid `u`, `v` value
+            edges = [("A", "B", "->"), ("A", None, "->"), ("B", "C", "->")]
+            graph8 = _CoreGraph(ebunch=edges)
+
         with pytest.raises(ValueError):  # same node error
             edges = [("A", "A", "->")]
             graph8 = _CoreGraph(ebunch=edges)
@@ -113,6 +123,10 @@ class TestCoreGraph:
 
         with pytest.raises(ValueError):  # invalid `type` value
             edges = [("A", "B", "-->")]
+            graph8 = _CoreGraph(ebunch=edges)
+
+        with pytest.raises(ValueError):  # miss `type` value
+            edges = [("A", "B")]
             graph8 = _CoreGraph(ebunch=edges)
 
         with pytest.raises(ValueError):  # invalid `type` values
@@ -228,6 +242,9 @@ class TestCoreGraph:
             graph6.add_edge("A", "B", "-->")
 
         with pytest.raises(ValueError):
+            graph6.add_edge("A", "B")
+
+        with pytest.raises(ValueError):
             graph6.add_edge("A", "B", "Invalid_value")
 
         assert graph6.has_edge("A", "B") == False  # Task6-2: Test `has_edge()`
@@ -239,25 +256,98 @@ class TestCoreGraph:
     def test_add_edges_from(self):
         """Test the `add_edges_from` method of the `_CoreGraph` class."""
         # Task1: Test adding the direct edges of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "->"), ("B", "C", "->")]
+        graph1 = _CoreGraph()
+        graph1.add_edges_from(ebunch=edges)
+
+        assert sorted(graph1.edges(data=True)) == [
+            ("A", "B", {"type": "->"}),
+            ("B", "C", {"type": "->"}),
+        ]
+        check_graph_status(graph1, 3, 2, set(), set(), set(), {})
 
         # Task2: Test adding the undirect edges of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "--"), ("B", "C", "--")]
+        graph2 = _CoreGraph()
+        graph2.add_edges_from(ebunch=edges)
+
+        assert sorted(graph2.edges(data=True)) == [
+            ("A", "B", {"type": "--"}),
+            ("B", "C", {"type": "--"}),
+        ]
+        check_graph_status(graph2, 3, 2, set(), set(), set(), {})
 
         # Task3: Test adding the bidirect edges of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "<>"), ("B", "C", "<>")]
+        graph3 = _CoreGraph()
+        graph3.add_edges_from(ebunch=edges)
+
+        assert sorted(graph3.edges(data=True)) == [
+            ("A", "B", {"type": "<>"}),
+            ("B", "C", {"type": "<>"}),
+        ]
+        check_graph_status(graph3, 3, 2, set(), set(), set(), {})
 
         # Task4: Test adding the unknown edges of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "-o"), ("B", "C", "o-"), ("C", "D", "oo")]
+        graph4 = _CoreGraph()
+        graph4.add_edges_from(ebunch=edges)
+
+        assert sorted(graph4.edges(data=True)) == [
+            ("A", "B", {"type": "-o"}),
+            ("B", "C", {"type": "o-"}),
+            ("C", "D", {"type": "oo"}),
+        ]
+        check_graph_status(graph4, 4, 3, set(), set(), set(), {})
 
         # Task5: Test adding the various edge of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "->"), ("B", "C", "--"), ("C", "D", "<>")]
+        graph5 = _CoreGraph()
+        graph5.add_edges_from(ebunch=edges)
+
+        assert sorted(graph5.edges(data=True)) == [
+            ("A", "B", {"type": "->"}),
+            ("B", "C", {"type": "--"}),
+            ("C", "D", {"type": "<>"}),
+        ]
+        check_graph_status(graph5, 4, 3, set(), set(), set(), {})
 
         # Task6: Test adding multiedges of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "->"), ("A", "B", "--"), ("A", "B", "oo")]
+        graph6 = _CoreGraph()
+        graph6.add_edges_from(ebunch=edges)
+
+        assert sorted(graph6.edges(data=True)) == [
+            ("A", "B", {"type": "->"}),
+            ("A", "B", {"type": "--"}),
+            ("A", "B", {"type": "oo"}),
+        ]
+        check_graph_status(graph6, 2, 3, set(), set(), set(), {})
 
         # Task7: Test failing add edges of a `_CoreGraph`.
-        ...
+        graph7 = _CoreGraph()
+
+        with pytest.raises(ValueError):  # invalid `u`, `v` value
+            edges = [("A", "B", "->"), (None, "A", "->"), ("B", "C", "->")]
+            graph7.add_edges_from(ebunch=edges)
+
+        with pytest.raises(ValueError):  # invalid `u`, `v` value
+            edges = [("A", "B", "->"), ("A", None, "->"), ("B", "C", "->")]
+            graph7.add_edges_from(ebunch=edges)
+
+        with pytest.raises(ValueError):  # miss `type` value
+            edges = [("A", "B", "->"), ("A", "C"), ("B", "C", "->")]
+            graph7.add_edges_from(ebunch=edges)
+
+        with pytest.raises(ValueError):  # same node error
+            edges = [("A", "B", "->"), ("A", "A", "->"), ("B", "C", "->")]
+            graph7.add_edges_from(ebunch=edges)
+
+        with pytest.raises(ValueError):  # invalid `type` value
+            edges = [("A", "B", "->"), ("B", "C", "-->"), ("C", "D", "->")]
+            graph7.add_edges_from(ebunch=edges)
+
+        check_graph_status(graph7, 0, 0, set(), set(), set(), {})
 
     def test_remove_edge(self):
         """Test the `remove_edge` method of the `_CoreGraph` class."""
@@ -310,7 +400,7 @@ class TestCoreGraph:
         # Task2: Test the `__eq__` method of the `_CoreGraph` class with values.
         ...
 
-        # Task3: Test faling the `__eq__` method of the `_CoreGraph` class.
+        # Task3: Test failing the `__eq__` method of the `_CoreGraph` class.
         ...
 
     def test_copy(self):
@@ -321,5 +411,5 @@ class TestCoreGraph:
         # Task2: Test the `copy` method of the `_CoreGraph` class with values.
         ...
 
-        # Task3: Test faling the `copy` method of the `_CoreGraph` class.
+        # Task3: Test failing the `copy` method of the `_CoreGraph` class.
         ...
