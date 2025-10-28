@@ -19,47 +19,103 @@ class TestCoreGraph(unittest.TestCase):
     def test_init_with_values(self):
         """Test the initialization of a `_CoreGraph` with values"""
         # Task1: Test the initialization of a `_CoreGraph` with nodes.
-        # nodes = ...
-        graph1 = _CoreGraph()
+        edges = [("A", "B", "->"), ("B", "C", "->")]
+        graph1 = _CoreGraph(ebunch=edges)
 
-        hf.check_graph_status(graph1, ..., ..., ..., ..., ..., ...)
+        assert sorted(graph1.nodes) == ["A", "B", "C"]
+        hf.check_graph_status(graph1, 3, 2, set(), set(), set(), {})
 
         # Task2: Test the initialization of a `_CoreGraph` with edges.
-        # edges = ...
-        graph2 = _CoreGraph()
+        edges = [("A", "B", "--"), ("A", "B", "-o"), ("B", "C", "<>")]
+        graph2 = _CoreGraph(ebunch=edges)
 
-        hf.check_graph_status(graph2, ..., ..., ..., ..., ..., ...)
+        assert sorted(graph2.edges(data=True)) == [
+            ("A", "B", {"type": "--"}),
+            ("A", "B", {"type": "-o"}),
+            ("B", "C", {"type": "<>"}),
+        ]
+        hf.check_graph_status(graph2, 3, 3, set(), set(), set(), {})
+
         # Task3: Test the initialization of a `_CoreGraph` with exposures.
-        # exposures = ...
-        graph3 = _CoreGraph()
+        edges = [("A", "B", "->")]
+        graph3 = _CoreGraph(ebunch=edges, exposures=["A"])
 
-        hf.check_graph_status(graph3, ..., ..., ..., ..., ..., ...)
+        assert sorted(graph3.exposures) == ["A"]
+        hf.check_graph_status(graph3, 2, 1, ["A"], set(), set(), {"exposures": ["A"]})
+
         # Task4: Test the initialization of a `_CoreGraph` with outcomes.
-        # outcomes = ...
-        graph4 = _CoreGraph()
+        edges = [("A", "B", "->")]
+        graph4 = _CoreGraph(ebunch=edges, outcomes=["B"])
 
-        hf.check_graph_status(graph4, ..., ..., ..., ..., ..., ...)
+        assert sorted(graph4.outcomes) == ["B"]
+        hf.check_graph_status(graph4, 2, 1, set(), ["B"], set(), {"outcomes": ["B"]})
+
         # Task5: Test the initialization of a `_CoreGraph` with latents.
-        # latents = ...
-        graph5 = _CoreGraph()
+        edges = [("A", "B", "->")]
+        graph5 = _CoreGraph(ebunch=edges, latents=["A"])
 
-        hf.check_graph_status(graph5, ..., ..., ..., ..., ..., ...)
+        assert sorted(graph5.latents) == ["A"]
+        hf.check_graph_status(graph5, 2, 1, set(), set(), ["A"], {"latents": ["A"]})
 
         # Task6: Test the initialization of a `_CoreGraph` with roles.
-        # roles = ...
-        graph6 = _CoreGraph()
+        edges = [("A", "B", "->")]
+        graph6 = _CoreGraph(ebunch=edges, roles={"test_role": ["A"]})
 
-        hf.check_graph_status(graph6, ..., ..., ..., ..., ..., ...)
+        assert sorted(graph6.get_roles()) == ["test_role"]
+        hf.check_graph_status(graph6, 2, 1, set(), set(), set(), {"test_role": ["A"]})
 
         # Task7: Test the initialization of a `_CoreGraph` with values.
-        graph7 = _CoreGraph()
+        edges = [("A", "B", "->"), ("B", "C", "oo")]
+        graph7 = _CoreGraph(
+            ebunch=edges,
+            exposures=["A"],
+            outcomes=["B"],
+            latents=["C"],
+            roles={"test_role": ["A"]},
+        )
 
-        hf.check_graph_status(graph7, ..., ..., ..., ..., ..., ...)
+        hf.check_graph_status(
+            graph7,
+            3,
+            2,
+            ["A"],
+            ["B"],
+            ["C"],
+            {
+                "exposures": ["A"],
+                "outcomes": ["B"],
+                "latents": ["C"],
+                "test_role": ["A"],
+            },
+        )
 
         # Task8: Test failing the initialization of a `_CoreGraph` with values.
-        graph8 = _CoreGraph()
+        with pytest.raises(ValueError):  # same node error
+            edges = [("A", "A", "->")]
+            graph8 = _CoreGraph(ebunch=edges)
 
-        hf.check_graph_status(graph8, ..., ..., ..., ..., ..., ...)
+        with pytest.raises(ValueError):  # same nodes error
+            edges = [("A", "B", "->"), ("A", "A", "->"), ("C", "D", "--")]
+            graph8 = _CoreGraph(ebunch=edges)
+
+        with pytest.raises(ValueError):  # invalid `type` value
+            edges = [("A", "B", "-->")]
+            graph8 = _CoreGraph(ebunch=edges)
+
+        with pytest.raises(ValueError):  # invalid `type` values
+            edges = [("A", "B", "->"), ("A", "C", "o-->"), ("C", "D", "--")]
+            graph8 = _CoreGraph(ebunch=edges)
+
+        with pytest.raises(ValueError):  # Granting a role to a node that is not owned.
+            roles = {"test_role": "A"}
+            graph8 = _CoreGraph(roles=roles)
+
+        with pytest.raises(ValueError):  # Granting a role to a node that is not owned.
+            edges = [("A", "B", "->")]
+            roles = {"test_role1": "A", "test_role2": "C", "test_role3": "B"}
+            graph8 = _CoreGraph(ebunch=edges, roles=roles)
+
+        hf.check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
     def test_add_edge(self):
         """Test the `add_edge` method of the `_CoreGraph` class."""
