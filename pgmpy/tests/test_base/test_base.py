@@ -71,7 +71,10 @@ class TestCoreGraph(unittest.TestCase):
         assert graph1.has_edge("A", "C") == True  # Task1-2: Test `has_edge()`
         assert graph1.has_edge("C", "B") == True
 
-        # assert graph1["A"]["C"] # Task1-3: Test edgeview
+        assert sorted(graph1.edges(data=True)) == [  # Task1-3: Test edgeview
+            ("A", "C", {"type": "->"}),
+            ("C", "B", {"type": "<-"}),
+        ]
 
         hf.check_graph_status(graph1, 3, 2, set(), set(), set(), {})
 
@@ -83,7 +86,10 @@ class TestCoreGraph(unittest.TestCase):
         assert graph2.has_edge("A", "C") == True  # Task2-2: Test `has_edge()`
         assert graph2.has_edge("C", "B") == True
 
-        # assert graph2["A"]["C"] # Task2-3: Test edgeview
+        assert sorted(graph2.edges(data=True)) == [  # Task2-3: Test edgeview
+            ("A", "C", {"type": "--"}),
+            ("C", "B", {"type": "--"}),
+        ]
 
         hf.check_graph_status(graph2, 3, 2, set(), set(), set(), {})
 
@@ -95,7 +101,10 @@ class TestCoreGraph(unittest.TestCase):
         assert graph3.has_edge("A", "C") == True  # Task3-2: Test `has_edge()`
         assert graph3.has_edge("C", "B") == True
 
-        # assert graph3["A"]["C"] # Task3-3: Test edgeview
+        assert sorted(graph3.edges(data=True)) == [  # Task3-3: Test edgeview
+            ("A", "C", {"type": "<>"}),
+            ("C", "B", {"type": "<>"}),
+        ]
 
         hf.check_graph_status(graph3, 3, 2, set(), set(), set(), {})
 
@@ -110,7 +119,13 @@ class TestCoreGraph(unittest.TestCase):
         assert graph4.has_edge("A", "C") == True  # Task4-2: Test `has_edge()`
         assert graph4.has_edge("C", "B") == True
 
-        # assert graph4["A"]["C"] # Task4-3: Test edgeview
+        assert sorted(graph4.edges(data=True)) == [  # Task4-3: Test edgeview
+            ("A", "C", {"type": "-o"}),
+            ("C", "B", {"type": "o-"}),
+            ("D", "E", {"type": "o>"}),
+            ("E", "F", {"type": "<o"}),
+            ("G", "H", {"type": "o"}),
+        ]
 
         hf.check_graph_status(graph4, 8, 5, set(), set(), set(), {})
 
@@ -123,7 +138,14 @@ class TestCoreGraph(unittest.TestCase):
 
         assert graph5.has_edge("A", "B") == True  # Task5-2: Test `has_edge()`
 
-        # assert graph5["A"]["C"] # Task5-3: Test edgeview
+        assert sorted(  # Task5-3: Test edgeview
+            graph5.edges(data=True), key=lambda x: (x[0], x[1])
+        ) == [
+            ("A", "B", {"type": "->"}),
+            ("A", "B", {"type": "<>"}),
+            ("A", "B", {"type": "--"}),
+            ("A", "B", {"type": "oo"}),
+        ]
 
         hf.check_graph_status(graph5, 2, 4, set(), set(), set(), {})
 
@@ -141,7 +163,7 @@ class TestCoreGraph(unittest.TestCase):
 
         assert graph6.has_edge("A", "B") == False  # Task6-2: Test `has_edge()`
 
-        # assert graph6["A"]["B"] # Task6-3: Test edgeview
+        assert sorted(graph6.edges(data=True)) == []  # Task6-3: Test edgeview
 
         hf.check_graph_status(graph6, 0, 0, set(), set(), set(), {})
 
