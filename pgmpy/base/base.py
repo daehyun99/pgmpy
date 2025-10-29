@@ -1,4 +1,4 @@
-from typing import Hashable, Iterable, Optional
+from typing import Hashable, Iterable, Optional, Union
 
 import networkx as nx
 
@@ -11,11 +11,11 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
     Parameters
     ----------
-    ebunch : input graph (optional, default: None)
-    latents : set of nodes (default: empty set)
-    exposures : set of nodes (default: empty set)
-    outcomes : set of nodes (default: empty set)
-    roles : dict, optional (default: None)
+    ebunch : input graph (optional, default: `None`)
+    latents : set of nodes (default: empty `set()`)
+    exposures : set of nodes (default: empty `set()`)
+    outcomes : set of nodes (default: empty `set()`)
+    roles : dict, optional (default: `None`)
 
     Examples
     --------
@@ -79,7 +79,9 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         latents: set[Hashable] = set(),
         roles=None,
     ):
-        super().__init__(ebunch)
+        super().__init__()
+        if ebunch:
+            self.add_edges_from(ebunch)
 
         self.exposures = set(exposures)
         self.outcomes = set(outcomes)
@@ -94,18 +96,39 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         for role, vars in roles.items():
             self.with_role(role=role, variables=vars, inplace=True)
 
+    # ----------------------------------------------------------------------
+    # Public API (or Public Methods)
+    # ----------------------------------------------------------------------
+
     def add_edge(
         self,
         u: Hashable,
         v: Hashable,
-        type: str,
+        type: str = None,
+        key: Optional[Hashable] = None,
         **kwargs,
     ):
         """
-        [Explain].
+        Add an edge between u and v.
+
+        The nodes u and v will be automatically added if they are
+        not already in the graph.
 
         Parameters
         ----------
+        u, v : node
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
+
+        type : str
+            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
+
+        key : hashable identifier, optional (default=lowest unused integer)
+            Used to distinguish multiedges between a pair of nodes.
+
+        kwargs : keyword arguments, optional
+            Edge data (or labels or objects) can be assigned using
+            keyword arguments.
 
         Examples
         --------
@@ -113,14 +136,34 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
 
         """
-        super().add_edge(u, v)
+        self._validate_edges_value(ebunch=[(u, v, type, key)])
+        super().add_edge(u, v, type=type, key=key, **kwargs)
 
-    def add_edges_from(self):
+    def add_edges_from(
+        self,
+        ebunch: Iterable[
+            Union[
+                tuple[Hashable, Hashable, Hashable],
+                tuple[Hashable, Hashable, Hashable, Hashable],
+            ]
+        ],
+        **kwargs,
+    ):
         """
-        [Explain].
+        Add all the edges in ebunch.
 
         Parameters
         ----------
+        ebunch : container of edges
+            Each edge given in the container will be added to the
+            graph. The edges can be:
+
+                - 3-tuples (u, v, type)
+                - 4-tuples (u, v, type, key) for an edge with data and key
+
+        kwargs : keyword arguments, optional
+            Edge data (or labels or objects) can be assigned using
+            keyword arguments.
 
         Examples
         --------
@@ -128,7 +171,15 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
 
         """
-        ...
+        self._validate_edges_value(ebunch=ebunch)
+
+        for edge_type_key in ebunch:
+            if len(edge_type_key) == 4:
+                u, v, type, key = edge_type_key
+            else:
+                u, v, type = edge_type_key
+                key = None
+            self.add_edge(u, v, type, key=key, **kwargs)
 
     def remove_edge(self):
         """
@@ -160,6 +211,25 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         ...
 
+    def copy(self):
+        """
+        [Explain].
+
+        Parameters
+        ----------
+
+        Examples
+        --------
+        >>> from pgmpy.base import _CoreGraph
+        >>> G = _CoreGraph()
+
+        """
+        ...
+
+    # ----------------------------------------------------------------------
+    # Internal Methods (or Private Methods)
+    # ----------------------------------------------------------------------
+
     def __eq__(self):
         """
         [Explain].
@@ -175,17 +245,30 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         ...
 
-    def copy(self):
+    def _validate_edges_value(
+        self,
+        ebunch: Iterable[
+            Union[
+                tuple[Hashable, Hashable, Hashable],
+                tuple[Hashable, Hashable, Hashable, Hashable],
+            ]
+        ],
+    ):
         """
-        [Explain].
-
-        Parameters
-        ----------
-
-        Examples
-        --------
-        >>> from pgmpy.base import _CoreGraph
-        >>> G = _CoreGraph()
-
+        Helper method that validates the input for
+            `add_edge()`,
+            `add_edges_from()`,
+            `remove_edge()`,
+            and `remove_edges_from()`.
         """
-        ...
+        for edge_type_key in ebunch:
+            if len(edge_type_key) == 4:
+                u, v, type, _ = edge_type_key
+            else:
+                u, v, type = edge_type_key
+            if (u is None) or (v is None):
+                raise ValueError("Nodes cannot be None.")
+            if u == v:
+                raise ValueError("Nodes cannot be the same for an edge.")
+            if (type is None) or (type not in self.SUPPORTED_EDGE_TYPES):
+                raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
