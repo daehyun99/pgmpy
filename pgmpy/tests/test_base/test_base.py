@@ -108,41 +108,48 @@ class TestCoreGraph:
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), (None, "A", "->"), ("B", "C", "->")]
             graph8 = _CoreGraph(ebunch=edges)
+            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), ("A", None, "->"), ("B", "C", "->")]
             graph8 = _CoreGraph(ebunch=edges)
+            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # same node error
             edges = [("A", "A", "->")]
             graph8 = _CoreGraph(ebunch=edges)
+            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # same nodes error
             edges = [("A", "B", "->"), ("A", "A", "->"), ("C", "D", "--")]
             graph8 = _CoreGraph(ebunch=edges)
+            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `type` value
             edges = [("A", "B", "-->")]
             graph8 = _CoreGraph(ebunch=edges)
+            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # miss `type` value
             edges = [("A", "B")]
             graph8 = _CoreGraph(ebunch=edges)
+            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `type` values
             edges = [("A", "B", "->"), ("A", "C", "o-->"), ("C", "D", "--")]
             graph8 = _CoreGraph(ebunch=edges)
+            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # Granting a role to a node that is not owned.
             roles = {"test_role": "A"}
             graph8 = _CoreGraph(roles=roles)
+            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # Granting a role to a node that is not owned.
             edges = [("A", "B", "->")]
             roles = {"test_role1": "A", "test_role2": "C", "test_role3": "B"}
             graph8 = _CoreGraph(ebunch=edges, roles=roles)
-
-        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
     def test_add_edge(self):
         """Test the `add_edge` method of the `_CoreGraph` class."""
@@ -355,45 +362,225 @@ class TestCoreGraph:
     def test_remove_edge(self):
         """Test the `remove_edge` method of the `_CoreGraph` class."""
         # Task1: Test removing the direct edge of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "->"), ("B", "C", "<-")]
+        graph1 = _CoreGraph(ebunch=edges)
+
+        graph1.remove_edge("A", "B", "->")  # Task1-1: Remove edge
+        graph1.remove_edge("B", "C", "<-")
+
+        assert graph1.has_edge("A", "B") == False  # Task1-2: Test `has_edge()`
+        assert graph1.has_edge("B", "C") == False
+
+        assert sorted(graph1.edges(data=True)) == []  # Task1-3: Test edgeview
+
+        check_graph_status(graph1, 3, 0, set(), set(), set(), {})
 
         # Task2: Test removing the undirect edge of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "--"), ("B", "C", "--")]
+        graph2 = _CoreGraph(ebunch=edges)
+
+        graph2.remove_edge("A", "B", "--")  # Task1-1: Remove edge
+        graph2.remove_edge("B", "C", "--")
+
+        assert graph2.has_edge("A", "B") == False  # Task1-2: Test `has_edge()`
+        assert graph2.has_edge("B", "C") == False
+
+        assert sorted(graph2.edges(data=True)) == []  # Task1-3: Test edgeview
+
+        check_graph_status(graph2, 3, 0, set(), set(), set(), {})
 
         # Task3: Test removing the bidirect edge of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "<>"), ("B", "C", "<>")]
+        graph3 = _CoreGraph(ebunch=edges)
+
+        graph3.remove_edge("A", "B", "<>")  # Task1-1: Remove edge
+        graph3.remove_edge("B", "C", "<>")
+
+        assert graph3.has_edge("A", "B") == False  # Task1-2: Test `has_edge()`
+        assert graph3.has_edge("B", "C") == False
+
+        assert sorted(graph3.edges(data=True)) == []  # Task1-3: Test edgeview
+
+        check_graph_status(graph3, 3, 0, set(), set(), set(), {})
 
         # Task4: Test removing the unknown edge of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "-o"), ("B", "C", "o-"), ("C", "D", "oo")]
+        graph4 = _CoreGraph(ebunch=edges)
+
+        graph4.remove_edge("A", "B", "-o")  # Task1-1: Remove edge
+        graph4.remove_edge("B", "C", "o-")
+        graph4.remove_edge("C", "D", "oo")
+
+        assert graph4.has_edge("A", "B") == False  # Task1-2: Test `has_edge()`
+        assert graph4.has_edge("B", "C") == False
+        assert graph4.has_edge("C", "D") == False
+
+        assert sorted(graph4.edges(data=True)) == []  # Task1-3: Test edgeview
+
+        check_graph_status(graph4, 4, 0, set(), set(), set(), {})
 
         # Task5: Test removing multiedges of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "->"), ("A", "B", "->"), ("A", "B", "--")]
+        graph5 = _CoreGraph(ebunch=edges)
+
+        graph5.remove_edge("A", "B", "->")  # Task1-1: Remove edge
+        graph5.remove_edge("A", "B", "->")
+        graph5.remove_edge("A", "B", "--")
+
+        assert graph5.has_edge("A", "B") == False  # Task1-2: Test `has_edge()`
+
+        assert sorted(graph5.edges(data=True)) == []  # Task1-3: Test edgeview
+
+        check_graph_status(graph5, 2, 0, set(), set(), set(), {})
 
         # Task6: Test failing remove edge of a `_CoreGraph`.
-        ...
+
+        with pytest.raises(ValueError):  # invalid `u`, `v` value
+            edges = [("A", "B", "->"), ("B", "C", "->")]
+            graph6 = _CoreGraph(ebunch=edges)
+            graph6.remove_edge("A", "B", "->")
+            graph6.remove_edge(None, "C", "->")
+        check_graph_status(graph6, 3, 1, set(), set(), set(), {})
+
+        with pytest.raises(ValueError):  # invalid `u`, `v` value
+            edges = [("A", "B", "->"), ("B", "C", "->")]
+            graph6 = _CoreGraph(ebunch=edges)
+            graph6.remove_edge("A", "B", "->")
+            graph6.remove_edge("B", None, "->")
+        check_graph_status(graph6, 3, 1, set(), set(), set(), {})
+
+        with pytest.raises(ValueError):  # miss `type` value
+            edges = [("A", "B", "->"), ("B", "C", "->")]
+            graph6 = _CoreGraph(ebunch=edges)
+            graph6.remove_edge("A", "B", "->")
+            graph6.remove_edge("B", "C")
+        check_graph_status(graph6, 3, 1, set(), set(), set(), {})
+
+        with pytest.raises(ValueError):  # same node error
+            edges = [("A", "B", "->"), ("B", "C", "->")]
+            graph6 = _CoreGraph(ebunch=edges)
+            graph6.remove_edge("A", "B", "->")
+            graph6.remove_edge("B", "B", "->")
+        check_graph_status(graph6, 3, 1, set(), set(), set(), {})
+
+        with pytest.raises(ValueError):  # invalid `type` value
+            edges = [("A", "B", "->"), ("B", "C", "->")]
+            graph6 = _CoreGraph(ebunch=edges)
+            graph6.remove_edge("A", "B", "->")
+            graph6.remove_edge("B", "C", "invalid_value")
+        check_graph_status(graph6, 3, 1, set(), set(), set(), {})
 
     def test_remove_edges_from(self):
         """Test the `remove_edges_from` method of the `_CoreGraph` class."""
         # Task1: Test removing the direct edges of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "->"), ("B", "C", "<-")]
+        graph1 = _CoreGraph(ebunch=edges)
+
+        graph1.remove_edges_from(ebunch=edges)  # Task1-1: Remove edge
+
+        assert graph1.has_edge("A", "B") == False  # Task1-2: Test `has_edge()`
+        assert graph1.has_edge("B", "C") == False
+
+        assert sorted(graph1.edges(data=True)) == []  # Task1-3: Test edgeview
+
+        check_graph_status(graph1, 3, 0, set(), set(), set(), {})
 
         # Task2: Test removing the undirect edges of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "--"), ("B", "C", "--")]
+        graph2 = _CoreGraph(ebunch=edges)
+
+        graph2.remove_edges_from(ebunch=edges)  # Task1-1: Remove edge
+
+        assert graph2.has_edge("A", "B") == False  # Task1-2: Test `has_edge()`
+        assert graph2.has_edge("B", "C") == False
+
+        assert sorted(graph2.edges(data=True)) == []  # Task1-3: Test edgeview
+
+        check_graph_status(graph2, 3, 0, set(), set(), set(), {})
 
         # Task3: Test removing the bidirect edges of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "<>"), ("B", "C", "<>")]
+        graph3 = _CoreGraph(ebunch=edges)
+
+        graph3.remove_edges_from(ebunch=edges)  # Task1-1: Remove edge
+
+        assert graph3.has_edge("A", "B") == False  # Task1-2: Test `has_edge()`
+        assert graph3.has_edge("B", "C") == False
+
+        assert sorted(graph3.edges(data=True)) == []  # Task1-3: Test edgeview
+
+        check_graph_status(graph3, 3, 0, set(), set(), set(), {})
 
         # Task4: Test removing the unknown edges of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "-o"), ("B", "C", "o-"), ("C", "D", "oo")]
+        graph4 = _CoreGraph(ebunch=edges)
+
+        graph4.remove_edges_from(ebunch=edges)  # Task1-1: Remove edge
+
+        assert graph4.has_edge("A", "B") == False  # Task1-2: Test `has_edge()`
+        assert graph4.has_edge("B", "C") == False
+        assert graph4.has_edge("C", "D") == False
+
+        assert sorted(graph4.edges(data=True)) == []  # Task1-3: Test edgeview
+
+        check_graph_status(graph4, 4, 0, set(), set(), set(), {})
 
         # Task5: Test removing the various edge of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "->"), ("B", "C", "--"), ("C", "D", "<o")]
+        graph5 = _CoreGraph(ebunch=edges)
+
+        graph5.remove_edges_from(ebunch=edges)  # Task1-1: Remove edge
+
+        assert graph5.has_edge("A", "B") == False  # Task1-2: Test `has_edge()`
+        assert graph5.has_edge("B", "C") == False
+        assert graph5.has_edge("C", "D") == False
+
+        assert sorted(graph5.edges(data=True)) == []  # Task1-3: Test edgeview
+
+        check_graph_status(graph5, 4, 0, set(), set(), set(), {})
 
         # Task6: Test removing multiedges of a `_CoreGraph`.
-        ...
+        edges = [("A", "B", "->"), ("A", "B", "->"), ("A", "B", "--")]
+        graph6 = _CoreGraph(ebunch=edges)
+
+        graph6.remove_edges_from(ebunch=edges)  # Task1-1: Remove edge
+
+        assert graph6.has_edge("A", "B") == False  # Task1-2: Test `has_edge()`
+
+        assert sorted(graph6.edges(data=True)) == []  # Task1-3: Test edgeview
+
+        check_graph_status(graph6, 2, 0, set(), set(), set(), {})
 
         # Task7: Test failing remove edges of a `_CoreGraph`.
-        ...
+        with pytest.raises(ValueError):  # invalid `u`, `v` value
+            edges = [("A", "B", "->"), ("B", "C", "->")]
+            graph7 = _CoreGraph(ebunch=edges)
+            graph7.remove_edges_from(("A", "B", "->"), (None, "C", "->"))
+        check_graph_status(graph7, 3, 2, set(), set(), set(), {})
+
+        with pytest.raises(ValueError):  # invalid `u`, `v` value
+            edges = [("A", "B", "->"), ("B", "C", "->")]
+            graph7 = _CoreGraph(ebunch=edges)
+            graph7.remove_edges_from(("A", "B", "->"), ("B", None, "->"))
+        check_graph_status(graph7, 3, 2, set(), set(), set(), {})
+
+        with pytest.raises(ValueError):  # miss `type` value
+            edges = [("A", "B", "->"), ("B", "C", "->")]
+            graph7 = _CoreGraph(ebunch=edges)
+            graph7.remove_edges_from(("A", "B", "->"), ("B", "C"))
+        check_graph_status(graph7, 3, 2, set(), set(), set(), {})
+
+        with pytest.raises(ValueError):  # same node error
+            edges = [("A", "B", "->"), ("B", "C", "->")]
+            graph7 = _CoreGraph(ebunch=edges)
+            graph7.remove_edges_from(("A", "B", "->"), ("B", "B", "->"))
+        check_graph_status(graph7, 3, 2, set(), set(), set(), {})
+
+        with pytest.raises(ValueError):  # invalid `type` value
+            edges = [("A", "B", "->"), ("B", "C", "->")]
+            graph7 = _CoreGraph(ebunch=edges)
+            graph7.remove_edges_from(("A", "B", "->"), ("B", "C", "invalid_value"))
+        check_graph_status(graph7, 3, 2, set(), set(), set(), {})
 
     def test_equality(self):
         """Test the `__eq__` method of the `_CoreGraph` class."""
