@@ -42,7 +42,7 @@ class TestCoreGraph:
         edges = [("A", "B", "--"), ("A", "B", "-o"), ("B", "C", "<>")]
         graph2 = _CoreGraph(ebunch=edges)
 
-        assert sorted(graph2.edges(data=True)) == [
+        assert sorted(graph2.edges(data=True), key=lambda x: (x[0], x[1])) == [
             ("A", "B", {"type": "--"}),
             ("A", "B", {"type": "-o"}),
             ("B", "C", {"type": "<>"}),
@@ -54,21 +54,21 @@ class TestCoreGraph:
         graph3 = _CoreGraph(ebunch=edges, exposures=["A"])
 
         assert sorted(graph3.exposures) == ["A"]
-        check_graph_status(graph3, 2, 1, ["A"], set(), set(), {"exposures": ["A"]})
+        check_graph_status(graph3, 2, 1, {"A"}, set(), set(), {"exposures": ["A"]})
 
         # Task4: Test the initialization of a `_CoreGraph` with outcomes.
         edges = [("A", "B", "->")]
         graph4 = _CoreGraph(ebunch=edges, outcomes=["B"])
 
         assert sorted(graph4.outcomes) == ["B"]
-        check_graph_status(graph4, 2, 1, set(), ["B"], set(), {"outcomes": ["B"]})
+        check_graph_status(graph4, 2, 1, set(), {"B"}, set(), {"outcomes": ["B"]})
 
         # Task5: Test the initialization of a `_CoreGraph` with latents.
         edges = [("A", "B", "->")]
         graph5 = _CoreGraph(ebunch=edges, latents=["A"])
 
         assert sorted(graph5.latents) == ["A"]
-        check_graph_status(graph5, 2, 1, set(), set(), ["A"], {"latents": ["A"]})
+        check_graph_status(graph5, 2, 1, set(), set(), {"A"}, {"latents": ["A"]})
 
         # Task6: Test the initialization of a `_CoreGraph` with roles.
         edges = [("A", "B", "->")]
@@ -91,9 +91,9 @@ class TestCoreGraph:
             graph7,
             3,
             2,
-            ["A"],
-            ["B"],
-            ["C"],
+            {"A"},
+            {"B"},
+            {"C"},
             {
                 "exposures": ["A"],
                 "outcomes": ["B"],
@@ -317,7 +317,7 @@ class TestCoreGraph:
         graph6 = _CoreGraph()
         graph6.add_edges_from(ebunch=edges)
 
-        assert sorted(graph6.edges(data=True)) == [
+        assert sorted(graph6.edges(data=True), key=lambda x: (x[0], x[1])) == [
             ("A", "B", {"type": "->"}),
             ("A", "B", {"type": "--"}),
             ("A", "B", {"type": "oo"}),
@@ -330,23 +330,26 @@ class TestCoreGraph:
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), (None, "A", "->"), ("B", "C", "->")]
             graph7.add_edges_from(ebunch=edges)
+        check_graph_status(graph7, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), ("A", None, "->"), ("B", "C", "->")]
             graph7.add_edges_from(ebunch=edges)
+        check_graph_status(graph7, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # miss `type` value
             edges = [("A", "B", "->"), ("A", "C"), ("B", "C", "->")]
             graph7.add_edges_from(ebunch=edges)
+        check_graph_status(graph7, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # same node error
             edges = [("A", "B", "->"), ("A", "A", "->"), ("B", "C", "->")]
             graph7.add_edges_from(ebunch=edges)
+        check_graph_status(graph7, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `type` value
             edges = [("A", "B", "->"), ("B", "C", "-->"), ("C", "D", "->")]
             graph7.add_edges_from(ebunch=edges)
-
         check_graph_status(graph7, 0, 0, set(), set(), set(), {})
 
     def test_remove_edge(self):
