@@ -73,7 +73,12 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
     def __init__(
         self,
-        ebunch: Optional[Iterable[tuple[Hashable, Hashable]]] = None,
+        ebunch: Iterable[
+            Union[
+                tuple[Hashable, Hashable, Hashable],
+                tuple[Hashable, Hashable, Hashable, Hashable],
+            ]
+        ] = None,
         exposures: set[Hashable] = set(),
         outcomes: set[Hashable] = set(),
         latents: set[Hashable] = set(),
