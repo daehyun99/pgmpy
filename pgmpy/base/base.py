@@ -208,9 +208,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         if key is None:
             key_type = self[u][v]
-            keys = dict(self[u][v]).keys()
-            for k in keys:
-                if type == key_type[k]["type"]:
+            for k in key_type:
+                if type == key_type[k].get("type"):
                     key = k
                     break
         if key is None:

@@ -103,53 +103,53 @@ class TestCoreGraph:
         )
 
         # Task8: Test failing the initialization of a `_CoreGraph` with values.
-        graph8 = _CoreGraph(ebunch=edges)
+        graph8 = _CoreGraph()
 
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), (None, "A", "->"), ("B", "C", "->")]
             graph8 = _CoreGraph(ebunch=edges)
-            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), ("A", None, "->"), ("B", "C", "->")]
             graph8 = _CoreGraph(ebunch=edges)
-            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # same node error
             edges = [("A", "A", "->")]
             graph8 = _CoreGraph(ebunch=edges)
-            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # same nodes error
             edges = [("A", "B", "->"), ("A", "A", "->"), ("C", "D", "--")]
             graph8 = _CoreGraph(ebunch=edges)
-            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `type` value
             edges = [("A", "B", "-->")]
             graph8 = _CoreGraph(ebunch=edges)
-            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # miss `type` value
             edges = [("A", "B")]
             graph8 = _CoreGraph(ebunch=edges)
-            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `type` values
             edges = [("A", "B", "->"), ("A", "C", "o-->"), ("C", "D", "--")]
             graph8 = _CoreGraph(ebunch=edges)
-            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # Granting a role to a node that is not owned.
             roles = {"test_role": "A"}
             graph8 = _CoreGraph(roles=roles)
-            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # Granting a role to a node that is not owned.
             edges = [("A", "B", "->")]
             roles = {"test_role1": "A", "test_role2": "C", "test_role3": "B"}
             graph8 = _CoreGraph(ebunch=edges, roles=roles)
-            check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
 
     def test_add_edge(self):
         """Test the `add_edge` method of the `_CoreGraph` class."""
