@@ -141,7 +141,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
 
         """
-        self._validate_edges_value(ebunch=[(u, v, type, key)])
+        self._validating_edges_value(ebunch=[(u, v, type, key)])
         super().add_edge(u, v, type=type, key=key, **kwargs)
 
     def add_edges_from(
@@ -176,17 +176,19 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
 
         """
-        self._validate_edges_value(ebunch=ebunch)
+        ebunch = self._validating_and_formatting_edges_value(ebunch=ebunch)
 
-        for edge_type_key in ebunch:
-            if len(edge_type_key) == 4:
-                u, v, type, key = edge_type_key
-            else:
-                u, v, type = edge_type_key
-                key = None
+        for u, v, type, key in ebunch:
             self.add_edge(u, v, type, key=key, **kwargs)
 
-    def remove_edge(self):
+    def remove_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        type: str = None,
+        key: Optional[Hashable] = None,
+        **kwargs,
+    ):
         """
         [Explain].
 
@@ -199,9 +201,33 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
 
         """
-        ...
+        self._validating_edges_value(ebunch=[(u, v, type, key)])
 
-    def remove_edges_from(self):
+        if self.has_edge(u, v) == False:
+            raise ValueError("Edge does not exist.")
+
+        if key is None:
+            key_type = self[u][v]
+            keys = dict(self[u][v]).keys()
+            for k in keys:
+                if type == key_type[k]["type"]:
+                    key = k
+                    break
+        if key is None:
+            raise ValueError(f"There is no {type} type edge between {u} and {v}.")
+
+        super().remove_edge(u, v, key=key)
+
+    def remove_edges_from(
+        self,
+        ebunch: Iterable[
+            Union[
+                tuple[Hashable, Hashable, Hashable],
+                tuple[Hashable, Hashable, Hashable, Hashable],
+            ]
+        ],
+        **kwargs,
+    ):
         """
         [Explain].
 
@@ -214,7 +240,9 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
 
         """
-        ...
+        ebunch = self._validating_and_formatting_edges_value(ebunch=ebunch)
+        for u, v, type, key in ebunch:
+            self.remove_edge(u, v, type, key=key, **kwargs)
 
     def copy(self):
         """
@@ -250,7 +278,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         ...
 
-    def _validate_edges_value(
+    def _validating_edges_value(
         self,
         ebunch: Iterable[
             Union[
@@ -262,9 +290,12 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         Helper method that validates the input for
             `add_edge()`,
-            `add_edges_from()`,
-            `remove_edge()`,
-            and `remove_edges_from()`.
+            `remove_edge()`.
+
+        Returns
+        -------
+        None
+
         """
         for edge_type_key in ebunch:
             if len(edge_type_key) == 4:
@@ -277,3 +308,37 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
                 raise ValueError("Nodes cannot be the same for an edge.")
             if (type is None) or (type not in self.SUPPORTED_EDGE_TYPES):
                 raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
+
+    def _validating_and_formatting_edges_value(
+        self,
+        ebunch: Iterable[
+            Union[
+                tuple[Hashable, Hashable, Hashable],
+                tuple[Hashable, Hashable, Hashable, Hashable],
+            ]
+        ],
+    ):
+        """
+        Helper method that validates the input for
+            `add_edges_from()`,
+            `remove_edges_from()`.
+
+        Returns
+        -------
+        ebunch : list of tuple(`u`, `v`, `type`, `key`)
+        """
+        result = []
+        for edge_type_key in ebunch:
+            if len(edge_type_key) == 4:
+                u, v, type, key = edge_type_key
+            else:
+                u, v, type = edge_type_key
+                key = None
+            if (u is None) or (v is None):
+                raise ValueError("Nodes cannot be None.")
+            if u == v:
+                raise ValueError("Nodes cannot be the same for an edge.")
+            if (type is None) or (type not in self.SUPPORTED_EDGE_TYPES):
+                raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
+            result.append((u, v, type, key))
+        return result
