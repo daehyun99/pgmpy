@@ -555,31 +555,31 @@ class TestCoreGraph:
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), ("B", "C", "->")]
             graph7 = _CoreGraph(ebunch=edges)
-            graph7.remove_edges_from(("A", "B", "->"), (None, "C", "->"))
+            graph7.remove_edges_from([("A", "B", "->"), (None, "C", "->")])
         check_graph_status(graph7, 3, 2, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), ("B", "C", "->")]
             graph7 = _CoreGraph(ebunch=edges)
-            graph7.remove_edges_from(("A", "B", "->"), ("B", None, "->"))
+            graph7.remove_edges_from([("A", "B", "->"), ("B", None, "->")])
         check_graph_status(graph7, 3, 2, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # miss `type` value
             edges = [("A", "B", "->"), ("B", "C", "->")]
             graph7 = _CoreGraph(ebunch=edges)
-            graph7.remove_edges_from(("A", "B", "->"), ("B", "C"))
+            graph7.remove_edges_from([("A", "B", "->"), ("B", "C")])
         check_graph_status(graph7, 3, 2, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # same node error
             edges = [("A", "B", "->"), ("B", "C", "->")]
             graph7 = _CoreGraph(ebunch=edges)
-            graph7.remove_edges_from(("A", "B", "->"), ("B", "B", "->"))
+            graph7.remove_edges_from([("A", "B", "->"), ("B", "B", "->")])
         check_graph_status(graph7, 3, 2, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `type` value
             edges = [("A", "B", "->"), ("B", "C", "->")]
             graph7 = _CoreGraph(ebunch=edges)
-            graph7.remove_edges_from(("A", "B", "->"), ("B", "C", "invalid_value"))
+            graph7.remove_edges_from([("A", "B", "->"), ("B", "C", "invalid_value")])
         check_graph_status(graph7, 3, 2, set(), set(), set(), {})
 
     def test_equality(self):
