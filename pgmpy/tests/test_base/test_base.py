@@ -738,10 +738,105 @@ class TestCoreGraph:
     def test_copy(self):
         """Test the `copy` method of the `_CoreGraph` class."""
         # Task1: Test the `copy` method of the empty `_CoreGraph` class.
-        ...
+        graph1_1 = _CoreGraph()
+        graph1_2 = graph1_1.copy()
+
+        assert graph1_1.__eq__(graph1_2) == True
+        assert graph1_2.__eq__(graph1_1) == True
+
+        check_graph_status(graph1_1, 0, 0, set(), set(), set(), {})
 
         # Task2: Test the `copy` method of the `_CoreGraph` class with values.
-        ...
+        # Task2-1: Setting values
+        edges = [("A", "B", "->"), ("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
+        exposures = ["A"]
+        outcomes = ["C"]
+        latents = ["D"]
+        roles = {"test_role": ["A", "B"]}
+
+        # Task2-2: only have `ebunch`
+        graph2_1 = _CoreGraph(ebunch=edges)
+        graph2_2 = graph2_1.copy()
+
+        assert graph2_1.__eq__(graph2_2) == True
+        assert graph2_2.__eq__(graph2_1) == True
+
+        check_graph_status(graph2_1, 4, 4, set(), set(), set(), {})
+
+        # Task2-3: have `exposures`, `outcomes`, `latents`
+        graph2_1 = _CoreGraph(
+            ebunch=edges, exposures=exposures, outcomes=outcomes, latents=latents
+        )
+        graph2_2 = graph2_1.copy()
+
+        assert graph2_1.__eq__(graph2_2) == True
+        assert graph2_2.__eq__(graph2_1) == True
+
+        check_graph_status(
+            graph2_1,
+            4,
+            4,
+            {"A"},
+            {"C"},
+            {"D"},
+            {
+                "exposures": ["A"],
+                "outcomes": ["C"],
+                "latents": ["D"],
+            },
+        )
+
+        # Task2-4: have `roles`
+        graph2_1 = _CoreGraph(ebunch=edges, roles=roles)
+        graph2_2 = graph2_1.copy()
+
+        assert graph2_1.__eq__(graph2_2) == True
+        assert graph2_2.__eq__(graph2_1) == True
+
+        check_graph_status(
+            graph2_1,
+            4,
+            4,
+            set(),
+            set(),
+            set(),
+            {
+                "test_role": ["A", "B"],
+            },
+        )
+
+        # Task2-5: has all values
+        graph2_1 = _CoreGraph(
+            ebunch=edges,
+            exposures=exposures,
+            outcomes=outcomes,
+            latents=latents,
+            roles=roles,
+        )
+        graph2_2 = graph2_1.copy()
+
+        assert graph2_1.__eq__(graph2_2) == True
+        assert graph2_2.__eq__(graph2_1) == True
+
+        check_graph_status(
+            graph2_1,
+            4,
+            4,
+            {"A"},
+            {"C"},
+            {"D"},
+            {
+                "exposures": ["A"],
+                "outcomes": ["C"],
+                "latents": ["D"],
+                "test_role": ["A", "B"],
+            },
+        )
 
         # Task3: Test failing the `copy` method of the `_CoreGraph` class.
-        ...
+        with pytest.raises(TypeError):
+            graph3_1 = _CoreGraph()
+            graph3_2 = graph3_1.copy("invalid_value")
+
+            assert graph3_1.__eq__(graph3_2) == False
+        check_graph_status(graph3_1, 0, 0, set(), set(), set(), {})
