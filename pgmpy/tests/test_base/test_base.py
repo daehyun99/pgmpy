@@ -2,7 +2,7 @@
 
 import pytest
 
-from pgmpy.base import _CoreGraph
+from pgmpy.base import ADMG, DAG, PDAG, _CoreGraph
 
 
 def check_graph_status(
@@ -585,13 +585,155 @@ class TestCoreGraph:
     def test_equality(self):
         """Test the `__eq__` method of the `_CoreGraph` class."""
         # Task1: Test the `__eq__` method of the empty `_CoreGraph` class.
-        ...
+        graph1 = _CoreGraph()
+        other1 = _CoreGraph()
+
+        assert graph1.__eq__(other1) == True
+        assert other1.__eq__(graph1) == True
+
+        check_graph_status(graph1, 0, 0, set(), set(), set(), {})
 
         # Task2: Test the `__eq__` method of the `_CoreGraph` class with values.
-        ...
+        # Task2-1: Setting graph and values
+        edges = [("A", "B", "->"), ("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
+        exposures = ["A"]
+        outcomes = ["C"]
+        latents = ["D"]
+        roles = {"test_role": ["A", "B"]}
+        graph2 = _CoreGraph(
+            ebunch=edges,
+            exposures=exposures,
+            outcomes=outcomes,
+            latents=latents,
+            roles=roles,
+        )
+
+        # Task2-2: When the models are the same
+        other2 = _CoreGraph()
+        other2.add_edges_from(ebunch=edges)
+        other2.exposures = exposures
+        other2.outcomes = outcomes
+        other2.latents = latents
+        other2.with_roles(roles)
+
+        assert graph2.__eq__(other2) == True
+        assert other2.__eq__(graph2) == True
+
+        # Task2-3: When the models differ
+        other2_1 = DAG()
+        other2_2 = PDAG()
+        other2_3 = ADMG()
+        other2_4 = "not_graph_class"
+
+        assert graph2.__eq__(other2_1) == False
+        assert graph2.__eq__(other2_2) == False
+        assert graph2.__eq__(other2_3) == False
+        assert graph2.__eq__(other2_4) == False
+        assert other2_1.__eq__(graph2) == False
+        assert other2_2.__eq__(graph2) == False
+        assert other2_3.__eq__(graph2) == False
+        assert other2_4.__eq__(graph2) == False
+
+        # Task2-4: When the `ebunch` variables differ between models
+        other2_1 = _CoreGraph(
+            ebunch=[
+                ("A", "B", "->"),
+                ("A", "C", "->"),  # differ node
+                ("B", "C", "->"),
+                ("C", "D", "oo"),
+            ],
+            exposures=exposures,
+            outcomes=outcomes,
+            latents=latents,
+            roles=roles,
+        )
+        other2_2 = _CoreGraph(
+            ebunch=[
+                ("A", "B", "->"),
+                ("A", "B", "--"),  # differ type
+                ("B", "C", "->"),
+                ("C", "D", "oo"),
+            ],
+            exposures=exposures,
+            outcomes=outcomes,
+            latents=latents,
+            roles=roles,
+        )
+
+        assert graph2.__eq__(other2_1) == False
+        assert graph2.__eq__(other2_2) == False
+        assert other2_1.__eq__(graph2) == False
+        assert other2_2.__eq__(graph2) == False
+
+        # Task2-5: When the `exposures`, `outcomes`, `latents`, and `roles` variables differ between models
+        other2_1 = _CoreGraph(
+            ebunch=edges,
+            exposures=["A", "B"],  # differ exposures
+            outcomes=outcomes,
+            latents=latents,
+            roles=roles,
+        )
+
+        other2_2 = _CoreGraph(
+            ebunch=edges,
+            exposures=exposures,
+            outcomes=["A", "B"],  # differ outcomes
+            latents=latents,
+            roles=roles,
+        )
+
+        other2_3 = _CoreGraph(
+            ebunch=edges,
+            exposures=exposures,
+            outcomes=outcomes,
+            latents=["A", "B"],  # differ latents
+            roles=roles,
+        )
+
+        other2_4 = _CoreGraph(
+            ebunch=edges,
+            exposures=exposures,
+            outcomes=outcomes,
+            latents=latents,
+            roles={"test_role": ["B", "C"]},  # differ roles
+        )
+
+        assert graph2.__eq__(other2_1) == False
+        assert graph2.__eq__(other2_2) == False
+        assert graph2.__eq__(other2_3) == False
+        assert graph2.__eq__(other2_4) == False
+        assert other2_1.__eq__(graph2) == False
+        assert other2_2.__eq__(graph2) == False
+        assert other2_3.__eq__(graph2) == False
+        assert other2_4.__eq__(graph2) == False
+
+        check_graph_status(
+            graph2,
+            4,
+            4,
+            {"A"},
+            {"C"},
+            {"D"},
+            {
+                "exposures": ["A"],
+                "outcomes": ["C"],
+                "latents": ["D"],
+                "test_role": ["A", "B"],
+            },
+        )
 
         # Task3: Test failing the `__eq__` method of the `_CoreGraph` class.
-        ...
+        with pytest.raises(ValueError):
+            graph3 = _CoreGraph()
+            graph3.__eq__()  # empty other
+        check_graph_status(graph3, 0, 0, set(), set(), set(), {})
+
+        with pytest.raises(ValueError):
+            graph3 = _CoreGraph()
+            other3_1 = _CoreGraph()
+            other3_2 = _CoreGraph()
+            graph3.__eq__(other3_1, other3_2)  # unexpected values
+        check_graph_status(graph3, 0, 0, set(), set(), set(), {})
 
     def test_copy(self):
         """Test the `copy` method of the `_CoreGraph` class."""
