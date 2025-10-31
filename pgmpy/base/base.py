@@ -1,3 +1,11 @@
+"""
+Base class for pgmpy graph objects.
+
+- Class comment: Comment for users.
+- `__init__` method comment: Comment for developers.
+
+"""
+
 from typing import Hashable, Iterable, Optional, Union
 
 import networkx as nx
@@ -12,6 +20,12 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
     Parameters
     ----------
     ebunch : input graph (optional, default: `None`)
+            Each edge given in the container will be added to the
+            graph. The edges can be:
+
+                - 3-tuples (u, v, type)
+                - 4-tuples (u, v, type, key) for an edge with data and key
+
     latents : set of nodes (default: empty `set()`)
     exposures : set of nodes (default: empty `set()`)
     outcomes : set of nodes (default: empty `set()`)
@@ -19,24 +33,37 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
     Examples
     --------
-    Create an empty _CoreGraph with no nodes and no edges.
+    Create an empty `_CoreGraph` with no nodes and no edges.
 
     >>> from pgmpy.base import _CoreGraph
     >>> G = _CoreGraph()
 
     Edges and vertices can be passed to the constructor as an edge list.
 
-    >>> [Example_Code]
+    >>> edges = [("A", "B", "->"), ("B", "C", "->")]
+    >>> G = _CoreGraph(ebunch=edges)
+    >>> G.edges
+    MultiEdgeView([('A', 'B', 0), ('B', 'C', 0)])
+    >>> G.edges(data=True)
+    MultiEdgeDataView([('A', 'B', {'type': '->'}), ('B', 'C', {'type': '->'})])
+    >>> G.SUPPORTED_EDGE_TYPES  # check the available edge types
+    ['--', '-o', 'o-', '->', '<-', 'o>', '<o', '<>', 'oo']
 
     **Nodes:**
 
     Add one node,
 
-    >>> [Example_Code]
+    >>> from pgmpy.base import _CoreGraph
+    >>> G = _CoreGraph()
+    >>> G.add_node("A")
+    >>> G.nodes
+    NodeView(('A',))
 
     Add a list of nodes,
 
-    >>> [Example_Code]
+    >>> G.add_nodes_from(["B", "C"])
+    >>> G.nodes
+    NodeView(('A', 'B', 'C'))
 
     **Edges:**
 
@@ -44,29 +71,63 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
     Add one edge,
 
-    >>> [Example_Code]
+    >>> from pgmpy.base import _CoreGraph
+    >>> G = _CoreGraph()
+    >>> G.add_edge("A", "B", "->")
+    >>> G.edges  # You can check the key value of the two nodes and the edge connecting the two nodes.
+    MultiEdgeView([('A', 'B', 0)])
+    >>> G.edges(
+    ...     data=True
+    ... )  # You can check the type value of the two nodes and the edge connecting the two nodes.
+    MultiEdgeDataView([('A', 'B', {'type': '->'})])
 
     Add a list of edges,
 
-    >>> [Example_Code]
+    >>> edges = [("A", "B", "->"), ("B", "C", "->")]
+    >>> G = _CoreGraph()
+    >>> G.add_edges_from(ebunch=edges)
+    >>> G.edges(data=True)
+    MultiEdgeDataView([('A', 'B', {'type': '->'}), ('B', 'C', {'type': '->'})])
 
     Remove one edge,
 
-    >>> [Example_Code]
+    >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
+    >>> G = _CoreGraph(ebunch=edges)
+    >>> G.remove_edge("A", "B", "->")
+    >>> G.edges(data=True)
+    MultiEdgeDataView([('B', 'C', {'type': '->'}), ('C', 'D', {'type': '--'})])
 
     Remove a list of edges,
 
-    >>> [Example_Code]
+    >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
+    >>> G.remove_edges_from(ebunch=remove_edges)
+    >>> G.edges(data=True)
+    MultiEdgeDataView([])
 
     **Exposures, Outcomes, and Latents:**
-        [Explain] about difference between Roles and Exposures, Outcomes, and Latents.
+        We provide a way to easily add frequently used node roles, such as `exposure`, `outcomes`, and `latents`.
 
-    >>> [Example_Code]
+    >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("D", "C", "-o")]
+    >>> G = _CoreGraph(ebunch=edges)
+    >>> G.exposures = "A"  # Add node 'A' with role 'exposure'
+    >>> G.outcomes = "C"  # Add node 'C' with role 'outcomes'
+    >>> G.latents = "D"  # Add node 'D' with role 'latents'
+    >>> G.exposures  # Checks for the 'exposure' role node.
+    {'A'}
+    >>> G.outcomes  # Checks for the 'outcomes' role node.
+    {'C'}
+    >>> G.latents  # Checks for the 'latents' role node.
+    {'D'}
 
     **Roles:**
+        In addition to 'exposure', 'outcomes', and 'latents', you can add custom roles.
 
-    >>> [Example_Code]
-
+    >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("D", "C", "-o")]
+    >>> G = _CoreGraph(ebunch=edges)
+    >>> G.with_role("Custom_role", "A", inplace=True)
+    >>> G.with_role("latents", "D", inplace=True)
+    >>> G.get_role_dict()
+    {'latents': ['D'], 'Custom_role': ['A']}
     """
 
     SUPPORTED_EDGE_TYPES = ["--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"]
@@ -84,6 +145,11 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         latents: set[Hashable] = set(),
         roles=None,
     ):
+        """
+        Notes
+        --------
+        - Sub-graph classes must implement `SUPPORTED_EDGE_TYPES`
+        """
         super().__init__()
         if ebunch:
             self.add_edges_from(ebunch)
@@ -135,11 +201,23 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             Edge data (or labels or objects) can be assigned using
             keyword arguments.
 
+        Returns
+        -------
+        None
+
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
         >>> G = _CoreGraph()
-
+        >>> G.SUPPORTED_EDGE_TYPES  # check the available edge types
+        ['--', '-o', 'o-', '->', '<-', 'o>', '<o', '<>', 'oo']
+        >>> G.add_edge("A", "B", "->")
+        >>> G.edges  # You can check the key value of the two nodes and the edge connecting the two nodes.
+        MultiEdgeView([('A', 'B', 0)])
+        >>> G.edges(
+        ...     data=True
+        ... )  # You can check the type value of the two nodes and the edge connecting the two nodes.
+        MultiEdgeDataView([('A', 'B', {'type': '->'})])
         """
         self._validating_edges_value(ebunch=[(u, v, type, key)])
         super().add_edge(u, v, type=type, key=key, **kwargs)
@@ -170,11 +248,20 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             Edge data (or labels or objects) can be assigned using
             keyword arguments.
 
+        Returns
+        -------
+        None
+
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
+        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph()
-
+        >>> G.SUPPORTED_EDGE_TYPES  # check the available edge types
+        ['--', '-o', 'o-', '->', '<-', 'o>', '<o', '<>', 'oo']
+        >>> G.add_edges_from(ebunch=edges)
+        >>> G.edges(data=True)
+        MultiEdgeDataView([('A', 'B', {'type': '->'}), ('B', 'C', {'type': '->'})])
         """
         ebunch = self._validating_and_formatting_edges_value(ebunch=ebunch)
 
@@ -190,16 +277,38 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         **kwargs,
     ):
         """
-        [Explain].
+        Remove an edge between u and v.
 
         Parameters
         ----------
+        u, v : node
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
+
+        type : str
+            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
+
+        key : hashable identifier, optional (default=lowest unused integer)
+            Used to distinguish multiedges between a pair of nodes.
+
+        kwargs : keyword arguments, optional
+            Edge data (or labels or objects) can be assigned using
+            keyword arguments.
+
+        Returns
+        -------
+        None
 
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
-        >>> G = _CoreGraph()
-
+        >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
+        >>> G = _CoreGraph(ebunch=edges)
+        >>> G.SUPPORTED_EDGE_TYPES  # check the available edge types
+        ['--', '-o', 'o-', '->', '<-', 'o>', '<o', '<>', 'oo']
+        >>> G.remove_edge("A", "B", "->")
+        >>> G.edges(data=True)
+        MultiEdgeDataView([('B', 'C', {'type': '->'}), ('C', 'D', {'type': '--'})])
         """
         self._validating_edges_value(ebunch=[(u, v, type, key)])
 
@@ -228,16 +337,32 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         **kwargs,
     ):
         """
-        [Explain].
+        Remove all the edges in ebunch.
 
         Parameters
         ----------
+        ebunch : container of edges
+            Each edge given in the container will be added to the
+            graph. The edges can be:
+
+                - 3-tuples (u, v, type)
+                - 4-tuples (u, v, type, key) for an edge with data and key
+
+        Returns
+        -------
+        None
 
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
-        >>> G = _CoreGraph()
-
+        >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
+        >>> G = _CoreGraph(ebunch=edges)
+        >>> G.SUPPORTED_EDGE_TYPES  # check the available edge types
+        ['--', '-o', 'o-', '->', '<-', 'o>', '<o', '<>', 'oo']
+        >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
+        >>> G.remove_edges_from(ebunch=remove_edges)
+        >>> G.edges(data=True)
+        MultiEdgeDataView([('A', 'B', {'type': '->'})])
         """
         ebunch = self._validating_and_formatting_edges_value(ebunch=ebunch)
         for u, v, type, key in ebunch:
@@ -347,6 +472,15 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             `add_edge()`,
             `remove_edge()`.
 
+        Parameters
+        ----------
+        ebunch : container of edges
+            Each edge given in the container will be added to the
+            graph. The edges can be:
+
+                - 3-tuples (u, v, type)
+                - 4-tuples (u, v, type, key) for an edge with data and key
+
         Returns
         -------
         None
@@ -376,6 +510,15 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         Helper method that validates the input for
             `add_edges_from()`,
             `remove_edges_from()`.
+
+        Parameters
+        ----------
+        ebunch : container of edges
+            Each edge given in the container will be added to the
+            graph. The edges can be:
+
+                - 3-tuples (u, v, type)
+                - 4-tuples (u, v, type, key) for an edge with data and key
 
         Returns
         -------
