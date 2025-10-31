@@ -245,37 +245,93 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
     def copy(self):
         """
-        [Explain].
+        Returns a copy of the graph object.
 
         Parameters
         ----------
+        None
+
+        Returns
+        -------
+        graph: graph object
+            A copy of the graph object.
 
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
-        >>> G = _CoreGraph()
+        >>> G1 = _CoreGraph()
+        >>> G2 = G1.copy()
+        >>> G2.__class__
+        pgmpy.base.base._CoreGraph
 
+        Notes
+        --------
+        - This method is expected to be usable without being implemented in a subclass of the graph class.
         """
-        ...
+        ebunch = []
+        edges_keys = self.edges  # list(tuple(u, v, key), tuple(u, v, key), ...)
+        edges_types = self.edges(  # list(tuple(u, v, type), tuple(u, v, type), ...)
+            data=True
+        )
+
+        for (u, v, key), (_, _, type) in zip(edges_keys, edges_types):
+            ebunch.append((u, v, type.get("type"), key))
+
+        graph_copy = self.__class__()
+        graph_copy.add_edges_from(ebunch=ebunch)
+        graph_copy.exposures = self.exposures
+        graph_copy.outcomes = self.outcomes
+        graph_copy.latents = self.latents
+        for role, vars in self.get_role_dict().items():
+            graph_copy.with_role(role=role, variables=vars, inplace=True)
+
+        if not self.__eq__(graph_copy):
+            raise ValueError("The graph `copy()` method is not performed correctly.")
+        return graph_copy
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
     # ----------------------------------------------------------------------
 
-    def __eq__(self):
+    def __eq__(self, other):
         """
-        [Explain].
+        Checks if two graphs are equal. Two graphs are considered equal if they
+        have the same nodes, edges, exposures, outcomes, latent variables, and variable roles.
 
         Parameters
         ----------
+        other: graph object
+            The other graph to compare with.
+
+        Returns
+        -------
+        bool:
+            True if the graphs are equal, False otherwise.
 
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
-        >>> G = _CoreGraph()
+        >>> G1 = _CoreGraph()
+        >>> G2 = _CoreGraph()
+        >>> G1.__eq__(G2)
+        True
 
+        Notes
+        --------
+        - This method is expected to be usable without being implemented in a subclass of the graph class.
         """
-        ...
+        if not isinstance(other, self.__class__):
+            return False
+
+        return (
+            set(self.nodes()) == set(other.nodes())
+            and set(self.edges()) == set(other.edges())
+            and list(self.edges(data=True)) == list(other.edges(data=True))
+            and self.exposures == other.exposures
+            and self.outcomes == other.outcomes
+            and self.latents == other.latents
+            and self.get_role_dict() == other.get_role_dict()
+        )
 
     def _validating_edges_value(
         self,
@@ -294,7 +350,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         Returns
         -------
         None
-
         """
         for edge_type_key in ebunch:
             if len(edge_type_key) == 4:
@@ -324,7 +379,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         Returns
         -------
-        ebunch : list of tuple(`u`, `v`, `type`, `key`)
+        ebunch : list of tuples
+            [(`u`, `v`, `type`, `key`), (`u`, `v`, `type`, `key`), ...]
         """
         result = []
         for edge_type_key in ebunch:
