@@ -128,6 +128,9 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
     >>> G.with_role("latents", "D", inplace=True)
     >>> G.get_role_dict()
     {'latents': ['D'], 'Custom_role': ['A']}
+    >>> G.without_role("Custom_role", "A", inplace=True)
+    >>> G.get_role_dict()
+    {'latents': ['D']}
     """
 
     SUPPORTED_EDGE_TYPES = ["--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"]
@@ -219,7 +222,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         ... )  # You can check the type value of the two nodes and the edge connecting the two nodes.
         MultiEdgeDataView([('A', 'B', {'type': '->'})])
         """
-        self._validating_edges_value(ebunch=[(u, v, type, key)])
+        _ = self._validating_and_formatting_edges_value(ebunch=[(u, v, type, key)])
         super().add_edge(u, v, type=type, key=key, **kwargs)
 
     def add_edges_from(
@@ -310,9 +313,9 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> G.edges(data=True)
         MultiEdgeDataView([('B', 'C', {'type': '->'}), ('C', 'D', {'type': '--'})])
         """
-        self._validating_edges_value(ebunch=[(u, v, type, key)])
+        _ = self._validating_and_formatting_edges_value(ebunch=[(u, v, type, key)])
 
-        if self.has_edge(u, v) == False:
+        if not self.has_edge(u, v):
             raise ValueError("Edge does not exist.")
 
         if key is None:
@@ -393,14 +396,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         --------
         - This method is expected to be usable without being implemented in a subclass of the graph class.
         """
-        ebunch = []
-        edges_keys = self.edges  # list(tuple(u, v, key), tuple(u, v, key), ...)
-        edges_types = self.edges(  # list(tuple(u, v, type), tuple(u, v, type), ...)
-            data=True
-        )
-
-        for (u, v, key), (_, _, type) in zip(edges_keys, edges_types):
-            ebunch.append((u, v, type.get("type"), key))
+        ebunch = self._get_edge_type_key()
 
         graph_copy = self.__class__()
         graph_copy.add_edges_from(ebunch=ebunch)
@@ -448,54 +444,17 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         if not isinstance(other, self.__class__):
             return False
 
+        self_ebunch = self._get_edge_type_key()
+        other_ebunch = other._get_edge_type_key()
+
         return (
             set(self.nodes()) == set(other.nodes())
-            and set(self.edges()) == set(other.edges())
-            and list(self.edges(data=True)) == list(other.edges(data=True))
+            and set(self_ebunch) == set(other_ebunch)
             and self.exposures == other.exposures
             and self.outcomes == other.outcomes
             and self.latents == other.latents
             and self.get_role_dict() == other.get_role_dict()
         )
-
-    def _validating_edges_value(
-        self,
-        ebunch: Iterable[
-            Union[
-                tuple[Hashable, Hashable, Hashable],
-                tuple[Hashable, Hashable, Hashable, Hashable],
-            ]
-        ],
-    ):
-        """
-        Helper method that validates the input for
-            `add_edge()`,
-            `remove_edge()`.
-
-        Parameters
-        ----------
-        ebunch : container of edges
-            Each edge given in the container will be added to the
-            graph. The edges can be:
-
-                - 3-tuples (u, v, type)
-                - 4-tuples (u, v, type, key) for an edge with data and key
-
-        Returns
-        -------
-        None
-        """
-        for edge_type_key in ebunch:
-            if len(edge_type_key) == 4:
-                u, v, type, _ = edge_type_key
-            else:
-                u, v, type = edge_type_key
-            if (u is None) or (v is None):
-                raise ValueError("Nodes cannot be None.")
-            if u == v:
-                raise ValueError("Nodes cannot be the same for an edge.")
-            if (type is None) or (type not in self.SUPPORTED_EDGE_TYPES):
-                raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
 
     def _validating_and_formatting_edges_value(
         self,
@@ -540,3 +499,30 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
                 raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
             result.append((u, v, type, key))
         return result
+
+    def _get_edge_type_key(self):
+        """
+        Returns the edge's `type` and `key` value connecting the two nodes as a list of tuples.
+
+        Helper method for
+            `copy()`,
+            `__eq__()`,
+
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        ebunch : list of tuples
+            [(`u`, `v`, `type`, `key`), (`u`, `v`, `type`, `key`), ...]
+
+        Notes
+        --------
+        - I expect this method to be useful for creating a graph edge view method.
+        """
+        return [
+            (u, v, data.get("type"), key)
+            for u, v, key, data in self.edges(data=True, keys=True)
+        ]
