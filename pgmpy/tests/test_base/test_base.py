@@ -614,7 +614,7 @@ class TestCoreGraph:
         other2.exposures = exposures
         other2.outcomes = outcomes
         other2.latents = latents
-        other2.with_roles(roles)
+        other2.with_role("test_role", ["A", "B"])
 
         assert graph2.__eq__(other2) == True
         assert other2.__eq__(graph2) == True
