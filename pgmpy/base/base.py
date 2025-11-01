@@ -4,6 +4,21 @@ Base class for pgmpy graph objects.
 - Class comment: Comment for users.
 - `__init__` method comment: Comment for developers.
 
+- Comment form:
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
 """
 
 from typing import Hashable, Iterable, Optional, Union
@@ -30,6 +45,15 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
     exposures : set of nodes (default: empty `set()`)
     outcomes : set of nodes (default: empty `set()`)
     roles : dict, optional (default: `None`)
+
+    Returns
+    -------
+
+    Notes
+    -----
+
+    See Also
+    --------
 
     Examples
     --------
@@ -149,7 +173,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         roles=None,
     ):
         """
-        Notes
+        Comments for developers
         --------
         - Sub-graph classes must implement `SUPPORTED_EDGE_TYPES`
         """
@@ -208,6 +232,16 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         -------
         None
 
+        See Also
+        --------
+        - `add_directed_edge()`,
+        - `add_undirected_edge()`,
+        - `add_bidirected_edge()`,
+        - `add_edges_from()`
+
+        Notes
+        -----
+
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
@@ -223,7 +257,16 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         MultiEdgeDataView([('A', 'B', {'type': '->'})])
         """
         _ = self._validating_and_formatting_edges_value(ebunch=[(u, v, type, key)])
-        super().add_edge(u, v, type=type, key=key, **kwargs)
+
+        # Dispatches based on the 'type' value.
+        if type in ["->", "<-", "o>", "<o"]:
+            self._add_directed_edge(u, v, type, key, **kwargs)
+        elif type in ["--", "-o", "o-"]:
+            self._add_undirected_edge(u, v, type, key, **kwargs)
+        elif type in ["<>"]:
+            self._add_bidirected_edge(u, v, type, key, **kwargs)
+        elif type in ["oo"]:
+            ...
 
     def add_edges_from(
         self,
@@ -254,6 +297,13 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         Returns
         -------
         None
+
+        See Also
+        --------
+        - `add_edge()`
+
+        Notes
+        -----
 
         Examples
         --------
@@ -301,6 +351,13 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         Returns
         -------
         None
+
+        See Also
+        --------
+        - `remove_edges_from()`
+
+        Notes
+        -----
 
         Examples
         --------
@@ -355,6 +412,13 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         -------
         None
 
+        See Also
+        --------
+        - `remove_edge()`
+
+        Notes
+        -----
+
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
@@ -384,6 +448,13 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         graph: graph object
             A copy of the graph object.
 
+        See Also
+        --------
+
+        Notes
+        -----
+        - This method is expected to be usable without being implemented in a subclass of the graph class.
+
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
@@ -391,10 +462,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> G2 = G1.copy()
         >>> G2.__class__
         pgmpy.base.base._CoreGraph
-
-        Notes
-        --------
-        - This method is expected to be usable without being implemented in a subclass of the graph class.
         """
         ebunch = self._get_edge_type_key()
 
@@ -429,6 +496,13 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         bool:
             True if the graphs are equal, False otherwise.
 
+        See Also
+        --------
+
+        Notes
+        -----
+        - This method is expected to be usable without being implemented in a subclass of the graph class.
+
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
@@ -436,10 +510,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> G2 = _CoreGraph()
         >>> G1.__eq__(G2)
         True
-
-        Notes
-        --------
-        - This method is expected to be usable without being implemented in a subclass of the graph class.
         """
         if not isinstance(other, self.__class__):
             return False
@@ -483,6 +553,15 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         -------
         ebunch : list of tuples
             [(`u`, `v`, `type`, `key`), (`u`, `v`, `type`, `key`), ...]
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
         """
         result = []
         for edge_type_key in ebunch:
@@ -518,11 +597,168 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         ebunch : list of tuples
             [(`u`, `v`, `type`, `key`), (`u`, `v`, `type`, `key`), ...]
 
-        Notes
+        See Also
         --------
+
+        Notes
+        -----
         - I expect this method to be useful for creating a graph edge view method.
+
+        Examples
+        --------
+
         """
         return [
             (u, v, data.get("type"), key)
             for u, v, key, data in self.edges(data=True, keys=True)
         ]
+
+    def _add_directed_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        type: str = None,
+        key: Optional[Hashable] = None,
+        **kwargs,
+    ):
+        """
+        Add an directed edge between u and v.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        - `add_edge()`
+
+        Notes
+        -----
+
+        Examples
+        --------
+        """
+        self._is_multigraph()
+        self._is_unknown_edge_type()
+        ...
+
+    def _add_undirected_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        type: str = None,
+        key: Optional[Hashable] = None,
+        **kwargs,
+    ):
+        """
+        Add an undirected edge between u and v.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        - `add_edge()`
+
+        Notes
+        -----
+
+        Examples
+        --------
+        """
+        self._is_multigraph()
+        self._is_unknown_edge_type()
+        ...
+
+    def _add_bidirected_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        type: str = None,
+        key: Optional[Hashable] = None,
+        **kwargs,
+    ):
+        """
+        Add an bidirected edge between u and v.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        """
+        self._is_multigraph()
+        self._is_unknown_edge_type()
+        ...
+
+    def _is_multigraph(self):
+        """
+        Checks if there can be multiple edges between two nodes.
+
+        Helper method for
+            `_add_directed_edge()`,
+            `_add_undirected_edge()`,
+            `_add_bidirected_edge()`,
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        `_add_directed_edge()`,
+        `_add_undirected_edge()`,
+        `_add_bidirected_edge()`,
+
+        Notes
+        -----
+
+        Examples
+        --------
+        """
+        ...
+
+    def _is_unknown_edge_type(self):
+        """
+        Checks if the edge type has unknown ("o").
+
+        Helper method for
+            `_add_directed_edge()`,
+            `_add_undirected_edge()`,
+            `_add_bidirected_edge()`,
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        `_add_directed_edge()`,
+        `_add_undirected_edge()`,
+        `_add_bidirected_edge()`,
+
+        Notes
+        -----
+
+        Examples
+        --------
+        """
+        ...
