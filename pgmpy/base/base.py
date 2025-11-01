@@ -49,11 +49,11 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
     Returns
     -------
 
-    Notes
-    -----
-
     See Also
     --------
+
+    Notes
+    -----
 
     Examples
     --------
@@ -173,7 +173,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         roles=None,
     ):
         """
-        Comments for developers
+        Notes
         --------
         - Sub-graph classes must implement `SUPPORTED_EDGE_TYPES`
         """
@@ -536,9 +536,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         ],
     ):
         """
-        Helper method that validates the input for
-            `add_edges_from()`,
-            `remove_edges_from()`.
+        Validates the value input by the user, then either raises an error or converts it to the correct format.
 
         Parameters
         ----------
@@ -559,6 +557,9 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         Notes
         -----
+        - Helper method that validates the input for
+            `add_edges_from()`,
+            `remove_edges_from()`.
 
         Examples
         --------
@@ -583,11 +584,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         Returns the edge's `type` and `key` value connecting the two nodes as a list of tuples.
 
-        Helper method for
-            `copy()`,
-            `__eq__()`,
-
-
         Parameters
         ----------
         None
@@ -603,6 +599,9 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         Notes
         -----
         - I expect this method to be useful for creating a graph edge view method.
+        - Helper method for
+            `copy()`,
+            `__eq__()`,
 
         Examples
         --------
@@ -622,7 +621,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         **kwargs,
     ):
         """
-        Add an directed edge between u and v.
+        Add a directed edge between u and v.
 
         Parameters
         ----------
@@ -684,7 +683,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         **kwargs,
     ):
         """
-        Add an bidirected edge between u and v.
+        Add a bidirected edge between u and v.
 
         Parameters
         ----------
@@ -709,11 +708,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         Checks if there can be multiple edges between two nodes.
 
-        Helper method for
-            `_add_directed_edge()`,
-            `_add_undirected_edge()`,
-            `_add_bidirected_edge()`,
-
         Parameters
         ----------
 
@@ -728,6 +722,10 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         Notes
         -----
+        - Helper method for
+            `_add_directed_edge()`,
+            `_add_undirected_edge()`,
+            `_add_bidirected_edge()`,
 
         Examples
         --------
@@ -738,11 +736,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         Checks if the edge type has unknown ("o").
 
-        Helper method for
-            `_add_directed_edge()`,
-            `_add_undirected_edge()`,
-            `_add_bidirected_edge()`,
-
         Parameters
         ----------
 
@@ -757,6 +750,10 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         Notes
         -----
+        - Helper method for
+            `_add_directed_edge()`,
+            `_add_undirected_edge()`,
+            `_add_bidirected_edge()`,
 
         Examples
         --------
