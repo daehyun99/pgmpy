@@ -13,7 +13,7 @@ import networkx as nx
 from pgmpy.base._mixin_roles import _GraphRolesMixin
 
 
-class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
+class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
     """
     Base graph class.
 
