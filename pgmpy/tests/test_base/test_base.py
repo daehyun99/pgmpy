@@ -666,14 +666,14 @@ class TestCoreGraph:
         # Different class
         other_dag = DAG()
         other_admg = ADMG()
-        otehr_pdag = PDAG()
+        other_pdag = PDAG()
 
         assert graph.__eq__(other_dag) == False
         assert other_dag.__eq__(graph) == False
         assert graph.__eq__(other_admg) == False
         assert other_admg.__eq__(graph) == False
-        assert graph.__eq__(otehr_pdag) == False
-        assert otehr_pdag.__eq__(graph) == False
+        assert graph.__eq__(other_pdag) == False
+        assert other_pdag.__eq__(graph) == False
 
         # Different ebunch
         other_ebunch = _CoreGraph(
