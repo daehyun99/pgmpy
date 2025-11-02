@@ -29,57 +29,62 @@ class TestCoreGraph:
         graph = _CoreGraph()
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-    def test_init_with_values(self):
-        """Test the initialization of a `_CoreGraph` with values"""
-        # Task1: Test the initialization of a `_CoreGraph` with nodes.
+    def test_init_with_nodes(self):
+        """Test the initialization of a `_CoreGraph` with nodes."""
         edges = [("A", "B", "->"), ("B", "C", "->")]
-        graph1 = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(ebunch=edges)
 
-        assert sorted(graph1.nodes) == ["A", "B", "C"]
-        check_graph_status(graph1, 3, 2, set(), set(), set(), {})
+        assert sorted(graph.nodes) == ["A", "B", "C"]
+        check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
-        # Task2: Test the initialization of a `_CoreGraph` with edges.
+    def test_init_with_edges(self):
+        """Test the initialization of a `_CoreGraph` with edges."""
         edges = [("A", "B", "--"), ("A", "B", "-o"), ("B", "C", "<>")]
-        graph2 = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(ebunch=edges)
 
-        assert sorted(graph2.edges(data=True), key=lambda x: (x[0], x[1])) == [
+        assert sorted(graph.edges(data=True), key=lambda x: (x[0], x[1])) == [
             ("A", "B", {"type": "--"}),
             ("A", "B", {"type": "-o"}),
             ("B", "C", {"type": "<>"}),
         ]
-        check_graph_status(graph2, 3, 3, set(), set(), set(), {})
+        check_graph_status(graph, 3, 3, set(), set(), set(), {})
 
-        # Task3: Test the initialization of a `_CoreGraph` with exposures.
+    def test_init_with_exposures(self):
+        """Test the initialization of a `_CoreGraph` with exposures."""
         edges = [("A", "B", "->")]
-        graph3 = _CoreGraph(ebunch=edges, exposures=["A"])
+        graph = _CoreGraph(ebunch=edges, exposures=["A"])
 
-        assert sorted(graph3.exposures) == ["A"]
-        check_graph_status(graph3, 2, 1, {"A"}, set(), set(), {"exposures": ["A"]})
+        assert sorted(graph.exposures) == ["A"]
+        check_graph_status(graph, 2, 1, {"A"}, set(), set(), {"exposures": ["A"]})
 
-        # Task4: Test the initialization of a `_CoreGraph` with outcomes.
+    def test_init_with_outcomes(self):
+        """Test the initialization of a `_CoreGraph` with outcomes."""
         edges = [("A", "B", "->")]
-        graph4 = _CoreGraph(ebunch=edges, outcomes=["B"])
+        graph = _CoreGraph(ebunch=edges, outcomes=["B"])
 
-        assert sorted(graph4.outcomes) == ["B"]
-        check_graph_status(graph4, 2, 1, set(), {"B"}, set(), {"outcomes": ["B"]})
+        assert sorted(graph.outcomes) == ["B"]
+        check_graph_status(graph, 2, 1, set(), {"B"}, set(), {"outcomes": ["B"]})
 
-        # Task5: Test the initialization of a `_CoreGraph` with latents.
+    def test_init_with_latents(self):
+        """Test the initialization of a `_CoreGraph` with latents."""
         edges = [("A", "B", "->")]
-        graph5 = _CoreGraph(ebunch=edges, latents=["A"])
+        graph = _CoreGraph(ebunch=edges, latents=["A"])
 
-        assert sorted(graph5.latents) == ["A"]
-        check_graph_status(graph5, 2, 1, set(), set(), {"A"}, {"latents": ["A"]})
+        assert sorted(graph.latents) == ["A"]
+        check_graph_status(graph, 2, 1, set(), set(), {"A"}, {"latents": ["A"]})
 
-        # Task6: Test the initialization of a `_CoreGraph` with roles.
+    def test_init_with_roles(self):
+        """Test the initialization of a `_CoreGraph` with roles."""
         edges = [("A", "B", "->")]
-        graph6 = _CoreGraph(ebunch=edges, roles={"test_role": ["A"]})
+        graph = _CoreGraph(ebunch=edges, roles={"test_role": ["A"]})
 
-        assert sorted(graph6.get_roles()) == ["test_role"]
-        check_graph_status(graph6, 2, 1, set(), set(), set(), {"test_role": ["A"]})
+        assert sorted(graph.get_roles()) == ["test_role"]
+        check_graph_status(graph, 2, 1, set(), set(), set(), {"test_role": ["A"]})
 
-        # Task7: Test the initialization of a `_CoreGraph` with values.
+    def test_init_with_all_values(self):
+        """Test the initialization of a `_CoreGraph` with all values."""
         edges = [("A", "B", "->"), ("B", "C", "oo")]
-        graph7 = _CoreGraph(
+        graph = _CoreGraph(
             ebunch=edges,
             exposures=["A"],
             outcomes=["B"],
@@ -88,7 +93,7 @@ class TestCoreGraph:
         )
 
         check_graph_status(
-            graph7,
+            graph,
             3,
             2,
             {"A"},
@@ -103,53 +108,53 @@ class TestCoreGraph:
         )
 
         # Task8: Test failing the initialization of a `_CoreGraph` with values.
-        graph8 = _CoreGraph()
+        graph = _CoreGraph()
 
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), (None, "A", "->"), ("B", "C", "->")]
-            graph8 = _CoreGraph(ebunch=edges)
-        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+            graph = _CoreGraph(ebunch=edges)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), ("A", None, "->"), ("B", "C", "->")]
-            graph8 = _CoreGraph(ebunch=edges)
-        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+            graph = _CoreGraph(ebunch=edges)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # same node error
             edges = [("A", "A", "->")]
-            graph8 = _CoreGraph(ebunch=edges)
-        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+            graph = _CoreGraph(ebunch=edges)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # same nodes error
             edges = [("A", "B", "->"), ("A", "A", "->"), ("C", "D", "--")]
-            graph8 = _CoreGraph(ebunch=edges)
-        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+            graph = _CoreGraph(ebunch=edges)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `type` value
             edges = [("A", "B", "-->")]
-            graph8 = _CoreGraph(ebunch=edges)
-        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+            graph = _CoreGraph(ebunch=edges)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # miss `type` value
             edges = [("A", "B")]
-            graph8 = _CoreGraph(ebunch=edges)
-        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+            graph = _CoreGraph(ebunch=edges)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `type` values
             edges = [("A", "B", "->"), ("A", "C", "o-->"), ("C", "D", "--")]
-            graph8 = _CoreGraph(ebunch=edges)
-        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+            graph = _CoreGraph(ebunch=edges)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # Granting a role to a node that is not owned.
             roles = {"test_role": "A"}
-            graph8 = _CoreGraph(roles=roles)
-        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+            graph = _CoreGraph(roles=roles)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # Granting a role to a node that is not owned.
             edges = [("A", "B", "->")]
             roles = {"test_role1": "A", "test_role2": "C", "test_role3": "B"}
-            graph8 = _CoreGraph(ebunch=edges, roles=roles)
-        check_graph_status(graph8, 0, 0, set(), set(), set(), {})
+            graph = _CoreGraph(ebunch=edges, roles=roles)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     def test_add_edge(self):
         """Test the `add_edge` method of the `_CoreGraph` class."""
