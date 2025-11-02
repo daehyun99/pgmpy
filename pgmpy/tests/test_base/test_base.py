@@ -107,6 +107,8 @@ class TestCoreGraph:
             },
         )
 
+    def test_init_fails(self):
+        """Test failing the initialization of a `_CoreGraph`."""
         # Task8: Test failing the initialization of a `_CoreGraph` with values.
         graph = _CoreGraph()
 
@@ -156,65 +158,67 @@ class TestCoreGraph:
             graph = _CoreGraph(ebunch=edges, roles=roles)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-    def test_add_edge(self):
-        """Test the `add_edge` method of the `_CoreGraph` class."""
-        # Task1: Test adding the direct edge of a `_CoreGraph`.
-        graph1 = _CoreGraph()
-        graph1.add_edge("A", "C", "->")  # Task1-1: Add edge
-        graph1.add_edge("C", "B", "<-")
+    def test_add_directed_edge(self):
+        """Test adding the direct edge of a `_CoreGraph`."""
+        graph = _CoreGraph()
+        graph.add_edge("A", "C", "->")
+        graph.add_edge("C", "B", "<-")
 
-        assert graph1.has_edge("A", "C") == True  # Task1-2: Test `has_edge()`
-        assert graph1.has_edge("C", "B") == True
+        assert graph.has_edge("A", "C")
+        assert graph.has_edge("C", "B")
 
-        assert sorted(graph1.edges(data=True)) == [  # Task1-3: Test edgeview
+        assert sorted(graph.edges(data=True)) == [
             ("A", "C", {"type": "->"}),
             ("C", "B", {"type": "<-"}),
         ]
 
-        check_graph_status(graph1, 3, 2, set(), set(), set(), {})
+        check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
-        # Task2: Test adding the undirect edge of a `_CoreGraph`.
-        graph2 = _CoreGraph()
-        graph2.add_edge("A", "C", "--")  # Task2-1: Add edge
-        graph2.add_edge("C", "B", "--")
+    def test_add_undirected_edge(self):
+        """Test adding the undirect edge of a `_CoreGraph`."""
+        graph = _CoreGraph()
+        graph.add_edge("A", "C", "--")
+        graph.add_edge("C", "B", "--")
 
-        assert graph2.has_edge("A", "C") == True  # Task2-2: Test `has_edge()`
-        assert graph2.has_edge("C", "B") == True
+        assert graph.has_edge("A", "C")
+        assert graph.has_edge("C", "B")
 
-        assert sorted(graph2.edges(data=True)) == [  # Task2-3: Test edgeview
+        assert sorted(graph.edges(data=True)) == [
             ("A", "C", {"type": "--"}),
             ("C", "B", {"type": "--"}),
         ]
 
-        check_graph_status(graph2, 3, 2, set(), set(), set(), {})
+        check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
-        # Task3: Test adding the bidirect edge of a `_CoreGraph`.
-        graph3 = _CoreGraph()
-        graph3.add_edge("A", "C", "<>")  # Task3-1: Add edge
-        graph3.add_edge("C", "B", "<>")
+    def test_add_bidirected_edge(self):
+        """Test adding the bidirect edge of a `_CoreGraph`."""
+        graph = _CoreGraph()
+        graph.add_edge("A", "C", "<>")
+        graph.add_edge("C", "B", "<>")
 
-        assert graph3.has_edge("A", "C") == True  # Task3-2: Test `has_edge()`
-        assert graph3.has_edge("C", "B") == True
+        assert graph.has_edge("A", "C")
+        assert graph.has_edge("C", "B")
 
-        assert sorted(graph3.edges(data=True)) == [  # Task3-3: Test edgeview
+        assert sorted(graph.edges(data=True)) == [
             ("A", "C", {"type": "<>"}),
             ("C", "B", {"type": "<>"}),
         ]
 
-        check_graph_status(graph3, 3, 2, set(), set(), set(), {})
+        check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
-        # Task4: Test adding the unknown edge of a `_CoreGraph`.
-        graph4 = _CoreGraph()
-        graph4.add_edge("A", "C", "-o")  # Task4-1: Add edge
-        graph4.add_edge("C", "B", "o-")
-        graph4.add_edge("D", "E", "o>")
-        graph4.add_edge("E", "F", "<o")
-        graph4.add_edge("G", "H", "oo")
+    def test_add_unknown_edge(self):
+        """Test adding the unknown edge of a `_CoreGraph`."""
+        graph = _CoreGraph()
+        graph.add_edge("A", "C", "-o")
+        graph.add_edge("C", "B", "o-")
+        graph.add_edge("D", "E", "o>")
+        graph.add_edge("E", "F", "<o")
+        graph.add_edge("G", "H", "oo")
 
-        assert graph4.has_edge("A", "C") == True  # Task4-2: Test `has_edge()`
-        assert graph4.has_edge("C", "B") == True
+        assert graph.has_edge("A", "C")
+        assert graph.has_edge("C", "B")
 
-        assert sorted(graph4.edges(data=True)) == [  # Task4-3: Test edgeview
+        assert sorted(graph.edges(data=True)) == [
             ("A", "C", {"type": "-o"}),
             ("C", "B", {"type": "o-"}),
             ("D", "E", {"type": "o>"}),
@@ -222,48 +226,48 @@ class TestCoreGraph:
             ("G", "H", {"type": "oo"}),
         ]
 
-        check_graph_status(graph4, 8, 5, set(), set(), set(), {})
+        check_graph_status(graph, 8, 5, set(), set(), set(), {})
 
-        # Task5: Test adding multiedges of a `_CoreGraph`.
-        graph5 = _CoreGraph()
-        graph5.add_edge("A", "B", "->")  # Task5-1: Add edge
-        graph5.add_edge("A", "B", "<>")
-        graph5.add_edge("A", "B", "--")
-        graph5.add_edge("A", "B", "oo")
+    def test_add_multiedges(self):
+        """Test adding multiedges of a `_CoreGraph`."""
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("A", "B", "<>")
+        graph.add_edge("A", "B", "--")
+        graph.add_edge("A", "B", "oo")
 
-        assert graph5.has_edge("A", "B") == True  # Task5-2: Test `has_edge()`
+        assert graph.has_edge("A", "B")
 
-        assert sorted(  # Task5-3: Test edgeview
-            graph5.edges(data=True), key=lambda x: (x[0], x[1])
-        ) == [
+        assert sorted(graph.edges(data=True), key=lambda x: (x[0], x[1])) == [
             ("A", "B", {"type": "->"}),
             ("A", "B", {"type": "<>"}),
             ("A", "B", {"type": "--"}),
             ("A", "B", {"type": "oo"}),
         ]
 
-        check_graph_status(graph5, 2, 4, set(), set(), set(), {})
+        check_graph_status(graph, 2, 4, set(), set(), set(), {})
 
-        # Task6: Test failing add edge of a `_CoreGraph`.
-        graph6 = _CoreGraph()
-
-        with pytest.raises(ValueError):
-            graph6.add_edge("A", "A", "->")
+    def test_add_edge_fails(self):
+        """Test failing add edge of a `_CoreGraph`."""
+        graph = _CoreGraph()
 
         with pytest.raises(ValueError):
-            graph6.add_edge("A", "B", "-->")
+            graph.add_edge("A", "A", "->")
 
         with pytest.raises(ValueError):
-            graph6.add_edge("A", "B")
+            graph.add_edge("A", "B", "-->")
 
         with pytest.raises(ValueError):
-            graph6.add_edge("A", "B", "Invalid_value")
+            graph.add_edge("A", "B")
 
-        assert graph6.has_edge("A", "B") == False  # Task6-2: Test `has_edge()`
+        with pytest.raises(ValueError):
+            graph.add_edge("A", "B", "Invalid_value")
 
-        assert sorted(graph6.edges(data=True)) == []  # Task6-3: Test edgeview
+        assert not graph.has_edge("A", "B")
 
-        check_graph_status(graph6, 0, 0, set(), set(), set(), {})
+        assert sorted(graph.edges(data=True)) == []
+
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     def test_add_edges_from(self):
         """Test the `add_edges_from` method of the `_CoreGraph` class."""
