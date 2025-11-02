@@ -258,15 +258,34 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         """
         _ = self._validating_and_formatting_edges_value(ebunch=[(u, v, type, key)])
 
-        # Dispatches based on the 'type' value.
+        if not self._is_multigraph():
+            ...  # The code logic to check if an edge exists between two nodes.
+            if (
+                ...
+            ):  # If an edge of the same type as the one being added exists, it replaces the existing edge.
+                ...
+            else:
+                raise ...
+
         if type in ["->", "<-", "o>", "<o"]:
-            self._add_directed_edge(u, v, type, key, **kwargs)
+            if type in ["<-", "<o"]:
+                u, v = v, u
+                type = f"{type[1]}>"
+            super().add_edge(u, v, key=key, type=type, **kwargs)
+
         elif type in ["--", "-o", "o-"]:
-            self._add_undirected_edge(u, v, type, key, **kwargs)
-        elif type in ["<>"]:
-            self._add_bidirected_edge(u, v, type, key, **kwargs)
-        elif type in ["oo"]:
-            ...
+            reverse_type = f"{type[1]}{type[0]}"
+            super().add_edge(u, v, key=key, type=type, **kwargs)
+            super().add_edge(v, u, key=key, type=reverse_type, **kwargs)
+
+        elif type in ["<>", "oo"]:
+            super().add_edge(u, v, key=key, type=type, **kwargs)
+            super().add_edge(v, u, key=key, type=type, **kwargs)
+        else:
+            raise AssertionError(
+                "This should never happen."
+                "If you see this error, please file an issue on the pgmpy GitHub."
+            )
 
     def add_edges_from(
         self,
@@ -612,98 +631,6 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             for u, v, key, data in self.edges(data=True, keys=True)
         ]
 
-    def _add_directed_edge(
-        self,
-        u: Hashable,
-        v: Hashable,
-        type: str = None,
-        key: Optional[Hashable] = None,
-        **kwargs,
-    ):
-        """
-        Add a directed edge between u and v.
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-
-        See Also
-        --------
-        - `add_edge()`
-
-        Notes
-        -----
-
-        Examples
-        --------
-        """
-        self._is_multigraph()
-        self._is_unknown_edge_type()
-        ...
-
-    def _add_undirected_edge(
-        self,
-        u: Hashable,
-        v: Hashable,
-        type: str = None,
-        key: Optional[Hashable] = None,
-        **kwargs,
-    ):
-        """
-        Add an undirected edge between u and v.
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-
-        See Also
-        --------
-        - `add_edge()`
-
-        Notes
-        -----
-
-        Examples
-        --------
-        """
-        self._is_multigraph()
-        self._is_unknown_edge_type()
-        ...
-
-    def _add_bidirected_edge(
-        self,
-        u: Hashable,
-        v: Hashable,
-        type: str = None,
-        key: Optional[Hashable] = None,
-        **kwargs,
-    ):
-        """
-        Add a bidirected edge between u and v.
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-
-        See Also
-        --------
-
-        Notes
-        -----
-
-        Examples
-        --------
-        """
-        self._is_multigraph()
-        self._is_unknown_edge_type()
-        ...
-
     def _is_multigraph(self):
         """
         Checks if there can be multiple edges between two nodes.
@@ -730,32 +657,4 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         Examples
         --------
         """
-        ...
-
-    def _is_unknown_edge_type(self):
-        """
-        Checks if the edge type has unknown ("o").
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-
-        See Also
-        --------
-        `_add_directed_edge()`,
-        `_add_undirected_edge()`,
-        `_add_bidirected_edge()`,
-
-        Notes
-        -----
-        - Helper method for
-            `_add_directed_edge()`,
-            `_add_undirected_edge()`,
-            `_add_bidirected_edge()`,
-
-        Examples
-        --------
-        """
-        ...
+        return True
