@@ -277,7 +277,6 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         v: Hashable,
         type: str = None,
         key: Optional[Hashable] = None,
-        **kwargs,
     ):
         """
         Remove an edge between u and v.
@@ -337,7 +336,6 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
                 tuple[Hashable, Hashable, Hashable, Hashable],
             ]
         ],
-        **kwargs,
     ):
         """
         Remove all the edges in ebunch.
@@ -369,7 +367,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         """
         ebunch = self._validating_and_formatting_edges_value(ebunch=ebunch)
         for u, v, type, key in ebunch:
-            self.remove_edge(u, v, type, key=key, **kwargs)
+            self.remove_edge(u, v, type, key=key)
 
     def copy(self):
         """
