@@ -170,9 +170,9 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
                 tuple[Hashable, Hashable, Hashable, Hashable],
             ]
         ] = None,
-        exposures: set[Hashable] = set(),
-        outcomes: set[Hashable] = set(),
-        latents: set[Hashable] = set(),
+        exposures: Optional[set[Hashable]] = None,
+        outcomes: Optional[set[Hashable]] = None,
+        latents: Optional[set[Hashable]] = None,
         roles=None,
     ):
         """
@@ -185,9 +185,9 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         if ebunch:
             self.add_edges_from(ebunch)
 
-        self.exposures = set(exposures)
-        self.outcomes = set(outcomes)
-        self.latents = set(latents)
+        self.exposures = set() if exposures is None else set(exposures)
+        self.outcomes = set() if outcomes is None else set(outcomes)
+        self.latents = set() if latents is None else set(latents)
 
         if roles is None:
             roles = {}
