@@ -677,7 +677,12 @@ class TestCoreGraph:
 
         # Different ebunch
         other_ebunch = _CoreGraph(
-            ebunch=[("X", "Y", "->")],
+            ebunch=[
+                ("A", "B", "->"),
+                ("B", "C", "->"),
+                ("B", "C", "->"),
+                ("C", "D", "oo"),
+            ],
             exposures=exposures,
             outcomes=outcomes,
             latents=latents,
@@ -733,7 +738,6 @@ class TestCoreGraph:
         # Not a graph class
         other_str = "not a graph"
         assert graph.__eq__(other_str) == False
-        assert other_str.__eq__(graph) == False
 
     def test_equality_fails(self):
         """Test failing the `__eq__` method of the `_CoreGraph` class."""
@@ -742,6 +746,11 @@ class TestCoreGraph:
             graph.__eq__()
         with pytest.raises(TypeError):
             graph.__eq__(_CoreGraph(), _CoreGraph())
+
+        with pytest.raises(AssertionError):
+            # Not a graph class
+            other_str = "not a graph"
+            assert other_str.__eq__(graph) == False
 
     def test_copy_empty(self):
         """Test the `copy` method of the empty `_CoreGraph` class."""
