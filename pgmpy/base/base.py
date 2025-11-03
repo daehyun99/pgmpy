@@ -4,6 +4,21 @@ Base class for pgmpy graph objects.
 - Class comment: Comment for users.
 - `__init__` method comment: Comment for developers.
 
+- Comment form:
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
 """
 
 from typing import Hashable, Iterable, Optional, Union
@@ -30,6 +45,15 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
     exposures : set of nodes (default: empty `set()`)
     outcomes : set of nodes (default: empty `set()`)
     roles : dict, optional (default: `None`)
+
+    Returns
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
 
     Examples
     --------
@@ -133,6 +157,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
     {'latents': ['D']}
     """
 
+    IS_MULTIGRAPH = True
     SUPPORTED_EDGE_TYPES = ["--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"]
 
     def __init__(
@@ -208,6 +233,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         -------
         None
 
+        See Also
+        --------
+        - `add_edges_from()`
+
+        Notes
+        -----
+
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
@@ -223,7 +255,39 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         MultiEdgeDataView([('A', 'B', {'type': '->'})])
         """
         _ = self._validating_and_formatting_edges_value(ebunch=[(u, v, type, key)])
-        super().add_edge(u, v, type=type, key=key, **kwargs)
+
+        # Finding available key values.
+        if self.IS_MULTIGRAPH and key is None:
+            key_list1, key_list2 = [], []
+            if self.has_edge(u, v):
+                key_list1 = list(self._adj[u][v].keys())
+            if self.has_edge(v, u):
+                key_list2 = list(self._adj[v][u].keys())
+            key_list = set(key_list1 + key_list2)
+            while True:
+                if key in key_list:
+                    key += 1
+                else:
+                    break
+
+        # Adding edge base on type value.
+        if type in ["->", "<-", "o>", "<o"]:
+            if type in ["<-", "<o"]:
+                u, v = v, u
+                type = f"{type[1]}>"
+            super().add_edge(u, v, key=key, type=type, **kwargs)
+        elif type in ["--", "-o", "o-"]:
+            reverse_type = f"{type[1]}{type[0]}"
+            key = super().add_edge(u, v, key=key, type=type, **kwargs)
+            super().add_edge(v, u, key=key, type=reverse_type, **kwargs)
+        elif type in ["<>", "oo"]:
+            key = super().add_edge(u, v, key=key, type=type, **kwargs)
+            super().add_edge(v, u, key=key, type=type, **kwargs)
+        else:
+            raise AssertionError(
+                "This should never happen."
+                "If you see this error, please file an issue on the pgmpy GitHub."
+            )
 
     def add_edges_from(
         self,
@@ -254,6 +318,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         Returns
         -------
         None
+
+        See Also
+        --------
+        - `add_edge()`
+
+        Notes
+        -----
 
         Examples
         --------
@@ -301,6 +372,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         -------
         None
 
+        See Also
+        --------
+        - `remove_edges_from()`
+
+        Notes
+        -----
+
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
@@ -314,19 +392,27 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         """
         _ = self._validating_and_formatting_edges_value(ebunch=[(u, v, type, key)])
 
-        if not self.has_edge(u, v):
-            raise ValueError("Edge does not exist.")
+        if type in ["->", "<-", "o>", "<o"]:
+            if type in ["<-", "<o"]:
+                u, v = v, u
+                type = f"{type[1]}>"
+            key = self._get_key(u, v, type, key=key)
+            super().remove_edge(u, v, key=key)
 
-        if key is None:
-            key_type = self[u][v]
-            for k in key_type:
-                if type == key_type[k].get("type"):
-                    key = k
-                    break
-        if key is None:
-            raise ValueError(f"There is no {type} type edge between {u} and {v}.")
+        elif type in ["--", "-o", "o-"]:
+            key = self._get_key(u, v, type, key=key)
+            super().remove_edge(u, v, key=key)
+            super().remove_edge(v, u, key=key)
 
-        super().remove_edge(u, v, key=key)
+        elif type in ["<>", "oo"]:
+            key = self._get_key(u, v, type, key=key)
+            super().remove_edge(u, v, key=key)
+            super().remove_edge(v, u, key=key)
+        else:
+            raise AssertionError(
+                "This should never happen."
+                "If you see this error, please file an issue on the pgmpy GitHub."
+            )
 
     def remove_edges_from(
         self,
@@ -352,6 +438,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         Returns
         -------
         None
+
+        See Also
+        --------
+        - `remove_edge()`
+
+        Notes
+        -----
 
         Examples
         --------
@@ -382,6 +475,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         graph: graph object
             A copy of the graph object.
 
+        See Also
+        --------
+
+        Notes
+        -----
+        - This method is expected to be usable without being implemented in a subclass of the graph class.
+
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
@@ -389,10 +489,6 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G2 = G1.copy()
         >>> G2.__class__
         pgmpy.base.base._CoreGraph
-
-        Notes
-        --------
-        - This method is expected to be usable without being implemented in a subclass of the graph class.
         """
         ebunch = self._get_edge_type_key()
 
@@ -404,9 +500,73 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         for role, vars in self.get_role_dict().items():
             graph_copy.with_role(role=role, variables=vars, inplace=True)
 
-        if not self.__eq__(graph_copy):
-            raise ValueError("The graph `copy()` method is not performed correctly.")
         return graph_copy
+
+    def get_edges(self, type: bool = False, key: bool = False):
+        """
+        Returns a list of edges in the graph.
+
+        For undirected and bidirected edges, which are stored as two directed
+        edges internally, this method returns only one of them.
+
+        Parameters
+        ----------
+        type: bool (default: False)
+            If True, returns edge data. The edge data is a dict with 'type'
+            as the key.
+
+        key: bool (default: False)
+            If True, returns the edge key.
+
+        Returns
+        -------
+        list of tuples:
+            A list of edges. The format of each edge tuple depends on the
+            `type` and `key` parameters:
+            - type=False, key=False: (u, v)
+            - type=True, key=False: (u, v, {'type': type})
+            - type=False, key=True: (u, v, key)
+            - type=True, key=True: (u, v, {'type': type}, key)
+
+        Examples
+        --------
+        >>> from pgmpy.base import _CoreGraph
+        >>> G = _CoreGraph(ebunch=[("A", "B", "->"), ("B", "C", "--")])
+        >>> G.get_edges()
+        [('A', 'B'), ('B', 'C')]
+        >>> G.get_edges(type=True)
+        [('A', 'B', {'type': '->'}), ('B', 'C', {'type': '--'})]
+        """
+        edge_type_key = self._get_edge_type_key()
+        result = []
+        seen = set()
+
+        # Removing duplicates
+        for u, v, type_val, key_val in edge_type_key:
+            if (u, v, type_val, key_val) not in seen:
+                seen.add((u, v, type_val, key_val))
+                if type_val in ["--", "<>", "oo"]:
+                    seen.add((v, u, type_val, key_val))
+                elif type_val in ["-o", "o-"]:
+                    reverse_type = f"{type_val[1]}{type_val[0]}"
+                    seen.add((v, u, reverse_type, key_val))
+
+                # Output format according to `data` and `key`
+                if type and key:
+                    # (u, v, data, key)
+                    output_form = (u, v, {"type": type_val}, key_val)
+                elif type and not key:
+                    # (u, v, data)
+                    output_form = (u, v, {"type": type_val})
+                elif not type and key:
+                    # (u, v, key)
+                    output_form = (u, v, key_val)
+                else:  # not data and not keys
+                    # (u, v)
+                    output_form = (u, v)
+
+                result.append(output_form)
+        return result
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
@@ -427,6 +587,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         bool:
             True if the graphs are equal, False otherwise.
 
+        See Also
+        --------
+
+        Notes
+        -----
+        - This method is expected to be usable without being implemented in a subclass of the graph class.
+
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
@@ -434,10 +601,6 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G2 = _CoreGraph()
         >>> G1.__eq__(G2)
         True
-
-        Notes
-        --------
-        - This method is expected to be usable without being implemented in a subclass of the graph class.
         """
         if not isinstance(other, self.__class__):
             return False
@@ -464,9 +627,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         ],
     ):
         """
-        Helper method that validates the input for
-            `add_edges_from()`,
-            `remove_edges_from()`.
+        Validates the value input by the user, then either raises an error or converts it to the correct format.
 
         Parameters
         ----------
@@ -481,6 +642,18 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         -------
         ebunch : list of tuples
             [(`u`, `v`, `type`, `key`), (`u`, `v`, `type`, `key`), ...]
+
+        See Also
+        --------
+
+        Notes
+        -----
+        - Helper method that validates the input for
+            `add_edges_from()`,
+            `remove_edges_from()`.
+
+        Examples
+        --------
         """
         result = []
         for edge_type_key in ebunch:
@@ -502,11 +675,6 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         """
         Returns the edge's `type` and `key` value connecting the two nodes as a list of tuples.
 
-        Helper method for
-            `copy()`,
-            `__eq__()`,
-
-
         Parameters
         ----------
         None
@@ -516,11 +684,52 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         ebunch : list of tuples
             [(`u`, `v`, `type`, `key`), (`u`, `v`, `type`, `key`), ...]
 
-        Notes
+        See Also
         --------
+
+        Notes
+        -----
         - I expect this method to be useful for creating a graph edge view method.
+        - Helper method for
+            `copy()`,
+            `__eq__()`,
+
+        Examples
+        --------
+
         """
-        return [
-            (u, v, data.get("type"), key)
-            for u, v, key, data in self.edges(data=True, keys=True)
-        ]
+        return sorted(
+            [
+                (u, v, data.get("type"), key)
+                for u, v, key, data in self.edges(data=True, keys=True)
+            ],
+            key=lambda x: (x[0], x[1]),
+        )
+
+    def _get_key(self, u, v, type, key=None):
+        """
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        - `remove_edge()`
+
+        Notes
+        -----
+
+        Examples
+        --------
+        """
+        if key is None:
+            key_type = self[u][v]
+            for k in key_type:
+                if type == key_type[k].get("type"):
+                    key = k
+                    break
+        if key is None:
+            raise ValueError(f"There is no {type} type edge between {u} and {v}.")
+        return key
