@@ -16,7 +16,7 @@ def check_graph_status(
 ):
     """Common graph state checking function."""
     assert len(graph.nodes) == node_count
-    assert len(graph.edges) == edge_count
+    assert len(graph.get_edges(type=True)) == edge_count
     assert graph.exposures == exposures
     assert graph.outcomes == outcomes
     assert graph.latents == latents
@@ -42,7 +42,7 @@ class TestCoreGraph:
         edges = [("A", "B", "--"), ("A", "B", "-o"), ("B", "C", "<>")]
         graph = _CoreGraph(ebunch=edges)
 
-        assert sorted(graph.edges(data=True), key=lambda x: (x[0], x[1])) == [
+        assert graph.get_edges(type=True) == [
             ("A", "B", {"type": "--"}),
             ("A", "B", {"type": "-o"}),
             ("B", "C", {"type": "<>"}),
@@ -165,11 +165,11 @@ class TestCoreGraph:
         graph.add_edge("C", "B", "<-")
 
         assert graph.has_edge("A", "C")
-        assert graph.has_edge("C", "B")
+        assert graph.has_edge("B", "C")
 
-        assert sorted(graph.edges(data=True)) == [
+        assert graph.get_edges(type=True) == [
             ("A", "C", {"type": "->"}),
-            ("C", "B", {"type": "<-"}),
+            ("B", "C", {"type": "->"}),
         ]
 
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
@@ -183,9 +183,9 @@ class TestCoreGraph:
         assert graph.has_edge("A", "C")
         assert graph.has_edge("C", "B")
 
-        assert sorted(graph.edges(data=True)) == [
+        assert graph.get_edges(type=True) == [
             ("A", "C", {"type": "--"}),
-            ("C", "B", {"type": "--"}),
+            ("B", "C", {"type": "--"}),
         ]
 
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
@@ -199,9 +199,9 @@ class TestCoreGraph:
         assert graph.has_edge("A", "C")
         assert graph.has_edge("C", "B")
 
-        assert sorted(graph.edges(data=True)) == [
+        assert graph.get_edges(type=True) == [
             ("A", "C", {"type": "<>"}),
-            ("C", "B", {"type": "<>"}),
+            ("B", "C", {"type": "<>"}),
         ]
 
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
@@ -218,11 +218,11 @@ class TestCoreGraph:
         assert graph.has_edge("A", "C")
         assert graph.has_edge("C", "B")
 
-        assert sorted(graph.edges(data=True)) == [
+        assert graph.get_edges(type=True) == [
             ("A", "C", {"type": "-o"}),
-            ("C", "B", {"type": "o-"}),
+            ("B", "C", {"type": "-o"}),
             ("D", "E", {"type": "o>"}),
-            ("E", "F", {"type": "<o"}),
+            ("F", "E", {"type": "o>"}),
             ("G", "H", {"type": "oo"}),
         ]
 
@@ -238,7 +238,7 @@ class TestCoreGraph:
 
         assert graph.has_edge("A", "B")
 
-        assert sorted(graph.edges(data=True), key=lambda x: (x[0], x[1])) == [
+        assert graph.get_edges(type=True) == [
             ("A", "B", {"type": "->"}),
             ("A", "B", {"type": "<>"}),
             ("A", "B", {"type": "--"}),
@@ -265,7 +265,7 @@ class TestCoreGraph:
 
         assert not graph.has_edge("A", "B")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
@@ -275,7 +275,7 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert sorted(graph.edges(data=True)) == [
+        assert graph.get_edges(type=True) == [
             ("A", "B", {"type": "->"}),
             ("B", "C", {"type": "->"}),
         ]
@@ -287,7 +287,7 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert sorted(graph.edges(data=True)) == [
+        assert graph.get_edges(type=True) == [
             ("A", "B", {"type": "--"}),
             ("B", "C", {"type": "--"}),
         ]
@@ -299,7 +299,7 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert sorted(graph.edges(data=True)) == [
+        assert graph.get_edges(type=True) == [
             ("A", "B", {"type": "<>"}),
             ("B", "C", {"type": "<>"}),
         ]
@@ -311,7 +311,7 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert sorted(graph.edges(data=True)) == [
+        assert graph.get_edges(type=True) == [
             ("A", "B", {"type": "-o"}),
             ("B", "C", {"type": "o-"}),
             ("C", "D", {"type": "oo"}),
@@ -324,7 +324,7 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert sorted(graph.edges(data=True)) == [
+        assert graph.get_edges(type=True) == [
             ("A", "B", {"type": "->"}),
             ("B", "C", {"type": "--"}),
             ("C", "D", {"type": "<>"}),
@@ -337,7 +337,7 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert sorted(graph.edges(data=True), key=lambda x: (x[0], x[1])) == [
+        assert graph.get_edges(type=True) == [
             ("A", "B", {"type": "->"}),
             ("A", "B", {"type": "--"}),
             ("A", "B", {"type": "oo"}),
@@ -384,7 +384,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -399,7 +399,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -414,7 +414,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -431,7 +431,7 @@ class TestCoreGraph:
         assert not graph.has_edge("B", "C")
         assert not graph.has_edge("C", "D")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 4, 0, set(), set(), set(), {})
 
@@ -446,7 +446,7 @@ class TestCoreGraph:
 
         assert not graph.has_edge("A", "B")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
@@ -494,7 +494,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -508,7 +508,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -522,7 +522,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -537,7 +537,7 @@ class TestCoreGraph:
         assert not graph.has_edge("B", "C")
         assert not graph.has_edge("C", "D")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 4, 0, set(), set(), set(), {})
 
@@ -552,7 +552,7 @@ class TestCoreGraph:
         assert not graph.has_edge("B", "C")
         assert not graph.has_edge("C", "D")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 4, 0, set(), set(), set(), {})
 
@@ -565,7 +565,7 @@ class TestCoreGraph:
 
         assert not graph.has_edge("A", "B")
 
-        assert sorted(graph.edges(data=True)) == []
+        assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 

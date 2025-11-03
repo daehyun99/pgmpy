@@ -157,6 +157,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
     {'latents': ['D']}
     """
 
+    IS_MULTIGRAPH = True
     SUPPORTED_EDGE_TYPES = ["--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"]
 
     def __init__(
@@ -258,28 +259,32 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         """
         _ = self._validating_and_formatting_edges_value(ebunch=[(u, v, type, key)])
 
-        if not self._is_multigraph():
-            ...  # The code logic to check if an edge exists between two nodes.
-            if (
-                ...
-            ):  # If an edge of the same type as the one being added exists, it replaces the existing edge.
-                ...
-            else:
-                raise ...
+        # Finding available key values.
+        if self.IS_MULTIGRAPH and key is None:
+            key_list1, key_list2 = [], []
+            if self.has_edge(u, v):
+                key_list1 = list(self._adj[u][v].keys())
+            if self.has_edge(v, u):
+                key_list2 = list(self._adj[v][u].keys())
+            key_list = set(key_list1 + key_list2)
+            while True:
+                if key in key_list:
+                    key += 1
+                else:
+                    break
 
+        # Adding edge base on type value.
         if type in ["->", "<-", "o>", "<o"]:
             if type in ["<-", "<o"]:
                 u, v = v, u
                 type = f"{type[1]}>"
             super().add_edge(u, v, key=key, type=type, **kwargs)
-
         elif type in ["--", "-o", "o-"]:
             reverse_type = f"{type[1]}{type[0]}"
-            super().add_edge(u, v, key=key, type=type, **kwargs)
+            key = super().add_edge(u, v, key=key, type=type, **kwargs)
             super().add_edge(v, u, key=key, type=reverse_type, **kwargs)
-
         elif type in ["<>", "oo"]:
-            super().add_edge(u, v, key=key, type=type, **kwargs)
+            key = super().add_edge(u, v, key=key, type=type, **kwargs)
             super().add_edge(v, u, key=key, type=type, **kwargs)
         else:
             raise AssertionError(
@@ -390,19 +395,24 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         """
         _ = self._validating_and_formatting_edges_value(ebunch=[(u, v, type, key)])
 
-        if not self.has_edge(u, v):
-            raise ValueError("Edge does not exist.")
+        if type in ["->", "<-", "o>", "<o"]:
+            if type in ["<-", "<o"]:
+                u, v = v, u
+                type = f"{type[1]}>"
+            super().remove_edge(u, v, key=key)
 
-        if key is None:
-            key_type = self[u][v]
-            for k in key_type:
-                if type == key_type[k].get("type"):
-                    key = k
-                    break
-        if key is None:
-            raise ValueError(f"There is no {type} type edge between {u} and {v}.")
+        elif type in ["--", "-o", "o-"]:
+            super().remove_edge(u, v, key=key)
+            super().remove_edge(v, u, key=key)
 
-        super().remove_edge(u, v, key=key)
+        elif type in ["<>", "oo"]:
+            super().remove_edge(u, v, key=key)
+            super().remove_edge(v, u, key=key)
+        else:
+            raise AssertionError(
+                "This should never happen."
+                "If you see this error, please file an issue on the pgmpy GitHub."
+            )
 
     def remove_edges_from(
         self,
@@ -490,9 +500,56 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         for role, vars in self.get_role_dict().items():
             graph_copy.with_role(role=role, variables=vars, inplace=True)
 
-        if not self.__eq__(graph_copy):
-            raise ValueError("The graph `copy()` method is not performed correctly.")
         return graph_copy
+
+    def get_edges(self, type: bool = False, key: bool = False):
+        """
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        """
+        edge_type_key = self._get_edge_type_key()
+        result = []
+        seen = set()
+
+        # Removing duplicates
+        for u, v, type_val, key_val in edge_type_key:
+            if (u, v, type_val, key_val) not in seen:
+                seen.add((u, v, type_val, key_val))
+                if type_val in ["--", "<>", "oo"]:
+                    seen.add((v, u, type_val, key_val))
+                elif type_val in ["-o", "o-"]:
+                    reverse_type = f"{type_val[1]}{type_val[0]}"
+                    seen.add((v, u, reverse_type, key_val))
+
+                # Output format according to `data` and `key`
+                if type and key:
+                    # (u, v, data, key)
+                    output_form = (u, v, {"type": type_val}, key_val)
+                elif type and not key:
+                    # (u, v, data)
+                    output_form = (u, v, {"type": type_val})
+                elif not type and key:
+                    # (u, v, key)
+                    output_form = (u, v, key_val)
+                else:  # not data and not keys
+                    # (u, v)
+                    output_form = (u, v)
+
+                result.append(output_form)
+        return result
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
@@ -624,35 +681,10 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         --------
 
         """
-        return [
-            (u, v, data.get("type"), key)
-            for u, v, key, data in self.edges(data=True, keys=True)
-        ]
-
-    def _is_multigraph(self):
-        """
-        Checks if there can be multiple edges between two nodes.
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-
-        See Also
-        --------
-        `_add_directed_edge()`,
-        `_add_undirected_edge()`,
-        `_add_bidirected_edge()`,
-
-        Notes
-        -----
-        - Helper method for
-            `_add_directed_edge()`,
-            `_add_undirected_edge()`,
-            `_add_bidirected_edge()`,
-
-        Examples
-        --------
-        """
-        return True
+        return sorted(
+            [
+                (u, v, data.get("type"), key)
+                for u, v, key, data in self.edges(data=True, keys=True)
+            ],
+            key=lambda x: (x[0], x[1]),
+        )
