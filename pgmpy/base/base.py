@@ -235,9 +235,6 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         See Also
         --------
-        - `add_directed_edge()`,
-        - `add_undirected_edge()`,
-        - `add_bidirected_edge()`,
         - `add_edges_from()`
 
         Notes
@@ -399,13 +396,16 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             if type in ["<-", "<o"]:
                 u, v = v, u
                 type = f"{type[1]}>"
+            key = self._get_key(u, v, type, key=key)
             super().remove_edge(u, v, key=key)
 
         elif type in ["--", "-o", "o-"]:
+            key = self._get_key(u, v, type, key=key)
             super().remove_edge(u, v, key=key)
             super().remove_edge(v, u, key=key)
 
         elif type in ["<>", "oo"]:
+            key = self._get_key(u, v, type, key=key)
             super().remove_edge(u, v, key=key)
             super().remove_edge(v, u, key=key)
         else:
@@ -504,21 +504,38 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
     def get_edges(self, type: bool = False, key: bool = False):
         """
+        Returns a list of edges in the graph.
+
+        For undirected and bidirected edges, which are stored as two directed
+        edges internally, this method returns only one of them.
 
         Parameters
         ----------
+        type: bool (default: False)
+            If True, returns edge data. The edge data is a dict with 'type'
+            as the key.
+
+        key: bool (default: False)
+            If True, returns the edge key.
 
         Returns
         -------
-
-        See Also
-        --------
-
-        Notes
-        -----
+        list of tuples:
+            A list of edges. The format of each edge tuple depends on the
+            `type` and `key` parameters:
+            - type=False, key=False: (u, v)
+            - type=True, key=False: (u, v, {'type': type})
+            - type=False, key=True: (u, v, key)
+            - type=True, key=True: (u, v, {'type': type}, key)
 
         Examples
         --------
+        >>> from pgmpy.base import _CoreGraph
+        >>> G = _CoreGraph(ebunch=[("A", "B", "->"), ("B", "C", "--")])
+        >>> G.get_edges()
+        [('A', 'B'), ('B', 'C')]
+        >>> G.get_edges(type=True)
+        [('A', 'B', {'type': '->'}), ('B', 'C', {'type': '--'})]
         """
         edge_type_key = self._get_edge_type_key()
         result = []
@@ -688,3 +705,31 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             ],
             key=lambda x: (x[0], x[1]),
         )
+
+    def _get_key(self, u, v, type, key=None):
+        """
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        - `remove_edge()`
+
+        Notes
+        -----
+
+        Examples
+        --------
+        """
+        if key is None:
+            key_type = self[u][v]
+            for k in key_type:
+                if type == key_type[k].get("type"):
+                    key = k
+                    break
+        if key is None:
+            raise ValueError(f"There is no {type} type edge between {u} and {v}.")
+        return key
