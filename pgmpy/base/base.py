@@ -48,6 +48,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
     Returns
     -------
+    None
 
     See Also
     --------
@@ -66,10 +67,10 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
     >>> edges = [("A", "B", "->"), ("B", "C", "->")]
     >>> G = _CoreGraph(ebunch=edges)
-    >>> G.edges
-    MultiEdgeView([('A', 'B', 0), ('B', 'C', 0)])
-    >>> G.edges(data=True)
-    MultiEdgeDataView([('A', 'B', {'type': '->'}), ('B', 'C', {'type': '->'})])
+    >>> G.get_edges()
+    [('A', 'B'), ('B', 'C')]
+    >>> G.get_edges(type=True)
+    [('A', 'B', {'type': '->'}), ('B', 'C', {'type': '->'})]
     >>> G.SUPPORTED_EDGE_TYPES  # check the available edge types
     ['--', '-o', 'o-', '->', '<-', 'o>', '<o', '<>', 'oo']
 
@@ -98,35 +99,36 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
     >>> from pgmpy.base import _CoreGraph
     >>> G = _CoreGraph()
     >>> G.add_edge("A", "B", "->")
-    >>> G.edges  # You can check the key value of the two nodes and the edge connecting the two nodes.
-    MultiEdgeView([('A', 'B', 0)])
-    >>> G.edges(
-    ...     data=True
+    >>> G.get_edges()  # You can check the key value of the two nodes and the edge connecting the two nodes.
+    [('A', 'B')]
+    >>> G.get_edges(
+    ...     type=True
     ... )  # You can check the type value of the two nodes and the edge connecting the two nodes.
-    MultiEdgeDataView([('A', 'B', {'type': '->'})])
+    [('A', 'B', {'type': '->'})]
+
 
     Add a list of edges,
 
     >>> edges = [("A", "B", "->"), ("B", "C", "->")]
     >>> G = _CoreGraph()
     >>> G.add_edges_from(ebunch=edges)
-    >>> G.edges(data=True)
-    MultiEdgeDataView([('A', 'B', {'type': '->'}), ('B', 'C', {'type': '->'})])
+    >>> G.get_edges(type=True)
+    [('A', 'B', {'type': '->'}), ('B', 'C', {'type': '->'})]
 
     Remove one edge,
 
     >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
     >>> G = _CoreGraph(ebunch=edges)
     >>> G.remove_edge("A", "B", "->")
-    >>> G.edges(data=True)
-    MultiEdgeDataView([('B', 'C', {'type': '->'}), ('C', 'D', {'type': '--'})])
+    >>> G.get_edges(type=True)
+    [('B', 'C', {'type': '->'}), ('C', 'D', {'type': '--'})]
 
     Remove a list of edges,
 
     >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
     >>> G.remove_edges_from(ebunch=remove_edges)
-    >>> G.edges(data=True)
-    MultiEdgeDataView([])
+    >>> G.get_edges(type=True)
+    []
 
     **Exposures, Outcomes, and Latents:**
         We provide a way to easily add frequently used node roles, such as `exposure`, `outcomes`, and `latents`.
@@ -177,6 +179,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         Notes
         --------
         - Sub-graph classes must implement `SUPPORTED_EDGE_TYPES`
+        - Sub-graph classes must implement `IS_MULTIGRAPH`
         """
         super().__init__()
         if ebunch:
@@ -239,6 +242,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Notes
         -----
+        - This method is expected to be usable without being implemented in a subclass of the graph class.
 
         Examples
         --------
@@ -247,23 +251,25 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G.SUPPORTED_EDGE_TYPES  # check the available edge types
         ['--', '-o', 'o-', '->', '<-', 'o>', '<o', '<>', 'oo']
         >>> G.add_edge("A", "B", "->")
-        >>> G.edges  # You can check the key value of the two nodes and the edge connecting the two nodes.
-        MultiEdgeView([('A', 'B', 0)])
-        >>> G.edges(
-        ...     data=True
+        >>> G.get_edges()  # You can check the key value of the two nodes and the edge connecting the two nodes.
+        [('A', 'B')]
+        >>> G.get_edges(
+        ...     type=True
         ... )  # You can check the type value of the two nodes and the edge connecting the two nodes.
-        MultiEdgeDataView([('A', 'B', {'type': '->'})])
+        [('A', 'B', {'type': '->'})]
         """
         _ = self._validating_and_formatting_edges_value(ebunch=[(u, v, type, key)])
 
         # Finding available key values.
         if self.IS_MULTIGRAPH and key is None:
-            key_list1, key_list2 = [], []
+            u2v_keys, v2u_keys = [], []
             if self.has_edge(u, v):
-                key_list1 = list(self._adj[u][v].keys())
+                u2v_keys = list(self._adj[u][v].keys())
             if self.has_edge(v, u):
-                key_list2 = list(self._adj[v][u].keys())
-            key_list = set(key_list1 + key_list2)
+                v2u_keys = list(self._adj[v][u].keys())
+            key_list = set(u2v_keys + v2u_keys)
+
+            key = 0
             while True:
                 if key in key_list:
                     key += 1
@@ -325,6 +331,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Notes
         -----
+        - This method is expected to be usable without being implemented in a subclass of the graph class.
 
         Examples
         --------
@@ -334,8 +341,8 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G.SUPPORTED_EDGE_TYPES  # check the available edge types
         ['--', '-o', 'o-', '->', '<-', 'o>', '<o', '<>', 'oo']
         >>> G.add_edges_from(ebunch=edges)
-        >>> G.edges(data=True)
-        MultiEdgeDataView([('A', 'B', {'type': '->'}), ('B', 'C', {'type': '->'})])
+        >>> G.get_edges(type=True)
+        [('A', 'B', {'type': '->'}), ('B', 'C', {'type': '->'})]
         """
         ebunch = self._validating_and_formatting_edges_value(ebunch=ebunch)
 
@@ -378,6 +385,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Notes
         -----
+        - This method is expected to be usable without being implemented in a subclass of the graph class.
 
         Examples
         --------
@@ -387,8 +395,8 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G.SUPPORTED_EDGE_TYPES  # check the available edge types
         ['--', '-o', 'o-', '->', '<-', 'o>', '<o', '<>', 'oo']
         >>> G.remove_edge("A", "B", "->")
-        >>> G.edges(data=True)
-        MultiEdgeDataView([('B', 'C', {'type': '->'}), ('C', 'D', {'type': '--'})])
+        >>> G.get_edges(type=True)
+        [('B', 'C', {'type': '->'}), ('C', 'D', {'type': '--'})]
         """
         _ = self._validating_and_formatting_edges_value(ebunch=[(u, v, type, key)])
 
@@ -398,13 +406,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
                 type = f"{type[1]}>"
             key = self._get_key(u, v, type, key=key)
             super().remove_edge(u, v, key=key)
-
-        elif type in ["--", "-o", "o-"]:
-            key = self._get_key(u, v, type, key=key)
-            super().remove_edge(u, v, key=key)
-            super().remove_edge(v, u, key=key)
-
-        elif type in ["<>", "oo"]:
+        elif type in ["--", "-o", "o-", "<>", "oo"]:
             key = self._get_key(u, v, type, key=key)
             super().remove_edge(u, v, key=key)
             super().remove_edge(v, u, key=key)
@@ -445,6 +447,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Notes
         -----
+        - This method is expected to be usable without being implemented in a subclass of the graph class.
 
         Examples
         --------
@@ -455,8 +458,8 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         ['--', '-o', 'o-', '->', '<-', 'o>', '<o', '<>', 'oo']
         >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
         >>> G.remove_edges_from(ebunch=remove_edges)
-        >>> G.edges(data=True)
-        MultiEdgeDataView([('A', 'B', {'type': '->'})])
+        >>> G.get_edges(type=True)
+        [('A', 'B', {'type': '->'})]
         """
         ebunch = self._validating_and_formatting_edges_value(ebunch=ebunch)
         for u, v, type, key in ebunch:
@@ -490,7 +493,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G2.__class__
         pgmpy.base.base._CoreGraph
         """
-        ebunch = self._get_edge_type_key()
+        ebunch = self._get_edges_type_key()
 
         graph_copy = self.__class__()
         graph_copy.add_edges_from(ebunch=ebunch)
@@ -528,6 +531,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             - type=False, key=True: (u, v, key)
             - type=True, key=True: (u, v, {'type': type}, key)
 
+        See Also
+        --------
+
+        Notes
+        -----
+        - This method is expected to be usable without being implemented in a subclass of the graph class.
+
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
@@ -536,8 +546,10 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         [('A', 'B'), ('B', 'C')]
         >>> G.get_edges(type=True)
         [('A', 'B', {'type': '->'}), ('B', 'C', {'type': '--'})]
+        >>> G.get_edges(type=True, key=True)
+        [('A', 'B', {'type': '->'}, 0), ('B', 'C', {'type': '--'}, 0)]
         """
-        edge_type_key = self._get_edge_type_key()
+        edge_type_key = self._get_edges_type_key()
         result = []
         seen = set()
 
@@ -605,8 +617,8 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         if not isinstance(other, self.__class__):
             return False
 
-        self_ebunch = self._get_edge_type_key()
-        other_ebunch = other._get_edge_type_key()
+        self_ebunch = self._get_edges_type_key()
+        other_ebunch = other._get_edges_type_key()
 
         return (
             set(self.nodes()) == set(other.nodes())
@@ -662,6 +674,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             else:
                 u, v, type = edge_type_key
                 key = None
+
             if (u is None) or (v is None):
                 raise ValueError("Nodes cannot be None.")
             if u == v:
@@ -671,7 +684,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             result.append((u, v, type, key))
         return result
 
-    def _get_edge_type_key(self):
+    def _get_edges_type_key(self):
         """
         Returns the edge's `type` and `key` value connecting the two nodes as a list of tuples.
 
@@ -696,7 +709,6 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-
         """
         return sorted(
             [
@@ -708,11 +720,24 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
     def _get_key(self, u, v, type, key=None):
         """
+        Return the key value using u, v, and type values.
+        If there is a key value, return the key value as is.
+
         Parameters
         ----------
+        u, v : node
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
+
+        type : str
+            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
+
+        key : hashable identifier, optional (default=lowest unused integer)
+            Used to distinguish multiedges between a pair of nodes.
 
         Returns
         -------
+        key : int
 
         See Also
         --------
