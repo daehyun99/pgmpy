@@ -718,7 +718,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             key=lambda x: (x[0], x[1]),
         )
 
-    def _get_key(self, u, v, type, key=None):
+    def _get_key(
+        self,
+        u: Hashable,
+        v: Hashable,
+        type: str = None,
+        key: Optional[Hashable] = None,
+    ):
         """
         Return the key value using u, v, and type values.
         If there is a key value, return the key value as is.
