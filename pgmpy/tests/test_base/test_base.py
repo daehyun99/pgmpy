@@ -441,7 +441,6 @@ class TestCoreGraph:
         graph = _CoreGraph(ebunch=edges)
 
         graph.remove_edge("A", "B", "->")
-        graph.remove_edge("A", "B", "->")
         graph.remove_edge("A", "B", "--")
 
         assert not graph.has_edge("A", "B")
@@ -561,7 +560,8 @@ class TestCoreGraph:
         edges = [("A", "B", "->"), ("A", "B", "->"), ("A", "B", "--")]
         graph = _CoreGraph(ebunch=edges)
 
-        graph.remove_edges_from(ebunch=edges)
+        del_edges = [("A", "B", "->"), ("A", "B", "--")]
+        graph.remove_edges_from(ebunch=del_edges)
 
         assert not graph.has_edge("A", "B")
 
@@ -650,7 +650,7 @@ class TestCoreGraph:
 
     def test_equality_different_graphs(self):
         """Test the `__eq__` method with different graphs."""
-        edges = [("A", "B", "->"), ("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
+        edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
         exposures = ["A"]
         outcomes = ["C"]
         latents = ["D"]
@@ -679,7 +679,7 @@ class TestCoreGraph:
         other_ebunch = _CoreGraph(
             ebunch=[
                 ("A", "B", "->"),
-                ("B", "C", "->"),
+                ("B", "C", "<>"),
                 ("B", "C", "->"),
                 ("C", "D", "oo"),
             ],
