@@ -610,7 +610,7 @@ class TestCoreGraph:
 
     def test_equality_with_values(self):
         """Test the `__eq__` method of the `_CoreGraph` class with values."""
-        edges = [("A", "B", "->"), ("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
+        edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
         exposures = ["A"]
         outcomes = ["C"]
         latents = ["D"]
@@ -636,7 +636,7 @@ class TestCoreGraph:
         check_graph_status(
             graph,
             4,
-            4,
+            3,
             {"A"},
             {"C"},
             {"D"},
@@ -764,14 +764,14 @@ class TestCoreGraph:
 
     def test_copy_with_ebunch(self):
         """Test the `copy` method of a `_CoreGraph` with an ebunch."""
-        edges = [("A", "B", "->"), ("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
+        edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
         graph = _CoreGraph(ebunch=edges)
         graph_copy = graph.copy()
 
         assert graph.__eq__(graph_copy) == True
         assert graph_copy.__eq__(graph) == True
 
-        check_graph_status(graph, 4, 4, set(), set(), set(), {})
+        check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_copy_with_attributes(self):
         """Test the `copy` method of a `_CoreGraph` with attributes."""
@@ -791,7 +791,7 @@ class TestCoreGraph:
         check_graph_status(
             graph,
             4,
-            4,
+            3,
             {"A"},
             {"C"},
             {"D"},
@@ -804,7 +804,7 @@ class TestCoreGraph:
 
     def test_copy_with_roles(self):
         """Test the `copy` method of a `_CoreGraph` with roles."""
-        edges = [("A", "B", "->"), ("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
+        edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
         roles = {"test_role": ["A", "B"]}
         graph = _CoreGraph(ebunch=edges, roles=roles)
         graph_copy = graph.copy()
@@ -815,7 +815,7 @@ class TestCoreGraph:
         check_graph_status(
             graph,
             4,
-            4,
+            3,
             set(),
             set(),
             set(),
@@ -826,7 +826,7 @@ class TestCoreGraph:
 
     def test_copy_with_all_values(self):
         """Test the `copy` method of a `_CoreGraph` with all values."""
-        edges = [("A", "B", "->"), ("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
+        edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
         exposures = ["A"]
         outcomes = ["C"]
         latents = ["D"]
@@ -846,7 +846,7 @@ class TestCoreGraph:
         check_graph_status(
             graph,
             4,
-            4,
+            3,
             {"A"},
             {"C"},
             {"D"},
