@@ -83,19 +83,19 @@ class TestCoreGraph:
 
     def test_init_with_all_values(self):
         """Test the initialization of a `_CoreGraph` with all values."""
-        edges = [("A", "B", "->"), ("B", "C", "oo")]
+        edges = [("A", "B", "->"), ("B", "C", "oo"), ("C", "D", "--")]
         graph = _CoreGraph(
             ebunch=edges,
             exposures=["A"],
             outcomes=["B"],
             latents=["C"],
-            roles={"test_role": ["A"]},
+            roles={"test_role": ["D"]},
         )
 
         check_graph_status(
             graph,
+            4,
             3,
-            2,
             {"A"},
             {"B"},
             {"C"},
@@ -103,7 +103,7 @@ class TestCoreGraph:
                 "exposures": ["A"],
                 "outcomes": ["B"],
                 "latents": ["C"],
-                "test_role": ["A"],
+                "test_role": ["D"],
             },
         )
 
@@ -614,7 +614,7 @@ class TestCoreGraph:
         exposures = ["A"]
         outcomes = ["C"]
         latents = ["D"]
-        roles = {"test_role": ["A", "B"]}
+        roles = {"test_role": ["B"]}
         graph = _CoreGraph(
             ebunch=edges,
             exposures=exposures,
@@ -628,7 +628,7 @@ class TestCoreGraph:
         other.exposures = exposures
         other.outcomes = outcomes
         other.latents = latents
-        other.with_role("test_role", ["A", "B"])
+        other.with_role("test_role", ["B"], inplace=True)
 
         assert graph.__eq__(other) == True
         assert other.__eq__(graph) == True
@@ -644,7 +644,7 @@ class TestCoreGraph:
                 "exposures": ["A"],
                 "outcomes": ["C"],
                 "latents": ["D"],
-                "test_role": ["A", "B"],
+                "test_role": ["B"],
             },
         )
 
@@ -654,7 +654,7 @@ class TestCoreGraph:
         exposures = ["A"]
         outcomes = ["C"]
         latents = ["D"]
-        roles = {"test_role": ["A", "B"]}
+        roles = {"test_role": ["B"]}
         graph = _CoreGraph(
             ebunch=edges,
             exposures=exposures,
@@ -830,7 +830,7 @@ class TestCoreGraph:
         exposures = ["A"]
         outcomes = ["C"]
         latents = ["D"]
-        roles = {"test_role": ["A", "B"]}
+        roles = {"test_role": ["B"]}
         graph = _CoreGraph(
             ebunch=edges,
             exposures=exposures,
@@ -854,7 +854,7 @@ class TestCoreGraph:
                 "exposures": ["A"],
                 "outcomes": ["C"],
                 "latents": ["D"],
-                "test_role": ["A", "B"],
+                "test_role": ["B"],
             },
         )
 
