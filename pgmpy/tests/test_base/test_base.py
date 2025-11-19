@@ -863,3 +863,31 @@ class TestCoreGraph:
         graph = _CoreGraph()
         with pytest.raises(TypeError):
             graph.copy("invalid_value")
+
+    def test_get_neighbors(self):
+        """Test `get_neighbors` method of the `_CoreGraph` class."""
+        ...
+
+    def test_get_parents(self):
+        """Test `get_parents` method of the `_CoreGraph` class."""
+        ...
+
+    def test_get_spouses(self):
+        """Test `get_spouses` method of the `_CoreGraph` class."""
+        ...
+
+    def test_get_children(self):
+        """Test `get_children` method of the `_CoreGraph` class."""
+        ...
+
+    def test_get_ancestors(self):
+        """Test `get_ancestors` method of the `_CoreGraph` class."""
+        ...
+
+    def test_get_descendants(self):
+        """Test `get_descendants` method of the `_CoreGraph` class."""
+        ...
+
+    def test_get_reachable_nodes(self):
+        """Test `get_reachable_nodes` method of the `_CoreGraph` class."""
+        ...
