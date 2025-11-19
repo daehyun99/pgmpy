@@ -395,9 +395,9 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         graph_copy = self.__class__()
         graph_copy.add_edges_from(ebunch=ebunch)
-        graph_copy.exposures = self.exposures.copy()
-        graph_copy.outcomes = self.outcomes.copy()
-        graph_copy.latents = self.latents.copy()
+        graph_copy.exposures = self.exposures
+        graph_copy.outcomes = self.outcomes
+        graph_copy.latents = self.latents
         for role, vars in self.get_role_dict().items():
             graph_copy.with_role(role=role, variables=vars, inplace=True)
 
