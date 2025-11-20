@@ -864,30 +864,177 @@ class TestCoreGraph:
         with pytest.raises(TypeError):
             graph.copy("invalid_value")
 
-    def test_get_neighbors(self):
-        """Test `get_neighbors` method of the `_CoreGraph` class."""
+    # get_neighbors
+    def test_get_neighbors_with_direct_edges(self):
+        """Test `get_neighbors` method of the `_CoreGraph` class with direct edges."""
         ...
 
-    def test_get_parents(self):
-        """Test `get_parents` method of the `_CoreGraph` class."""
+    def test_get_neighbors_with_undirect_edges(self):
+        """Test `get_neighbors` method of the `_CoreGraph` class with undirect edges."""
         ...
 
-    def test_get_spouses(self):
-        """Test `get_spouses` method of the `_CoreGraph` class."""
+    def test_get_neighbors_with_bidirect_edges(self):
+        """Test `get_neighbors` method of the `_CoreGraph` class with bidirect edges."""
         ...
 
-    def test_get_children(self):
-        """Test `get_children` method of the `_CoreGraph` class."""
+    def test_get_neighbors_with_unknown_edges(self):
+        """Test `get_neighbors` method of the `_CoreGraph` class with unknown edges."""
         ...
 
-    def test_get_ancestors(self):
-        """Test `get_ancestors` method of the `_CoreGraph` class."""
+    def test_get_neighbors_with_multiedges(self):
+        """Test `get_neighbors` method of the `_CoreGraph` class with multiedges."""
         ...
 
-    def test_get_descendants(self):
-        """Test `get_descendants` method of the `_CoreGraph` class."""
+    def test_get_neighbors_fails(self):
+        """Test failing `get_neighbors` method of the `_CoreGraph` class"""
         ...
 
-    def test_get_reachable_nodes(self):
-        """Test `get_reachable_nodes` method of the `_CoreGraph` class."""
+    # get_parents
+    def test_get_parents_with_direct_edges(self):
+        """Test `get_parents` method of the `_CoreGraph` class with direct edges."""
+        ...
+
+    def test_get_parents_with_undirect_edges(self):
+        """Test `get_parents` method of the `_CoreGraph` class with undirect edges."""
+        ...
+
+    def test_get_parents_with_bidirect_edges(self):
+        """Test `get_parents` method of the `_CoreGraph` class with bidirect edges."""
+        ...
+
+    def test_get_parents_with_unknown_edges(self):
+        """Test `get_parents` method of the `_CoreGraph` class with unknown edges."""
+        ...
+
+    def test_get_parents_with_multiedges(self):
+        """Test `get_parents` method of the `_CoreGraph` class with multiedges."""
+        ...
+
+    def test_get_parents_fails(self):
+        """Test failing `get_parents` method of the `_CoreGraph` class"""
+        ...
+
+    # get_spouses
+    def test_get_spouses_with_direct_edges(self):
+        """Test `get_spouses` method of the `_CoreGraph` class with direct edges."""
+        ...
+
+    def test_get_spouses_with_undirect_edges(self):
+        """Test `get_spouses` method of the `_CoreGraph` class with undirect edges."""
+        ...
+
+    def test_get_spouses_with_bidirect_edges(self):
+        """Test `get_spouses` method of the `_CoreGraph` class with bidirect edges."""
+        ...
+
+    def test_get_spouses_with_unknown_edges(self):
+        """Test `get_spouses` method of the `_CoreGraph` class with unknown edges."""
+        ...
+
+    def test_get_spouses_with_multiedges(self):
+        """Test `get_spouses` method of the `_CoreGraph` class with multiedges."""
+        ...
+
+    def test_get_spouses_fails(self):
+        """Test failing `get_spouses` method of the `_CoreGraph` class"""
+        ...
+
+    # get_children
+    def test_get_children_with_direct_edges(self):
+        """Test `get_children` method of the `_CoreGraph` class with direct edges."""
+        ...
+
+    def test_get_children_with_undirect_edges(self):
+        """Test `get_children` method of the `_CoreGraph` class with undirect edges."""
+        ...
+
+    def test_get_children_with_bidirect_edges(self):
+        """Test `get_children` method of the `_CoreGraph` class with bidirect edges."""
+        ...
+
+    def test_get_children_with_unknown_edges(self):
+        """Test `get_children` method of the `_CoreGraph` class with unknown edges."""
+        ...
+
+    def test_get_children_with_multiedges(self):
+        """Test `get_children` method of the `_CoreGraph` class with multiedges."""
+        ...
+
+    def test_get_children_fails(self):
+        """Test failing `get_children` method of the `_CoreGraph` class"""
+        ...
+
+    # get_ancestors
+    def test_get_ancestors_with_direct_edges(self):
+        """Test `get_ancestors` method of the `_CoreGraph` class with direct edges."""
+        ...
+
+    def test_get_ancestors_with_undirect_edges(self):
+        """Test `get_ancestors` method of the `_CoreGraph` class with undirect edges."""
+        ...
+
+    def test_get_ancestors_with_bidirect_edges(self):
+        """Test `get_ancestors` method of the `_CoreGraph` class with bidirect edges."""
+        ...
+
+    def test_get_ancestors_with_unknown_edges(self):
+        """Test `get_ancestors` method of the `_CoreGraph` class with unknown edges."""
+        ...
+
+    def test_get_ancestors_with_multiedges(self):
+        """Test `get_ancestors` method of the `_CoreGraph` class with multiedges."""
+        ...
+
+    def test_get_ancestors_fails(self):
+        """Test failing `get_ancestors` method of the `_CoreGraph` class"""
+        ...
+
+    # get_descendants
+    def test_get_descendants_with_direct_edges(self):
+        """Test `get_descendants` method of the `_CoreGraph` class with direct edges."""
+        ...
+
+    def test_get_descendants_with_undirect_edges(self):
+        """Test `get_descendants` method of the `_CoreGraph` class with undirect edges."""
+        ...
+
+    def test_get_descendants_with_bidirect_edges(self):
+        """Test `get_descendants` method of the `_CoreGraph` class with bidirect edges."""
+        ...
+
+    def test_get_descendants_with_unknown_edges(self):
+        """Test `get_descendants` method of the `_CoreGraph` class with unknown edges."""
+        ...
+
+    def test_get_descendants_with_multiedges(self):
+        """Test `get_descendants` method of the `_CoreGraph` class with multiedges."""
+        ...
+
+    def test_get_descendants_fails(self):
+        """Test failing `get_descendants` method of the `_CoreGraph` class"""
+        ...
+
+    # get_reachable_nodes
+    def test_get_reachable_nodes_with_direct_edges(self):
+        """Test `get_reachable_nodes` method of the `_CoreGraph` class with direct edges."""
+        ...
+
+    def test_get_reachable_nodes_with_undirect_edges(self):
+        """Test `get_reachable_nodes` method of the `_CoreGraph` class with undirect edges."""
+        ...
+
+    def test_get_reachable_nodes_with_bidirect_edges(self):
+        """Test `get_reachable_nodes` method of the `_CoreGraph` class with bidirect edges."""
+        ...
+
+    def test_get_reachable_nodes_with_unknown_edges(self):
+        """Test `get_reachable_nodes` method of the `_CoreGraph` class with unknown edges."""
+        ...
+
+    def test_get_reachable_nodes_with_multiedges(self):
+        """Test `get_reachable_nodes` method of the `_CoreGraph` class with multiedges."""
+        ...
+
+    def test_get_reachable_nodes_fails(self):
+        """Test failing `get_reachable_nodes` method of the `_CoreGraph` class"""
         ...
