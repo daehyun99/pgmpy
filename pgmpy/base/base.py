@@ -395,9 +395,9 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         graph_copy = self.__class__()
         graph_copy.add_edges_from(ebunch=ebunch)
-        graph_copy.exposures = self.exposures.copy()
-        graph_copy.outcomes = self.outcomes.copy()
-        graph_copy.latents = self.latents.copy()
+        graph_copy.exposures = self.exposures
+        graph_copy.outcomes = self.outcomes
+        graph_copy.latents = self.latents
         for role, vars in self.get_role_dict().items():
             graph_copy.with_role(role=role, variables=vars, inplace=True)
 
@@ -455,6 +455,228 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
                     output_form = (u, v)  # (u, v)
                 result.append(output_form)
         return result
+
+    def get_neighbors(self):
+        """
+        [Explain]
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        `get_parents()`
+        `get_children()`
+        `get_ancestors()`
+        `get_descendants()`
+        `get_spouses()`
+        `get_reachable_nodes()`
+
+        Notes
+        -----
+        This method is expected to be usable without being implemented in a subclass of the graph class.
+
+        Examples
+        --------
+        >>> from pgmpy.base import _CoreGraph
+        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
+        >>> G = _CoreGraph()
+        [Explain]
+        """
+        ...
+
+    def get_parents(self):
+        """
+        [Explain]
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        `get_neighbors()`
+        `get_children()`
+        `get_ancestors()`
+        `get_descendants()`
+        `get_spouses()`
+        `get_reachable_nodes()`
+
+        Notes
+        -----
+        This method is expected to be usable without being implemented in a subclass of the graph class.
+
+        Examples
+        --------
+        >>> from pgmpy.base import _CoreGraph
+        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
+        >>> G = _CoreGraph()
+        [Explain]
+        """
+        ...
+
+    def get_children(self):
+        """
+        [Explain]
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        `get_neighbors()`
+        `get_parents()`
+        `get_ancestors()`
+        `get_descendants()`
+        `get_spouses()`
+        `get_reachable_nodes()`
+
+        Notes
+        -----
+        This method is expected to be usable without being implemented in a subclass of the graph class.
+
+        Examples
+        --------
+        >>> from pgmpy.base import _CoreGraph
+        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
+        >>> G = _CoreGraph()
+        [Explain]
+        """
+        ...
+
+    def get_spouses(self):
+        """
+        [Explain]
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        `get_neighbors()`
+        `get_parents()`
+        `get_children()`
+        `get_descendants()`
+        `get_reachable_nodes()`
+
+        Notes
+        -----
+        This method is expected to be usable without being implemented in a subclass of the graph class.
+
+        Examples
+        --------
+        >>> from pgmpy.base import _CoreGraph
+        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
+        >>> G = _CoreGraph()
+        [Explain]
+        """
+        ...
+
+    def get_ancestors(self):
+        """
+        [Explain]
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        `get_neighbors()`
+        `get_parents()`
+        `get_children()`
+        `get_descendants()`
+        `get_spouses()`
+        `get_reachable_nodes()`
+
+        Notes
+        -----
+        This method is expected to be usable without being implemented in a subclass of the graph class.
+
+        Examples
+        --------
+        >>> from pgmpy.base import _CoreGraph
+        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
+        >>> G = _CoreGraph()
+        [Explain]
+        """
+        ...
+
+    def get_descendants(self):
+        """
+        [Explain]
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        `get_neighbors()`
+        `get_parents()`
+        `get_children()`
+        `get_ancestors()`
+        `get_spouses()`
+        `get_reachable_nodes()`
+
+        Notes
+        -----
+        This method is expected to be usable without being implemented in a subclass of the graph class.
+
+        Examples
+        --------
+        >>> from pgmpy.base import _CoreGraph
+        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
+        >>> G = _CoreGraph()
+        [Explain]
+        """
+        ...
+
+    def get_reachable_nodes(self):
+        """
+        [Explain]
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        See Also
+        --------
+        `get_neighbors()`
+        `get_parents()`
+        `get_children()`
+        `get_ancestors()`
+        `get_spouses()`
+
+        Notes
+        -----
+        This method is expected to be usable without being implemented in a subclass of the graph class.
+
+        Examples
+        --------
+        >>> from pgmpy.base import _CoreGraph
+        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
+        >>> G = _CoreGraph()
+        [Explain]
+        """
+        ...
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
