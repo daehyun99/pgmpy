@@ -956,7 +956,7 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="<-")
-        assert graph.get_neighbors("B") == {"A", "D"}
+        assert graph.get_neighbors("B") == {"A"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_neighbors_with_undirect_edges(self):
@@ -1722,19 +1722,19 @@ class TestCoreGraph:
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_reachable_nodes("B", "<o") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("B", "<o") == {"A", "B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_reachable_nodes("B", "-o") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("B", "-o") == {"A", "B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_reachable_nodes("B", "o-") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("B", "o-") == {"A", "B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
-        assert graph.get_reachable_nodes("B", "oo") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("B", "oo") == {"A", "B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_reachable_nodes_with_multiedges(self):
