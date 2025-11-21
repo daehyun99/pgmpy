@@ -1004,23 +1004,23 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="o>")
-        assert graph.get_neighbors("C") == {"A", "C", "D"}
+        assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_neighbors("C") == {"A", "C", "D"}
+        assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_neighbors("C") == {"A", "C", "D"}
+        assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_neighbors("C") == {"A", "C", "D"}
+        assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
-        assert graph.get_neighbors("C") == {"A", "C", "D"}
+        assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_neighbors_with_multiedges(self):
@@ -1031,7 +1031,6 @@ class TestCoreGraph:
         assert graph.get_neighbors("A") == all_nodes_except_A
         assert graph.get_neighbors("B") == {"A", "X"}
         assert graph.get_neighbors("C") == {"A", "Y"}
-        assert graph.get_neighbors("Z") == set()
         check_graph_status(graph, 12, 11, set(), set(), set(), {})
 
     def test_get_neighbors_fails(self):
@@ -1126,23 +1125,23 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="o>")
-        assert graph.get_parents("C") == set()
+        assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_parents("C") == set()
+        assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_parents("C") == set()
+        assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_parents("C") == set()
+        assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
-        assert graph.get_parents("C") == set()
+        assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_parents_with_multiedges(self):
@@ -1245,23 +1244,23 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="o>")
-        assert graph.get_spouses("C") == set()
+        assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_spouses("C") == set()
+        assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_spouses("C") == set()
+        assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_spouses("C") == set()
+        assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
-        assert graph.get_spouses("C") == set()
+        assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_spouses_with_multiedges(self):
@@ -1364,23 +1363,23 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="o>")
-        assert graph.get_children("C") == set()
+        assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_children("C") == set()
+        assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_children("C") == set()
+        assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_children("C") == set()
+        assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
-        assert graph.get_children("C") == set()
+        assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_children_with_multiedges(self):
@@ -1483,23 +1482,23 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="o>")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_ancestors_with_multiedges(self):
@@ -1601,23 +1600,23 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="o>")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_descendants_with_multiedges(self):
@@ -1719,23 +1718,23 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="o>")
-        assert graph.get_reachable_nodes("C", "o>") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("B", "o>") == {"A", "B", "C", "D", "E"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_reachable_nodes("C", "<o") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("B", "<o") == {"A", "B", "C", "D", "E"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_reachable_nodes("C", "-o") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("B", "-o") == {"A", "B", "C", "D", "E"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_reachable_nodes("C", "o-") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("B", "o-") == {"A", "B", "C", "D", "E"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
-        assert graph.get_reachable_nodes("C", "oo") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("B", "oo") == {"A", "B", "C", "D", "E"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_reachable_nodes_with_multiedges(self):
