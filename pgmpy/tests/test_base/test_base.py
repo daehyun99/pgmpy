@@ -1037,11 +1037,28 @@ class TestCoreGraph:
     def test_get_neighbors_fails(self):
         """Test failing `get_neighbors` method of the `_CoreGraph` class"""
         # Test1: The `_CoreGraph` do not have any nodes.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_neighbors("A")
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
         # Test2: The `_CoreGraph` have nodes. But, do not have any edges.
-        ...
+        graph = _CoreGraph()
+        graph.add_node("A")
+        graph.add_node("B")
+
+        assert graph.get_neighbors("A") == set()
+        check_graph_status(graph, 2, 0, set(), set(), set(), {})
+
         # Test3: Wrong input values.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_neighbors()
+        with pytest.raises(ValueError):
+            graph.get_neighbors(1)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     # get_parents
     def test_get_parents_with_direct_edges(self):
@@ -1139,11 +1156,28 @@ class TestCoreGraph:
     def test_get_parents_fails(self):
         """Test failing `get_parents` method of the `_CoreGraph` class"""
         # Test1: The `_CoreGraph` do not have any nodes.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_parents("A")
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
         # Test2: The `_CoreGraph` have nodes. But, do not have any edges.
-        ...
+        graph = _CoreGraph()
+        graph.add_node("A")
+        graph.add_node("B")
+
+        assert graph.get_parents("A") == set()
+        check_graph_status(graph, 2, 0, set(), set(), set(), {})
+
         # Test3: Wrong input values.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_parents()
+        with pytest.raises(ValueError):
+            graph.get_parents(1)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     # get_spouses
     def test_get_spouses_with_direct_edges(self):
@@ -1241,11 +1275,28 @@ class TestCoreGraph:
     def test_get_spouses_fails(self):
         """Test failing `get_spouses` method of the `_CoreGraph` class"""
         # Test1: The `_CoreGraph` do not have any nodes.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_spouses("A")
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
         # Test2: The `_CoreGraph` have nodes. But, do not have any edges.
-        ...
+        graph = _CoreGraph()
+        graph.add_node("A")
+        graph.add_node("B")
+
+        assert graph.get_spouses("A") == set()
+        check_graph_status(graph, 2, 0, set(), set(), set(), {})
+
         # Test3: Wrong input values.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_spouses()
+        with pytest.raises(ValueError):
+            graph.get_spouses(1)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     # get_children
     def test_get_children_with_direct_edges(self):
@@ -1343,11 +1394,28 @@ class TestCoreGraph:
     def test_get_children_fails(self):
         """Test failing `get_children` method of the `_CoreGraph` class"""
         # Test1: The `_CoreGraph` do not have any nodes.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_children("A")
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
         # Test2: The `_CoreGraph` have nodes. But, do not have any edges.
-        ...
+        graph = _CoreGraph()
+        graph.add_node("A")
+        graph.add_node("B")
+
+        assert graph.get_children("A") == set()
+        check_graph_status(graph, 2, 0, set(), set(), set(), {})
+
         # Test3: Wrong input values.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_children()
+        with pytest.raises(ValueError):
+            graph.get_children(1)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     # get_ancestors
     def test_get_ancestors_with_direct_edges(self):
@@ -1444,11 +1512,28 @@ class TestCoreGraph:
     def test_get_ancestors_fails(self):
         """Test failing `get_ancestors` method of the `_CoreGraph` class"""
         # Test1: The `_CoreGraph` do not have any nodes.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_ancestors("A")
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
         # Test2: The `_CoreGraph` have nodes. But, do not have any edges.
-        ...
+        graph = _CoreGraph()
+        graph.add_node("A")
+        graph.add_node("B")
+
+        assert graph.get_ancestors("A") == set()
+        check_graph_status(graph, 2, 0, set(), set(), set(), {})
+
         # Test3: Wrong input values.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_ancestors()
+        with pytest.raises(ValueError):
+            graph.get_ancestors(1)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     # get_descendants
     def test_get_descendants_with_direct_edges(self):
@@ -1545,11 +1630,28 @@ class TestCoreGraph:
     def test_get_descendants_fails(self):
         """Test failing `get_descendants` method of the `_CoreGraph` class"""
         # Test1: The `_CoreGraph` do not have any nodes.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_descendants("A")
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
         # Test2: The `_CoreGraph` have nodes. But, do not have any edges.
-        ...
+        graph = _CoreGraph()
+        graph.add_node("A")
+        graph.add_node("B")
+
+        assert graph.get_descendants("A") == set()
+        check_graph_status(graph, 2, 0, set(), set(), set(), {})
+
         # Test3: Wrong input values.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_descendants()
+        with pytest.raises(ValueError):
+            graph.get_descendants(1)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     # get_reachable_nodes
     def test_get_reachable_nodes_with_direct_edges(self):
@@ -1661,8 +1763,26 @@ class TestCoreGraph:
     def test_get_reachable_nodes_fails(self):
         """Test failing `get_reachable_nodes` method of the `_CoreGraph` class"""
         # Test1: The `_CoreGraph` do not have any nodes.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_reachable_nodes("A", "->")
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
         # Test2: The `_CoreGraph` have nodes. But, do not have any edges.
-        ...
+        graph = _CoreGraph()
+        graph.add_node("A")
+        graph.add_node("B")
+
+        assert graph.get_reachable_nodes("A") == set()
+        check_graph_status(graph, 2, 0, set(), set(), set(), {})
+
         # Test3: Wrong input values.
-        ...
+        graph = _CoreGraph()
+
+        with pytest.raises(ValueError):
+            graph.get_reachable_nodes()
+        with pytest.raises(ValueError):
+            graph.get_reachable_nodes("A")
+
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
