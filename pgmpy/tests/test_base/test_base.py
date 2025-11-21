@@ -8,7 +8,7 @@ from pgmpy.base import ADMG, DAG, PDAG, _CoreGraph
 @pytest.fixture
 def sample_graph1(type=None):
     """
-    Sample graph for testing node serching(`get_*`) method of `_CoreGraph` class.
+    Sample graph for testing node searching(`get_*`) method of `_CoreGraph` class.
     Tests node searching methods centered on node `C`.
 
     Notes
@@ -29,7 +29,7 @@ def sample_graph1(type=None):
 @pytest.fixture
 def sample_graph2(type=None):
     """
-    Sample graph for testing node serching(`get_*`) method of `_CoreGraph` class.
+    Sample graph for testing node searching(`get_*`) method of `_CoreGraph` class.
     Tests node searching methods centered on node `B`.
 
     Notes
@@ -55,7 +55,7 @@ def sample_graph2(type=None):
 @pytest.fixture
 def sample_graph3():
     """
-    sample graph for testing node serching(`get_*`) method of `_CoreGraph` class.
+    sample graph for testing node searching(`get_*`) method of `_CoreGraph` class.
 
     Notes
     -----
