@@ -5,7 +5,6 @@ import pytest
 from pgmpy.base import ADMG, DAG, PDAG, _CoreGraph
 
 
-@pytest.fixture
 def sample_graph1(type=None):
     """
     Sample graph for testing node searching(`get_*`) method of `_CoreGraph` class.
@@ -26,7 +25,6 @@ def sample_graph1(type=None):
     return _CoreGraph(ebunch=edges)
 
 
-@pytest.fixture
 def sample_graph2(type=None):
     """
     Sample graph for testing node searching(`get_*`) method of `_CoreGraph` class.
@@ -52,7 +50,6 @@ def sample_graph2(type=None):
     return _CoreGraph(ebunch=edges)
 
 
-@pytest.fixture
 def sample_graph3():
     """
     sample graph for testing node searching(`get_*`) method of `_CoreGraph` class.
@@ -956,7 +953,7 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="<-")
-        assert graph.get_neighbors("B") == {"A"}
+        assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_neighbors_with_undirect_edges(self):
@@ -1033,6 +1030,36 @@ class TestCoreGraph:
         assert graph.get_neighbors("C") == {"A", "Y"}
         check_graph_status(graph, 12, 11, set(), set(), set(), {})
 
+    def test_get_neighbors_with_type_values():
+        """Test `get_neighbors` method of the `_CoreGraph` class with type values."""
+        graph = sample_graph1(type="->")
+        assert graph.get_neighbors("C", "->") == {"B", "D"}
+        check_graph_status(graph, 5, 4, set(), set(), set(), {})
+
+        graph = sample_graph2(type="->")
+        assert graph.get_neighbors("B", "->") == {"A", "C", "D"}
+        check_graph_status(graph, 4, 3, set(), set(), set(), {})
+
+        graph = sample_graph1(type="->")
+        assert graph.get_neighbors("C", "<-") == set()
+        check_graph_status(graph, 5, 4, set(), set(), set(), {})
+
+        graph = sample_graph2(type="->")
+        assert graph.get_neighbors("B", "<-") == set()
+        check_graph_status(graph, 4, 3, set(), set(), set(), {})
+
+        graph = sample_graph3()
+        all_nodes_except_A = {"B", "C", "D", "E", "F", "G", "H", "I", "J"}
+        assert graph.get_neighbors("A", "->") == all_nodes_except_A
+        assert graph.get_neighbors("A", "<-") == {"C"}
+        assert graph.get_neighbors("A", "<>") == {"E"}
+        assert graph.get_neighbors("B", "->") == {"X"}
+        assert graph.get_neighbors("B", "<-") == {"A"}
+        assert graph.get_neighbors("C", "->") == {"A"}
+        assert graph.get_neighbors("C", "<-") == {"Y"}
+        assert graph.get_neighbors("C", "<>") == set()
+        check_graph_status(graph, 12, 11, set(), set(), set(), {})
+
     def test_get_neighbors_fails(self):
         """Test failing `get_neighbors` method of the `_CoreGraph` class"""
         # Test1: The `_CoreGraph` do not have any nodes.
@@ -1050,14 +1077,22 @@ class TestCoreGraph:
         assert graph.get_neighbors("A") == set()
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
-        # Test3: Wrong input values.
+        # Test3: Wrong input node values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_neighbors()
         with pytest.raises(ValueError):
             graph.get_neighbors(1)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
+        # Test4: Wrong input type values.
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+
+        with pytest.raises(ValueError):
+            graph.get_neighbors("A", "wrong_edge")
+        check_graph_status(graph, 2, 1, set(), set(), set(), {})
 
     # get_parents
     def test_get_parents_with_direct_edges(self):
