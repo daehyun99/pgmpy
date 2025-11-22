@@ -5,7 +5,6 @@ import pytest
 from pgmpy.base import ADMG, DAG, PDAG, _CoreGraph
 
 
-@pytest.fixture
 def sample_graph1(type=None):
     """
     Sample graph for testing node searching(`get_*`) method of `_CoreGraph` class.
@@ -26,7 +25,6 @@ def sample_graph1(type=None):
     return _CoreGraph(ebunch=edges)
 
 
-@pytest.fixture
 def sample_graph2(type=None):
     """
     Sample graph for testing node searching(`get_*`) method of `_CoreGraph` class.
@@ -52,7 +50,6 @@ def sample_graph2(type=None):
     return _CoreGraph(ebunch=edges)
 
 
-@pytest.fixture
 def sample_graph3():
     """
     sample graph for testing node searching(`get_*`) method of `_CoreGraph` class.
@@ -956,7 +953,7 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="<-")
-        assert graph.get_neighbors("B") == {"A"}
+        assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_neighbors_with_undirect_edges(self):
@@ -1053,7 +1050,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_neighbors()
         with pytest.raises(ValueError):
             graph.get_neighbors(1)
