@@ -720,13 +720,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             Nodes can be, for example, strings or numbers.
             Nodes must be hashable (and not None) Python objects.
 
+        type : str
+            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
+
         Returns
         -------
         nodes : set
             Set of reachable nodes.
-
-        type : str
-            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
 
         See Also
         --------
