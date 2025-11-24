@@ -1206,7 +1206,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_parents()
         with pytest.raises(ValueError):
             graph.get_parents(1)
@@ -1325,7 +1325,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_spouses()
         with pytest.raises(ValueError):
             graph.get_spouses(1)
@@ -1444,7 +1444,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_children()
         with pytest.raises(ValueError):
             graph.get_children(1)
@@ -1562,7 +1562,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_ancestors()
         with pytest.raises(ValueError):
             graph.get_ancestors(1)
@@ -1680,7 +1680,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_descendants()
         with pytest.raises(ValueError):
             graph.get_descendants(1)
@@ -1813,7 +1813,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_reachable_nodes()
         with pytest.raises(ValueError):
             graph.get_reachable_nodes("A")
