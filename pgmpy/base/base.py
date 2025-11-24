@@ -1,3 +1,4 @@
+from collections import deque
 from typing import Hashable, Iterable, Optional
 
 import networkx as nx
@@ -671,7 +672,20 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        self._validating_nodes_value(node=node)
+        ancestors = set()
+        visited = set()
+        queue = deque(node)
+        nodes = self.nodes()
+
+        while queue:
+            current = queue.popleft()
+            if current not in nodes:
+                raise ValueError(f"Node {current} not in graph.")
+            elif current not in visited:
+                visited.add(current)
+                ancestors.add(current)
+                queue.extend(self.get_parents(current))
+        return ancestors
 
     def get_descendants(self, node):
         """
@@ -708,7 +722,20 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        self._validating_nodes_value(node=node)
+        descendants = set()
+        visited = set()
+        queue = deque(node)
+        nodes = self.nodes()
+
+        while queue:
+            current = queue.popleft()
+            if current not in nodes:
+                raise ValueError(f"Node {current} not in graph.")
+            if current not in visited:
+                visited.add(current)
+                descendants.add(current)
+                queue.extend(self.get_children(current))
+        return descendants
 
     def get_reachable_nodes(self, node, type):
         """
