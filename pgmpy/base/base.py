@@ -496,28 +496,31 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         """
         self._validating_nodes_value(node=node, type=type)
 
+        if type is None:
+            return set(nx.all_neighbors(self, node))
+
         result = set()
-        for neighbor in nx.all_neighbors(self, node):
-            if type is None:
-                result.add(neighbor)
-            elif type in ["->", "o>", "--", "<>", "oo"]:
+        if type in ["->", "o>", "--", "<>", "oo"]:
+            for neighbor in nx.all_neighbors(self, node):
                 if self.has_edge(node, neighbor, key=type):
                     result.add(neighbor)
-            elif type in ["<-", "<o"]:
-                reverse_type = f"{type[1]}>"
+        elif type in ["<-", "<o"]:
+            reverse_type = f"{type[1]}>"
+            for neighbor in nx.all_neighbors(self, node):
                 if self.has_edge(neighbor, node, key=reverse_type):
                     result.add(neighbor)
-            elif type in ["-o", "o-"]:
-                reverse_type = f"{type[1]}{type[0]}"
-                if self.has_edge(node, neighbor, key=type):
+        elif type in ["-o", "o-"]:
+            reverse_type = f"{type[1]}{type[0]}"
+            for neighbor in nx.all_neighbors(self, node):
+                if (self.has_edge(node, neighbor, key=type)) or (
+                    self.has_edge(neighbor, node, key=reverse_type)
+                ):
                     result.add(neighbor)
-                elif self.has_edge(neighbor, node, key=reverse_type):
-                    result.add(neighbor)
-            else:
-                raise AssertionError(
-                    "This should never happen."
-                    "If you see this error, please file an issue on the pgmpy GitHub."
-                )
+        else:
+            raise AssertionError(
+                "This should never happen."
+                "If you see this error, please file an issue on the pgmpy GitHub."
+            )
         return result
 
     def get_parents(self, node):
