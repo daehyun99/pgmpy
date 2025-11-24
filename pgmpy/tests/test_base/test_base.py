@@ -1048,6 +1048,14 @@ class TestCoreGraph:
         assert graph.get_neighbors("B", "<-") == {"A"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
+        graph = sample_graph1(type="-o")
+        assert graph.get_neighbors("C", "o-") == {"B"}
+        check_graph_status(graph, 5, 4, set(), set(), set(), {})
+
+        graph = sample_graph2(type="-o")
+        assert graph.get_neighbors("B", "o-") == {"A"}
+        check_graph_status(graph, 4, 3, set(), set(), set(), {})
+
         graph = sample_graph3()
         assert graph.get_neighbors("A", "->") == {"B"}
         assert graph.get_neighbors("A", "<-") == {"C"}
