@@ -501,17 +501,17 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             if type is None:
                 result.add(neighbor)
             elif type in ["->", "o>", "--", "<>", "oo"]:
-                if [node, neighbor, type] in self.edges(keys=True):
+                if self.has_edge(node, neighbor, key=type):
                     result.add(neighbor)
             elif type in ["<-", "<o"]:
                 reverse_type = f"{type[1]}>"
-                if [neighbor, node, reverse_type] in self.edges(keys=True):
+                if self.has_edge(neighbor, node, key=reverse_type):
                     result.add(neighbor)
             elif type in ["-o", "o-"]:
                 reverse_type = f"{type[1]}{type[0]}"
-                if [node, neighbor, type] in self.edges(keys=True):
+                if self.has_edge(node, neighbor, key=type):
                     result.add(neighbor)
-                if [neighbor, node, reverse_type] in self.edges(keys=True):
+                elif self.has_edge(neighbor, node, key=reverse_type):
                     result.add(neighbor)
             else:
                 raise AssertionError(
