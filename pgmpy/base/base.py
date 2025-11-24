@@ -456,15 +456,23 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
                 result.append(output_form)
         return result
 
-    def get_neighbors(self):
+    def get_neighbors(self, node, type=None):
         """
-        [Explain]
+        Returns a set of neighbors nodes in the graph.
 
         Parameters
         ----------
+        node : Hashable
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
+
+        type : str
+            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
 
         Returns
         -------
+        nodes : set
+            Set of neighbors nodes.
 
         See Also
         --------
@@ -486,17 +494,49 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        ...
+        self._validating_nodes_value(node=node, type=type)
 
-    def get_parents(self):
+        if type is None:
+            return set(nx.all_neighbors(self, node))
+
+        result = set()
+        if type in ["->", "o>", "--", "<>", "oo"]:
+            for neighbor in nx.all_neighbors(self, node):
+                if self.has_edge(node, neighbor, key=type):
+                    result.add(neighbor)
+        elif type in ["<-", "<o"]:
+            reverse_type = f"{type[1]}>"
+            for neighbor in nx.all_neighbors(self, node):
+                if self.has_edge(neighbor, node, key=reverse_type):
+                    result.add(neighbor)
+        elif type in ["-o", "o-"]:
+            reverse_type = f"{type[1]}{type[0]}"
+            for neighbor in nx.all_neighbors(self, node):
+                if (self.has_edge(node, neighbor, key=type)) or (
+                    self.has_edge(neighbor, node, key=reverse_type)
+                ):
+                    result.add(neighbor)
+        else:
+            raise AssertionError(
+                "This should never happen."
+                "If you see this error, please file an issue on the pgmpy GitHub."
+            )
+        return result
+
+    def get_parents(self, node):
         """
-        [Explain]
+        Returns a set of parents nodes in the graph.
 
         Parameters
         ----------
+        node : Hashable
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
 
         Returns
         -------
+        nodes : set
+            Set of parents nodes.
 
         See Also
         --------
@@ -518,17 +558,23 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        ...
+        self._validating_nodes_value(node=node, type="<-")
+        return self.get_neighbors(node=node, type="<-")
 
-    def get_children(self):
+    def get_children(self, node):
         """
-        [Explain]
+        Returns a set of children nodes in the graph.
 
         Parameters
         ----------
+        node : Hashable
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
 
         Returns
         -------
+        nodes : set
+            Set of children nodes.
 
         See Also
         --------
@@ -550,17 +596,23 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        ...
+        self._validating_nodes_value(node=node, type="->")
+        return self.get_neighbors(node=node, type="->")
 
-    def get_spouses(self):
+    def get_spouses(self, node):
         """
-        [Explain]
+        Returns a set of spouses nodes in the graph.
 
         Parameters
         ----------
+        node : Hashable
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
 
         Returns
         -------
+        nodes : set
+            Set of spouses nodes.
 
         See Also
         --------
@@ -581,17 +633,23 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        ...
+        self._validating_nodes_value(node=node, type="<>")
+        return self.get_neighbors(node=node, type="<>")
 
-    def get_ancestors(self):
+    def get_ancestors(self, node):
         """
-        [Explain]
+        Returns a set of ancestors nodes in the graph.
 
         Parameters
         ----------
+        node : Hashable
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
 
         Returns
         -------
+        nodes : set
+            Set of ancestors nodes.
 
         See Also
         --------
@@ -613,17 +671,22 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        ...
+        self._validating_nodes_value(node=node)
 
-    def get_descendants(self):
+    def get_descendants(self, node):
         """
-        [Explain]
+        Returns a set of descendants nodes in the graph.
 
         Parameters
         ----------
+        node : Hashable
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
 
         Returns
         -------
+        nodes : set
+            Set of descendants nodes.
 
         See Also
         --------
@@ -645,17 +708,25 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        ...
+        self._validating_nodes_value(node=node)
 
-    def get_reachable_nodes(self):
+    def get_reachable_nodes(self, node, type):
         """
-        [Explain]
+        Returns a set of reachable nodes in the graph.
 
         Parameters
         ----------
+        node : Hashable
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
+
+        type : str
+            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
 
         Returns
         -------
+        nodes : set
+            Set of reachable nodes.
 
         See Also
         --------
@@ -676,7 +747,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        ...
+        self._validating_nodes_value(node=node, type=type)
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
@@ -777,3 +848,41 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             [(u, v, type) for u, v, type in self.edges(keys=True)],
             key=lambda x: (x[0], x[1]),
         )
+
+    def _validating_nodes_value(self, node, type):
+        """
+        Validating the input of a node-searching method.
+
+        Parameters
+        ----------
+        node : Hashable
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
+
+        type : str
+            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
+
+        Returns
+        -------
+        None
+
+        See Also
+        --------
+        `get_neighbors()`
+        `get_parents()`
+        `get_children()`
+        `get_ancestors()`
+        `get_descendants()`
+        `get_spouses()`
+        `get_reachable_nodes()`
+
+        """
+        # Check node's value
+        if node is None:
+            raise ValueError("Node cannot be None.")
+        if node not in self.nodes():
+            raise ValueError(f"Node {node} not in graph.")
+
+        # Check type's value
+        if (type is not None) and (type not in self.SUPPORTED_EDGE_TYPES):
+            raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")

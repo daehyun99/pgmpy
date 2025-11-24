@@ -1030,27 +1030,34 @@ class TestCoreGraph:
         assert graph.get_neighbors("C") == {"A", "Y"}
         check_graph_status(graph, 12, 11, set(), set(), set(), {})
 
-    def test_get_neighbors_with_type_values():
+    def test_get_neighbors_with_type_values(self):
         """Test `get_neighbors` method of the `_CoreGraph` class with type values."""
         graph = sample_graph1(type="->")
-        assert graph.get_neighbors("C", "->") == {"B", "D"}
+        assert graph.get_neighbors("C", "->") == {"D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="->")
-        assert graph.get_neighbors("B", "->") == {"A", "C", "D"}
+        assert graph.get_neighbors("B", "->") == {"C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph1(type="->")
-        assert graph.get_neighbors("C", "<-") == set()
+        assert graph.get_neighbors("C", "<-") == {"B"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="->")
-        assert graph.get_neighbors("B", "<-") == set()
+        assert graph.get_neighbors("B", "<-") == {"A"}
+        check_graph_status(graph, 4, 3, set(), set(), set(), {})
+
+        graph = sample_graph1(type="-o")
+        assert graph.get_neighbors("C", "o-") == {"B"}
+        check_graph_status(graph, 5, 4, set(), set(), set(), {})
+
+        graph = sample_graph2(type="-o")
+        assert graph.get_neighbors("B", "o-") == {"A"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph3()
-        all_nodes_except_A = {"B", "C", "D", "E", "F", "G", "H", "I", "J"}
-        assert graph.get_neighbors("A", "->") == all_nodes_except_A
+        assert graph.get_neighbors("A", "->") == {"B"}
         assert graph.get_neighbors("A", "<-") == {"C"}
         assert graph.get_neighbors("A", "<>") == {"E"}
         assert graph.get_neighbors("B", "->") == {"X"}
@@ -1207,7 +1214,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_parents()
         with pytest.raises(ValueError):
             graph.get_parents(1)
@@ -1326,7 +1333,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_spouses()
         with pytest.raises(ValueError):
             graph.get_spouses(1)
@@ -1445,7 +1452,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_children()
         with pytest.raises(ValueError):
             graph.get_children(1)
@@ -1563,7 +1570,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_ancestors()
         with pytest.raises(ValueError):
             graph.get_ancestors(1)
@@ -1681,7 +1688,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_descendants()
         with pytest.raises(ValueError):
             graph.get_descendants(1)
@@ -1814,7 +1821,7 @@ class TestCoreGraph:
         # Test3: Wrong input values.
         graph = _CoreGraph()
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_reachable_nodes()
         with pytest.raises(ValueError):
             graph.get_reachable_nodes("A")
