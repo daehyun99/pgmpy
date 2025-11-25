@@ -774,7 +774,20 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        self._validating_nodes_value(node=node, type=type)
+        reachable = set()
+        visited = set()
+        queue = deque(node)
+        nodes = self.nodes()
+
+        while queue:
+            current = queue.popleft()
+            if current not in nodes:
+                raise ValueError(f"Node {current} not in graph.")
+            if current not in visited:
+                visited.add(current)
+                reachable.add(current)
+                queue.extend(self.get_neighbors(current, type=type))
+        return reachable
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
