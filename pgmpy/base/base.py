@@ -669,17 +669,15 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
+        if node not in self.nodes():
+            raise ValueError(f"Node {node} not in graph.")
+
         ancestors = set()
-        visited = set()
-        queue = deque(node)
-        nodes = self.nodes()
+        queue = deque([node])
 
         while queue:
             current = queue.popleft()
-            if current not in nodes:
-                raise ValueError(f"Node {current} not in graph.")
-            elif current not in visited:
-                visited.add(current)
+            if current not in ancestors:
                 ancestors.add(current)
                 queue.extend(self.get_parents(current))
         return ancestors
@@ -719,17 +717,15 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
+        if node not in self.nodes():
+            raise ValueError(f"Node {node} not in graph.")
+
         descendants = set()
-        visited = set()
-        queue = deque(node)
-        nodes = self.nodes()
+        queue = deque([node])
 
         while queue:
             current = queue.popleft()
-            if current not in nodes:
-                raise ValueError(f"Node {current} not in graph.")
-            if current not in visited:
-                visited.add(current)
+            if current not in descendants:
                 descendants.add(current)
                 queue.extend(self.get_children(current))
         return descendants
@@ -771,17 +767,15 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
+        if node not in self.nodes():
+            raise ValueError(f"Node {node} not in graph.")
+
         reachable = set()
-        visited = set()
-        queue = deque(node)
-        nodes = self.nodes()
+        queue = deque([node])
 
         while queue:
             current = queue.popleft()
-            if current not in nodes:
-                raise ValueError(f"Node {current} not in graph.")
-            if current not in visited:
-                visited.add(current)
+            if current not in reachable:
                 reachable.add(current)
                 queue.extend(self.get_neighbors(current, type=type))
         return reachable
