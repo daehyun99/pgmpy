@@ -201,18 +201,19 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         self._validating_edges_value(ebunch=[(u, v, type)])
 
         # Adding edge base on type value.
-        if type in ["->", "<-", "o>", "<o"]:
-            if type in ["<-", "<o"]:
-                u, v = v, u
-                type = f"{type[1]}>"
-            super().add_edge(u, v, key=type, **kwargs)
-        elif type in ["--", "-o", "o-"]:
+        if type in ["<-", "<o"]:
+            u, v = v, u
+            type = f"{type[1]}>"
+        super().add_edge(u, v, key=type, **kwargs)
+
+        # Further adding edge based on the edge's type.
+        if type in ["--", "-o", "o-"]:
             reverse_type = f"{type[1]}{type[0]}"
-            super().add_edge(u, v, key=type, **kwargs)
             super().add_edge(v, u, key=reverse_type, **kwargs)
         elif type in ["<>", "oo"]:
-            super().add_edge(u, v, key=type, **kwargs)
             super().add_edge(v, u, key=type, **kwargs)
+        elif type in ["->", "<-", "o>", "<o"]:
+            pass
         else:
             raise AssertionError(
                 "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
@@ -308,18 +309,19 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         self._validating_edges_value(ebunch=[(u, v, type)])
 
         # Removing edge base on `type` value.
-        if type in ["->", "<-", "o>", "<o"]:
-            if type in ["<-", "<o"]:
-                u, v = v, u
-                type = f"{type[1]}>"
-            super().remove_edge(u, v, key=type)
-        elif type in ["--", "-o", "o-"]:
+        if type in ["<-", "<o"]:
+            u, v = v, u
+            type = f"{type[1]}>"
+        super().remove_edge(u, v, key=type)
+
+        # Further removing edge based on the edge's type.
+        if type in ["--", "-o", "o-"]:
             reverse_type = f"{type[1]}{type[0]}"
-            super().remove_edge(u, v, key=type)
             super().remove_edge(v, u, key=reverse_type)
         elif type in ["<>", "oo"]:
-            super().remove_edge(u, v, key=type)
             super().remove_edge(v, u, key=type)
+        elif type in ["->", "<-", "o>", "<o"]:
+            pass
         else:
             raise AssertionError(
                 "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
