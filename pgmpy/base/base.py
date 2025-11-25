@@ -379,7 +379,6 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         graph: graph object
             A copy of the graph object.
 
-
         Notes
         -----
         This method is expected to be usable without being implemented in a subclass of the graph class.
@@ -492,8 +491,11 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         --------
         >>> from pgmpy.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
-        >>> G = _CoreGraph()
-        [Explain]
+        >>> G = _CoreGraph(ebunch=edges)
+        >>> G.get_neighbors("B", "->")
+        {'C'}
+        >>> G.get_neighbors("B", "<-")
+        {'A'}
         """
         self._validating_nodes_value(node=node, type=type)
 
@@ -555,8 +557,11 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         --------
         >>> from pgmpy.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
-        >>> G = _CoreGraph()
-        [Explain]
+        >>> G = _CoreGraph(ebunch=edges)
+        >>> G.get_parents("B")
+        {'A'}
+        >>> G.get_parents("C")
+        {'B'}
         """
         self._validating_nodes_value(node=node, type="<-")
         return self.get_neighbors(node=node, type="<-")
@@ -593,8 +598,11 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         --------
         >>> from pgmpy.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
-        >>> G = _CoreGraph()
-        [Explain]
+        >>> G = _CoreGraph(ebunch=edges)
+        >>> G.get_children("A")
+        {'B'}
+        >>> G.get_children("B")
+        {'C'}
         """
         self._validating_nodes_value(node=node, type="->")
         return self.get_neighbors(node=node, type="->")
@@ -629,9 +637,12 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
-        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
-        >>> G = _CoreGraph()
-        [Explain]
+        >>> edges = [("A", "B", "->"), ("B", "C", "<>")]
+        >>> G = _CoreGraph(ebunch=edges)
+        >>> G.get_spouses("B")
+        {'C'}
+        >>> G.get_spouses("C")
+        {'B'}
         """
         self._validating_nodes_value(node=node, type="<>")
         return self.get_neighbors(node=node, type="<>")
@@ -668,8 +679,11 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         --------
         >>> from pgmpy.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
-        >>> G = _CoreGraph()
-        [Explain]
+        >>> G = _CoreGraph(ebunch=edges)
+        >>> G.get_ancestors("C")
+        {'A', 'B', 'C'}
+        >>> G.get_ancestors("B")
+        {'A', 'B'}
         """
         if node not in self.nodes():
             raise ValueError(f"Node {node} not in graph.")
@@ -716,8 +730,11 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         --------
         >>> from pgmpy.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
-        >>> G = _CoreGraph()
-        [Explain]
+        >>> G = _CoreGraph(ebunch=edges)
+        >>> G.get_descendants("A")
+        {'A', 'B', 'C'}
+        >>> G.get_descendants("B")
+        {'B', 'C'}
         """
         if node not in self.nodes():
             raise ValueError(f"Node {node} not in graph.")
@@ -765,9 +782,19 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         Examples
         --------
         >>> from pgmpy.base import _CoreGraph
-        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
-        >>> G = _CoreGraph()
-        [Explain]
+        >>> edges = [
+        ...     ("A", "B", "->"),
+        ...     ("B", "C", "->"),
+        ...     ("C", "D", "--"),
+        ...     ("D", "F", "<>"),
+        ... ]
+        >>> G = _CoreGraph(ebunch=edges)
+        >>> G.get_reachable_nodes("A", "->")
+        {'A', 'B', 'C'}
+        >>> G.get_reachable_nodes("C", "--")
+        {'C', 'D'}
+        >>> G.get_reachable_nodes("D", "<>")
+        {'D', 'F'}
         """
         if node not in self.nodes():
             raise ValueError(f"Node {node} not in graph.")
