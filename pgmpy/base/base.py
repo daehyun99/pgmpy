@@ -215,8 +215,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             super().add_edge(v, u, key=type, **kwargs)
         else:
             raise AssertionError(
-                "This should never happen."
-                "If you see this error, please file an issue on the pgmpy GitHub."
+                "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
             )
 
     def add_edges_from(
@@ -323,8 +322,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             super().remove_edge(v, u, key=type)
         else:
             raise AssertionError(
-                "This should never happen."
-                "If you see this error, please file an issue on the pgmpy GitHub."
+                "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
             )
 
     def remove_edges_from(
@@ -519,8 +517,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
                     result.add(neighbor)
         else:
             raise AssertionError(
-                "This should never happen."
-                "If you see this error, please file an issue on the pgmpy GitHub."
+                "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
             )
         return result
 
