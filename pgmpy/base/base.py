@@ -1,3 +1,4 @@
+from collections import deque
 from typing import Hashable, Iterable, Optional
 
 import networkx as nx
@@ -200,22 +201,22 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         self._validating_edges_value(ebunch=[(u, v, type)])
 
         # Adding edge base on type value.
-        if type in ["->", "<-", "o>", "<o"]:
-            if type in ["<-", "<o"]:
-                u, v = v, u
-                type = f"{type[1]}>"
-            super().add_edge(u, v, key=type, **kwargs)
-        elif type in ["--", "-o", "o-"]:
+        if type in ["<-", "<o"]:
+            u, v = v, u
+            type = f"{type[1]}>"
+        super().add_edge(u, v, key=type, **kwargs)
+
+        # Further adding edge based on the edge's type.
+        if type in ["--", "-o", "o-"]:
             reverse_type = f"{type[1]}{type[0]}"
-            super().add_edge(u, v, key=type, **kwargs)
             super().add_edge(v, u, key=reverse_type, **kwargs)
         elif type in ["<>", "oo"]:
-            super().add_edge(u, v, key=type, **kwargs)
             super().add_edge(v, u, key=type, **kwargs)
+        elif type in ["->", "<-", "o>", "<o"]:
+            pass
         else:
             raise AssertionError(
-                "This should never happen."
-                "If you see this error, please file an issue on the pgmpy GitHub."
+                "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
             )
 
     def add_edges_from(
@@ -308,22 +309,22 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         self._validating_edges_value(ebunch=[(u, v, type)])
 
         # Removing edge base on `type` value.
-        if type in ["->", "<-", "o>", "<o"]:
-            if type in ["<-", "<o"]:
-                u, v = v, u
-                type = f"{type[1]}>"
-            super().remove_edge(u, v, key=type)
-        elif type in ["--", "-o", "o-"]:
+        if type in ["<-", "<o"]:
+            u, v = v, u
+            type = f"{type[1]}>"
+        super().remove_edge(u, v, key=type)
+
+        # Further removing edge based on the edge's type.
+        if type in ["--", "-o", "o-"]:
             reverse_type = f"{type[1]}{type[0]}"
-            super().remove_edge(u, v, key=type)
             super().remove_edge(v, u, key=reverse_type)
         elif type in ["<>", "oo"]:
-            super().remove_edge(u, v, key=type)
             super().remove_edge(v, u, key=type)
+        elif type in ["->", "<-", "o>", "<o"]:
+            pass
         else:
             raise AssertionError(
-                "This should never happen."
-                "If you see this error, please file an issue on the pgmpy GitHub."
+                "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
             )
 
     def remove_edges_from(
@@ -518,8 +519,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
                     result.add(neighbor)
         else:
             raise AssertionError(
-                "This should never happen."
-                "If you see this error, please file an issue on the pgmpy GitHub."
+                "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
             )
         return result
 
@@ -671,7 +671,18 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        self._validating_nodes_value(node=node)
+        if node not in self.nodes():
+            raise ValueError(f"Node {node} not in graph.")
+
+        ancestors = set()
+        queue = deque([node])
+
+        while queue:
+            current = queue.popleft()
+            if current not in ancestors:
+                ancestors.add(current)
+                queue.extend(self.get_parents(current))
+        return ancestors
 
     def get_descendants(self, node):
         """
@@ -708,7 +719,18 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        self._validating_nodes_value(node=node)
+        if node not in self.nodes():
+            raise ValueError(f"Node {node} not in graph.")
+
+        descendants = set()
+        queue = deque([node])
+
+        while queue:
+            current = queue.popleft()
+            if current not in descendants:
+                descendants.add(current)
+                queue.extend(self.get_children(current))
+        return descendants
 
     def get_reachable_nodes(self, node, type):
         """
@@ -747,7 +769,18 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph()
         [Explain]
         """
-        self._validating_nodes_value(node=node, type=type)
+        if node not in self.nodes():
+            raise ValueError(f"Node {node} not in graph.")
+
+        reachable = set()
+        queue = deque([node])
+
+        while queue:
+            current = queue.popleft()
+            if current not in reachable:
+                reachable.add(current)
+                queue.extend(self.get_neighbors(current, type=type))
+        return reachable
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)

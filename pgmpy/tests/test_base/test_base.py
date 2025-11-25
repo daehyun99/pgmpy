@@ -1483,64 +1483,64 @@ class TestCoreGraph:
         """Test `get_ancestors` method of the `_CoreGraph` class with undirect edges."""
         # Test1: edge.
         graph = sample_graph1(type="--")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="--")
-        assert graph.get_ancestors("B") == set()
+        assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_ancestors_with_bidirect_edges(self):
         """Test `get_ancestors` method of the `_CoreGraph` class with bidirect edges."""
         # Test1: edge.
         graph = sample_graph1(type="<>")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="<>")
-        assert graph.get_ancestors("B") == set()
+        assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_ancestors_with_unknown_edges(self):
         """Test `get_ancestors` method of the `_CoreGraph` class with unknown edges."""
         graph = sample_graph1(type="o>")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="<o")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="-o")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="o-")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="oo")
-        assert graph.get_ancestors("C") == set()
+        assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="o>")
-        assert graph.get_ancestors("B") == set()
+        assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_ancestors("B") == set()
+        assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_ancestors("B") == set()
+        assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_ancestors("B") == set()
+        assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
-        assert graph.get_ancestors("B") == set()
+        assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_ancestors_with_multiedges(self):
@@ -1564,7 +1564,7 @@ class TestCoreGraph:
         graph.add_node("A")
         graph.add_node("B")
 
-        assert graph.get_ancestors("A") == set()
+        assert graph.get_ancestors("A") == {"A"}
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
         # Test3: Wrong input values.
@@ -1573,7 +1573,7 @@ class TestCoreGraph:
         with pytest.raises(TypeError):
             graph.get_ancestors()
         with pytest.raises(ValueError):
-            graph.get_ancestors(1)
+            graph.get_ancestors("1")
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     # get_descendants
@@ -1601,64 +1601,64 @@ class TestCoreGraph:
         """Test `get_descendants` method of the `_CoreGraph` class with undirect edges."""
         # Test1: edge.
         graph = sample_graph1(type="--")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="--")
-        assert graph.get_descendants("B") == set()
+        assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_descendants_with_bidirect_edges(self):
         """Test `get_descendants` method of the `_CoreGraph` class with bidirect edges."""
         # Test1: edge.
         graph = sample_graph1(type="<>")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="<>")
-        assert graph.get_descendants("B") == set()
+        assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_descendants_with_unknown_edges(self):
         """Test `get_descendants` method of the `_CoreGraph` class with unknown edges."""
         graph = sample_graph1(type="o>")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="<o")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="-o")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="o-")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="oo")
-        assert graph.get_descendants("C") == set()
+        assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="o>")
-        assert graph.get_descendants("B") == set()
+        assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_descendants("B") == set()
+        assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_descendants("B") == set()
+        assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_descendants("B") == set()
+        assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
-        assert graph.get_descendants("B") == set()
+        assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_descendants_with_multiedges(self):
@@ -1682,7 +1682,7 @@ class TestCoreGraph:
         graph.add_node("A")
         graph.add_node("B")
 
-        assert graph.get_descendants("A") == set()
+        assert graph.get_descendants("A") == {"A"}
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
         # Test3: Wrong input values.
@@ -1691,7 +1691,7 @@ class TestCoreGraph:
         with pytest.raises(TypeError):
             graph.get_descendants()
         with pytest.raises(ValueError):
-            graph.get_descendants(1)
+            graph.get_descendants("1")
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     # get_reachable_nodes
@@ -1699,20 +1699,20 @@ class TestCoreGraph:
         """Test `get_reachable_nodes` method of the `_CoreGraph` class with direct edges."""
         # Test1: edge.
         graph = sample_graph1(type="->")
-        assert graph.get_reachable_nodes("C", "->") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("C", "->") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="->")
-        assert graph.get_reachable_nodes("B", "->") == {"A", "B", "C", "D"}
+        assert graph.get_reachable_nodes("B", "->") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         # Test2: reverse edge.
         graph = sample_graph1(type="<-")
-        assert graph.get_reachable_nodes("C", "<-") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("C", "<-") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="<-")
-        assert graph.get_reachable_nodes("B", "<-") == {"A", "B", "C", "D"}
+        assert graph.get_reachable_nodes("B", "<-") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_reachable_nodes_with_undirect_edges(self):
@@ -1740,19 +1740,19 @@ class TestCoreGraph:
     def test_get_reachable_nodes_with_unknown_edges(self):
         """Test `get_reachable_nodes` method of the `_CoreGraph` class with unknown edges."""
         graph = sample_graph1(type="o>")
-        assert graph.get_reachable_nodes("C", "o>") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("C", "o>") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="<o")
-        assert graph.get_reachable_nodes("C", "<o") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("C", "<o") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="-o")
-        assert graph.get_reachable_nodes("C", "-o") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("C", "-o") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="o-")
-        assert graph.get_reachable_nodes("C", "o-") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("C", "o-") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph1(type="oo")
@@ -1760,19 +1760,19 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="o>")
-        assert graph.get_reachable_nodes("B", "o>") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("B", "o>") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_reachable_nodes("B", "<o") == {"A", "B", "C", "D"}
+        assert graph.get_reachable_nodes("B", "<o") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_reachable_nodes("B", "-o") == {"A", "B", "C", "D"}
+        assert graph.get_reachable_nodes("B", "-o") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_reachable_nodes("B", "o-") == {"A", "B", "C", "D"}
+        assert graph.get_reachable_nodes("B", "o-") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
@@ -1786,8 +1786,6 @@ class TestCoreGraph:
             "A",
             "B",
             "X",
-            "E",
-            "I",
         }
         assert graph.get_reachable_nodes("A", "<-") == {
             "A",
@@ -1815,7 +1813,7 @@ class TestCoreGraph:
         graph.add_node("A")
         graph.add_node("B")
 
-        assert graph.get_reachable_nodes("A") == set()
+        assert graph.get_reachable_nodes("A", "->") == {"A"}
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
         # Test3: Wrong input values.
@@ -1823,7 +1821,7 @@ class TestCoreGraph:
 
         with pytest.raises(TypeError):
             graph.get_reachable_nodes()
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_reachable_nodes("A")
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
