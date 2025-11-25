@@ -1760,19 +1760,19 @@ class TestCoreGraph:
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
         graph = sample_graph2(type="o>")
-        assert graph.get_reachable_nodes("B", "o>") == {"A", "B", "C", "D", "E"}
+        assert graph.get_reachable_nodes("B", "o>") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="<o")
-        assert graph.get_reachable_nodes("B", "<o") == {"A", "B", "C", "D"}
+        assert graph.get_reachable_nodes("B", "<o") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="-o")
-        assert graph.get_reachable_nodes("B", "-o") == {"A", "B", "C", "D"}
+        assert graph.get_reachable_nodes("B", "-o") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="o-")
-        assert graph.get_reachable_nodes("B", "o-") == {"A", "B", "C", "D"}
+        assert graph.get_reachable_nodes("B", "o-") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         graph = sample_graph2(type="oo")
@@ -1786,8 +1786,6 @@ class TestCoreGraph:
             "A",
             "B",
             "X",
-            "E",
-            "I",
         }
         assert graph.get_reachable_nodes("A", "<-") == {
             "A",
@@ -1815,7 +1813,7 @@ class TestCoreGraph:
         graph.add_node("A")
         graph.add_node("B")
 
-        assert graph.get_reachable_nodes("A") == set()
+        assert graph.get_reachable_nodes("A", "->") == {"A"}
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
         # Test3: Wrong input values.
@@ -1823,7 +1821,7 @@ class TestCoreGraph:
 
         with pytest.raises(TypeError):
             graph.get_reachable_nodes()
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             graph.get_reachable_nodes("A")
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
