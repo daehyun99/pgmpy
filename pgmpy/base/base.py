@@ -4,6 +4,7 @@ from typing import Hashable, Iterable, Optional
 import networkx as nx
 
 from pgmpy.base._mixin_roles import _GraphRolesMixin
+from pgmpy.global_vars import logger
 
 
 class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
@@ -198,7 +199,10 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G.get_edges(type=True)
         [('A', 'B', {'type': '->'})]
         """
-        self._validating_edges_value(ebunch=[(u, v, type)])
+        ebunch = self._validating_and_formatting_edges_value(
+            ebunch=[(u, v, type)], default_type="->"
+        )
+        u, v, type = ebunch[0]
 
         # Adding edge base on type value.
         if type in ["<-", "<o"]:
@@ -257,7 +261,9 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G.get_edges(type=True)
         [('A', 'B', {'type': '->'}), ('B', 'C', {'type': '->'})]
         """
-        self._validating_edges_value(ebunch=ebunch)
+        ebunch = self._validating_and_formatting_edges_value(
+            ebunch=ebunch, default_type="->"
+        )
 
         for u, v, type in ebunch:
             self.add_edge(u, v, type, **kwargs)
@@ -306,7 +312,10 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G.get_edges(type=True)
         [('B', 'C', {'type': '->'}), ('C', 'D', {'type': '--'})]
         """
-        self._validating_edges_value(ebunch=[(u, v, type)])
+        ebunch = self._validating_and_formatting_edges_value(
+            ebunch=[(u, v, type)], default_type="->"
+        )
+        u, v, type = ebunch[0]
 
         # Removing edge base on `type` value.
         if type in ["<-", "<o"]:
@@ -361,7 +370,9 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G.get_edges(type=True)
         [('A', 'B', {'type': '->'})]
         """
-        self._validating_edges_value(ebunch=ebunch)
+        ebunch = self._validating_and_formatting_edges_value(
+            ebunch=ebunch, default_type="->"
+        )
 
         for u, v, type in ebunch:
             self.remove_edge(u, v, type)
@@ -855,15 +866,24 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             and self.get_role_dict() == other.get_role_dict()
         )
 
-    def _validating_edges_value(
+    def _validating_and_formatting_edges_value(
         self,
         ebunch: Iterable[tuple[Hashable, Hashable, Hashable]],
+        default_type: str = "->",
     ):
         """
-        Validates the value input by the user, then either raises an error.
+        Validates the value input by the user, then either raises an error or converts it to the correct format.
 
         Parameters
         ----------
+        ebunch : list of tuples
+            [(`u`, `v`, `type`), (`u`, `v`, `type`), ...]
+
+        default_type : str
+            edge's type value.
+
+        Returns
+        -------
         ebunch : list of tuples
             [(`u`, `v`, `type`), (`u`, `v`, `type`), ...]
 
@@ -875,13 +895,28 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             `remove_edge()`,
             `remove_edges_from()`.
         """
-        for u, v, type in ebunch:
+        result = []
+        for edege_to_add in ebunch:
+            # Checking type's value. edege_to_add == (u, v, type)
+            if len(edege_to_add) == 2 or (edege_to_add[2] is None):
+                u = edege_to_add[0]
+                v = edege_to_add[1]
+                type = default_type
+                logger.info(
+                    f"Missing 'type' value. Setting default edge type between {u} and {v} to {default_type}."
+                )
+            else:
+                u, v, type = edege_to_add
+            if type not in self.SUPPORTED_EDGE_TYPES:
+                raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
+
+            # Checking nodes's value.
             if (u is None) or (v is None):
                 raise ValueError("Nodes cannot be None.")
             if u == v:
                 raise ValueError("Nodes cannot be the same for an edge.")
-            if (type is None) or (type not in self.SUPPORTED_EDGE_TYPES):
-                raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
+            result.append((u, v, type))
+        return result
 
     def _get_edges_type_key(self):
         """
