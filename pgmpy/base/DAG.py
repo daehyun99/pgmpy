@@ -187,24 +187,9 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         for role, vars in roles.items():
             self.with_role(role=role, variables=vars, inplace=True)
 
-    def _check_cycles(self):
-        """Checks if the graph has cycles.
-
-        Raises
-        ------
-        ValueError
-            If the graph has cycles.
-        """
-        cycles = []
-        try:
-            cycles = list(nx.find_cycle(self))
-        except nx.NetworkXNoCycle:
-            pass
-        else:
-            out_str = "Cycles are not allowed in a DAG."
-            out_str += "\nEdges indicating the path taken for a loop: "
-            out_str += "".join([f"({u},{v}) " for (u, v) in cycles])
-            raise ValueError(out_str)
+    # ----------------------------------------------------------------------
+    # Public API (or Public Methods)
+    # ----------------------------------------------------------------------
 
     @classmethod
     def from_lavaan(
@@ -1602,15 +1587,6 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         else:
             return "dag {\n}"
 
-    def _variable_name_contains_non_string(self):
-        """
-        Checks if the variable names contain any non-string values. Used only for CausalInference class.
-        """
-        for node in list(self.nodes()):
-            if not isinstance(node, str):
-                return (node, type(node))
-        return False
-
     def copy(self):
         """Returns a copy of the DAG object."""
         dag = DAG(ebunch=self.edges(), latents=self.latents)
@@ -1620,31 +1596,6 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
             dag.with_role(role=role, variables=vars, inplace=True)
 
         return dag
-
-    def __eq__(self, other):
-        """
-        Checks if two DAGs are equal. Two DAGs are considered equal if they
-        have the same nodes, edges, latent variables, and variable roles.
-
-        Parameters
-        ----------
-        other: DAG object
-            The other DAG to compare with.
-
-        Returns
-        -------
-        bool
-            True if the DAGs are equal, False otherwise.
-        """
-        if not isinstance(other, DAG):
-            return False
-
-        return (
-            set(self.nodes()) == set(other.nodes())
-            and set(self.edges()) == set(other.edges())
-            and self.latents == other.latents
-            and self.get_role_dict() == other.get_role_dict()
-        )
 
     def edge_strength(self, data, edges=None):
         """
@@ -1909,6 +1860,63 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
                 metric_vals["Failing CIs / Total CIs"] = display_value
 
         return metric_vals
+
+    # ----------------------------------------------------------------------
+    # Internal Methods (or Private Methods)
+    # ----------------------------------------------------------------------
+
+    def _check_cycles(self):
+        """Checks if the graph has cycles.
+
+        Raises
+        ------
+        ValueError
+            If the graph has cycles.
+        """
+        cycles = []
+        try:
+            cycles = list(nx.find_cycle(self))
+        except nx.NetworkXNoCycle:
+            pass
+        else:
+            out_str = "Cycles are not allowed in a DAG."
+            out_str += "\nEdges indicating the path taken for a loop: "
+            out_str += "".join([f"({u},{v}) " for (u, v) in cycles])
+            raise ValueError(out_str)
+
+    def _variable_name_contains_non_string(self):
+        """
+        Checks if the variable names contain any non-string values. Used only for CausalInference class.
+        """
+        for node in list(self.nodes()):
+            if not isinstance(node, str):
+                return (node, type(node))
+        return False
+
+    def __eq__(self, other):
+        """
+        Checks if two DAGs are equal. Two DAGs are considered equal if they
+        have the same nodes, edges, latent variables, and variable roles.
+
+        Parameters
+        ----------
+        other: DAG object
+            The other DAG to compare with.
+
+        Returns
+        -------
+        bool
+            True if the DAGs are equal, False otherwise.
+        """
+        if not isinstance(other, DAG):
+            return False
+
+        return (
+            set(self.nodes()) == set(other.nodes())
+            and set(self.edges()) == set(other.edges())
+            and self.latents == other.latents
+            and self.get_role_dict() == other.get_role_dict()
+        )
 
     def __hash__(self):
         """

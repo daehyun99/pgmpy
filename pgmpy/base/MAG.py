@@ -106,45 +106,9 @@ class MAG(AncestralBase):
             roles=roles,
         )
 
-    def _is_collider(self, u, c, v):
-        """
-        Check if a node is a collider in a path u - c - v.
-
-        A collider is a node with incoming arrowheads on both sides:
-        u -> c <- v.
-
-        Parameters
-        ----------
-        u : Hashable
-            The first endpoint in the triplet (u, c, v).
-
-        c : Hashable
-            The middle node, candidate collider.
-
-        v : Hashable
-            The second endpoint in the triplet.
-
-        Returns
-        -------
-        bool
-            True if `c` is a collider on the path, False otherwise.
-
-        Examples
-        --------
-        >>> from pgmpy.base import MAG
-        >>> mag = MAG()
-        >>> mag.add_edge("X", "Z", "-", ">")
-        >>> mag.add_edge("Y", "Z", "-", ">")
-        >>> mag._is_collider("X", "Z", "Y")
-        True
-        """
-        if not (self.has_edge(u, c) and self.has_edge(c, v)):
-            return False
-
-        mark_uc_at_c = self.edges[u, c]["marks"][c]
-        mark_cv_at_c = self.edges[c, v]["marks"][c]
-
-        return mark_uc_at_c == ">" and mark_cv_at_c == ">"
+    # ----------------------------------------------------------------------
+    # Public API (or Public Methods)
+    # ----------------------------------------------------------------------
 
     def has_inducing_path(self, u, v, W):
         """
@@ -394,3 +358,47 @@ class MAG(AncestralBase):
 
         new_mag.remove_edges_from(edges_to_remove)
         return new_mag
+
+    # ----------------------------------------------------------------------
+    # Internal Methods (or Private Methods)
+    # ----------------------------------------------------------------------
+
+    def _is_collider(self, u, c, v):
+        """
+        Check if a node is a collider in a path u - c - v.
+
+        A collider is a node with incoming arrowheads on both sides:
+        u -> c <- v.
+
+        Parameters
+        ----------
+        u : Hashable
+            The first endpoint in the triplet (u, c, v).
+
+        c : Hashable
+            The middle node, candidate collider.
+
+        v : Hashable
+            The second endpoint in the triplet.
+
+        Returns
+        -------
+        bool
+            True if `c` is a collider on the path, False otherwise.
+
+        Examples
+        --------
+        >>> from pgmpy.base import MAG
+        >>> mag = MAG()
+        >>> mag.add_edge("X", "Z", "-", ">")
+        >>> mag.add_edge("Y", "Z", "-", ">")
+        >>> mag._is_collider("X", "Z", "Y")
+        True
+        """
+        if not (self.has_edge(u, c) and self.has_edge(c, v)):
+            return False
+
+        mark_uc_at_c = self.edges[u, c]["marks"][c]
+        mark_cv_at_c = self.edges[c, v]["marks"][c]
+
+        return mark_uc_at_c == ">" and mark_cv_at_c == ">"

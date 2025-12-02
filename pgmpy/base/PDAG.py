@@ -91,6 +91,10 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
         for role, vars in roles.items():
             self.with_role(role=role, variables=vars, inplace=True)
 
+    # ----------------------------------------------------------------------
+    # Public API (or Public Methods)
+    # ----------------------------------------------------------------------
+
     def all_neighbors(self, node):
         """
         Returns a set of all neighbors of a node in the PDAG. This includes both directed and undirected edges.
@@ -200,14 +204,6 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
             pdag.with_role(role=role, variables=vars, inplace=True)
         return pdag
 
-    def _directed_graph(self):
-        """
-        Returns a subgraph containing only directed edges.
-        """
-        dag = nx.DiGraph(self.directed_edges)
-        dag.add_nodes_from(self.nodes())
-        return dag
-
     def orient_undirected_edge(self, u, v, inplace=False):
         """
         Orients an undirected edge u - v as u -> v.
@@ -248,22 +244,6 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
 
         if not inplace:
             return pdag
-
-    def _check_new_unshielded_collider(self, u, v):
-        """
-        Tests if orienting an undirected edge u - v as u -> v creates new unshielded V-structures in the PDAG.
-
-        Checks whether v has any directed parents other than u that are not adjacent to u.
-
-        Returns
-        -------
-        True, if the orientation u -> v would lead to creation of a new V-structure.
-        False, if no new V-structures are formed.
-        """
-        for node in self.directed_parents(v):
-            if (node != u) and (not self.is_adjacent(u, node)):
-                return True
-        return False
 
     def apply_meeks_rules(self, apply_r4=False, inplace=False, debug=False):
         """
@@ -469,6 +449,34 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
         <AGraph <Swig Object of type 'Agraph_t *' at 0x7fdea4cde040>>
         """
         return nx.nx_agraph.to_agraph(self)
+
+    # ----------------------------------------------------------------------
+    # Internal Methods (or Private Methods)
+    # ----------------------------------------------------------------------
+
+    def _directed_graph(self):
+        """
+        Returns a subgraph containing only directed edges.
+        """
+        dag = nx.DiGraph(self.directed_edges)
+        dag.add_nodes_from(self.nodes())
+        return dag
+
+    def _check_new_unshielded_collider(self, u, v):
+        """
+        Tests if orienting an undirected edge u - v as u -> v creates new unshielded V-structures in the PDAG.
+
+        Checks whether v has any directed parents other than u that are not adjacent to u.
+
+        Returns
+        -------
+        True, if the orientation u -> v would lead to creation of a new V-structure.
+        False, if no new V-structures are formed.
+        """
+        for node in self.directed_parents(v):
+            if (node != u) and (not self.is_adjacent(u, node)):
+                return True
+        return False
 
     def __eq__(self, other):
         """

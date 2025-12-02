@@ -58,6 +58,10 @@ class ADMG(_GraphRolesMixin, MultiDiGraph):
         for role, vars in roles.items():
             self.with_role(role=role, variables=vars, inplace=True)
 
+    # ----------------------------------------------------------------------
+    # Public API (or Public Methods)
+    # ----------------------------------------------------------------------
+
     def add_directed_edges(self, ebunch):
         """
         Adds directed edges (u -> v) to the ADMG.
@@ -571,6 +575,10 @@ class ADMG(_GraphRolesMixin, MultiDiGraph):
             return m_connected_set & nodes_v_set
 
         return m_connected_set
+
+    # ----------------------------------------------------------------------
+    # Internal Methods (or Private Methods)
+    # ----------------------------------------------------------------------
 
     def __eq__(self, other):
         """
