@@ -120,6 +120,10 @@ class TestCoreGraph:
         ]
         check_graph_status(graph, 3, 3, set(), set(), set(), {})
 
+        edges = [("A", "B"), ("B", "C")]
+        graph = _CoreGraph(ebunch=edges)
+        check_graph_status(graph, 3, 2, set(), set(), set(), {})
+
     def test_init_with_exposures(self):
         """Test the initialization of a `_CoreGraph` with exposures."""
         edges = [("A", "B", "->")]
@@ -208,11 +212,6 @@ class TestCoreGraph:
             graph = _CoreGraph(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-        with pytest.raises(ValueError):  # miss `type` value
-            edges = [("A", "B")]
-            graph = _CoreGraph(ebunch=edges)
-        check_graph_status(graph, 0, 0, set(), set(), set(), {})
-
         with pytest.raises(ValueError):  # invalid `type` values
             edges = [("A", "B", "->"), ("A", "C", "o-->"), ("C", "D", "--")]
             graph = _CoreGraph(ebunch=edges)
@@ -228,6 +227,12 @@ class TestCoreGraph:
             roles = {"test_role1": "A", "test_role2": "C", "test_role3": "B"}
             graph = _CoreGraph(ebunch=edges, roles=roles)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
+    def test_add_edge(self):
+        """Test adding the edge of a `_CoreGraph` when type value is not given."""
+        graph = _CoreGraph()
+        graph.add_edge("A", "B")
+        check_graph_status(graph, 2, 1, set(), set(), set(), {})
 
     def test_add_directed_edge(self):
         """Test adding the direct edge of a `_CoreGraph`."""
@@ -329,9 +334,6 @@ class TestCoreGraph:
             graph.add_edge("A", "B", "-->")
 
         with pytest.raises(ValueError):
-            graph.add_edge("A", "B")
-
-        with pytest.raises(ValueError):
             graph.add_edge("A", "B", "Invalid_value")
 
         assert not graph.has_edge("A", "B")
@@ -339,6 +341,13 @@ class TestCoreGraph:
         assert graph.get_edges(type=True) == []
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
+    def test_add_edges_from(self):
+        """Test adding edge of a `_CoreGraph` when type value is not given."""
+        graph = _CoreGraph()
+        edges = [("A", "B", "->"), ("A", "C"), ("B", "C", "->")]
+        graph.add_edges_from(ebunch=edges)
+        check_graph_status(graph, 3, 3, set(), set(), set(), {})
 
     def test_add_directed_edges_from(self):
         """Test adding the direct edges of a `_CoreGraph`."""
@@ -429,11 +438,6 @@ class TestCoreGraph:
             graph.add_edges_from(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-        with pytest.raises(ValueError):  # miss `type` value
-            edges = [("A", "B", "->"), ("A", "C"), ("B", "C", "->")]
-            graph.add_edges_from(ebunch=edges)
-        check_graph_status(graph, 0, 0, set(), set(), set(), {})
-
         with pytest.raises(ValueError):  # same node error
             edges = [("A", "B", "->"), ("A", "A", "->"), ("B", "C", "->")]
             graph.add_edges_from(ebunch=edges)
@@ -443,6 +447,14 @@ class TestCoreGraph:
             edges = [("A", "B", "->"), ("B", "C", "-->"), ("C", "D", "->")]
             graph.add_edges_from(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
+    def test_remove_edge(self):
+        """Test removing edge of a `_CoreGraph` when type value is not given."""
+        edges = [("A", "B", "->"), ("B", "C", "<-")]
+        graph = _CoreGraph(ebunch=edges)
+        graph.remove_edge("A", "B")
+        graph.remove_edge("C", "B")
+        check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
     def test_remove_directed_edge(self):
         """Test removing the direct edge of a `_CoreGraph`."""
@@ -538,12 +550,6 @@ class TestCoreGraph:
 
         graph = _CoreGraph(ebunch=edges)
         graph.remove_edge("A", "B", "->")
-        with pytest.raises(ValueError):  # miss `type` value
-            graph.remove_edge("B", "C")
-        check_graph_status(graph, 3, 1, set(), set(), set(), {})
-
-        graph = _CoreGraph(ebunch=edges)
-        graph.remove_edge("A", "B", "->")
         with pytest.raises(ValueError):  # same node error
             graph.remove_edge("B", "B", "->")
         check_graph_status(graph, 3, 1, set(), set(), set(), {})
@@ -553,6 +559,13 @@ class TestCoreGraph:
         with pytest.raises(ValueError):  # invalid `type` value
             graph.remove_edge("B", "C", "invalid_value")
         check_graph_status(graph, 3, 1, set(), set(), set(), {})
+
+    def test_remove_edges_from(self):
+        """Test removing edges of a `_CoreGraph` when type value is not given."""
+        edges = [("A", "B", "->"), ("B", "C", "->")]
+        graph = _CoreGraph(ebunch=edges)
+        graph.remove_edges_from([("A", "B", "->"), ("B", "C")])
+        check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
     def test_remove_directed_edges_from(self):
         """Test removing the direct edges of a `_CoreGraph`."""
@@ -652,11 +665,6 @@ class TestCoreGraph:
         graph = _CoreGraph(ebunch=edges)
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             graph.remove_edges_from([("A", "B", "->"), ("B", None, "->")])
-        check_graph_status(graph, 3, 2, set(), set(), set(), {})
-
-        graph = _CoreGraph(ebunch=edges)
-        with pytest.raises(ValueError):  # miss `type` value
-            graph.remove_edges_from([("A", "B", "->"), ("B", "C")])
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
         graph = _CoreGraph(ebunch=edges)
