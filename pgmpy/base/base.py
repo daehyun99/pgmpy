@@ -45,7 +45,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
     --------
     Create an empty `_CoreGraph` with no nodes and no edges.
 
-    >>> from pgmpy.base import _CoreGraph
+    >>> from pgmpy.base.base import _CoreGraph
     >>> G = _CoreGraph()
 
     Edges and vertices can be passed to the constructor as an edge list.
@@ -59,7 +59,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
     Add one node,
 
-    >>> from pgmpy.base import _CoreGraph
+    >>> from pgmpy.base.base import _CoreGraph
     >>> G = _CoreGraph()
     >>> G.add_node("A")
     >>> G.nodes
@@ -71,7 +71,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
     Add one edge,
 
-    >>> from pgmpy.base import _CoreGraph
+    >>> from pgmpy.base.base import _CoreGraph
     >>> G = _CoreGraph()
     >>> G.add_edge("A", "B", "->")
     >>> G.get_edges(type=True)
@@ -111,13 +111,14 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
     >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("D", "C", "-o")]
     >>> G = _CoreGraph(ebunch=edges)
-    >>> G.with_role("Custom_role", "A", inplace=True)
-    >>> G.with_role("latents", "D", inplace=True)
+    >>> G = G.with_role("Custom_role", "A", inplace=False)
+    >>> G = G.with_role("latents", "D", inplace=False)
     >>> G.get_role_dict()
     {'latents': ['D'], 'Custom_role': ['A']}
-    >>> G.without_role("Custom_role", "A", inplace=True)
+    >>> G = G.without_role("Custom_role", "A", inplace=False)
     >>> G.get_role_dict()
     {'latents': ['D']}
+
     """
 
     SUPPORTED_EDGE_TYPES = set(["--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"])
@@ -192,13 +193,14 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> G = _CoreGraph()
         >>> G.add_edge("A", "B", "->")
         >>> G.get_edges(type=True)
         [('A', 'B', {'type': '->'})]
+
         """
-        self._validating_edges_value(ebunch=[(u, v, type)])
+        self._validate_edges(ebunch=[(u, v, type)])
 
         # Adding edge base on type value.
         if type in ["<-", "<o"]:
@@ -250,14 +252,15 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph()
         >>> G.add_edges_from(ebunch=edges)
         >>> G.get_edges(type=True)
         [('A', 'B', {'type': '->'}), ('B', 'C', {'type': '->'})]
+
         """
-        self._validating_edges_value(ebunch=ebunch)
+        self._validate_edges(ebunch=ebunch)
 
         for u, v, type in ebunch:
             self.add_edge(u, v, type, **kwargs)
@@ -299,14 +302,15 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> G.remove_edge("A", "B", "->")
         >>> G.get_edges(type=True)
         [('B', 'C', {'type': '->'}), ('C', 'D', {'type': '--'})]
+
         """
-        self._validating_edges_value(ebunch=[(u, v, type)])
+        self._validate_edges(ebunch=[(u, v, type)])
 
         # Removing edge base on `type` value.
         if type in ["<-", "<o"]:
@@ -353,15 +357,16 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
         >>> G.remove_edges_from(ebunch=remove_edges)
         >>> G.get_edges(type=True)
         [('A', 'B', {'type': '->'})]
+
         """
-        self._validating_edges_value(ebunch=ebunch)
+        self._validate_edges(ebunch=ebunch)
 
         for u, v, type in ebunch:
             self.remove_edge(u, v, type)
@@ -385,19 +390,17 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> G1 = _CoreGraph()
         >>> G2 = G1.copy()
         >>> G2.__class__
-        pgmpy.base.base._CoreGraph
+        <class 'pgmpy.base.base._CoreGraph'>
+
         """
         ebunch = self._get_edges_type_key()
 
         graph_copy = self.__class__()
         graph_copy.add_edges_from(ebunch=ebunch)
-        graph_copy.exposures = self.exposures
-        graph_copy.outcomes = self.outcomes
-        graph_copy.latents = self.latents
         for role, vars in self.get_role_dict().items():
             graph_copy.with_role(role=role, variables=vars, inplace=True)
 
@@ -427,12 +430,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> G = _CoreGraph(ebunch=[("A", "B", "->"), ("B", "C", "--")])
         >>> G.get_edges()
         [('A', 'B'), ('B', 'C')]
         >>> G.get_edges(type=True)
         [('A', 'B', {'type': '->'}), ('B', 'C', {'type': '--'})]
+
         """
         edges_type = self._get_edges_type_key()
         result = []
@@ -489,15 +493,16 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph(ebunch=edges)
-        >>> G.get_neighbors("B", "->")
-        {'C'}
-        >>> G.get_neighbors("B", "<-")
-        {'A'}
+        >>> print(sorted(G.get_neighbors("B", "->")))
+        ['C']
+        >>> print(sorted(G.get_neighbors("B", "<-")))
+        ['A']
+
         """
-        self._validating_nodes_value(node=node, type=type)
+        self._validate_nodes(node=node, type=type)
 
         if type is None:
             return set(nx.all_neighbors(self, node))
@@ -555,15 +560,16 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph(ebunch=edges)
-        >>> G.get_parents("B")
-        {'A'}
-        >>> G.get_parents("C")
-        {'B'}
+        >>> print(sorted(G.get_parents("B")))
+        ['A']
+        >>> print(sorted(G.get_parents("C")))
+        ['B']
+
         """
-        self._validating_nodes_value(node=node, type="<-")
+        self._validate_nodes(node=node, type="<-")
         return self.get_neighbors(node=node, type="<-")
 
     def get_children(self, node):
@@ -596,15 +602,16 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph(ebunch=edges)
-        >>> G.get_children("A")
-        {'B'}
-        >>> G.get_children("B")
-        {'C'}
+        >>> print(sorted(G.get_children("A")))
+        ['B']
+        >>> print(sorted(G.get_children("B")))
+        ['C']
+
         """
-        self._validating_nodes_value(node=node, type="->")
+        self._validate_nodes(node=node, type="->")
         return self.get_neighbors(node=node, type="->")
 
     def get_spouses(self, node):
@@ -636,15 +643,16 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "<>")]
         >>> G = _CoreGraph(ebunch=edges)
-        >>> G.get_spouses("B")
-        {'C'}
-        >>> G.get_spouses("C")
-        {'B'}
+        >>> print(sorted(G.get_spouses("B")))
+        ['C']
+        >>> print(sorted(G.get_spouses("C")))
+        ['B']
+
         """
-        self._validating_nodes_value(node=node, type="<>")
+        self._validate_nodes(node=node, type="<>")
         return self.get_neighbors(node=node, type="<>")
 
     def get_ancestors(self, node):
@@ -677,13 +685,14 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph(ebunch=edges)
-        >>> G.get_ancestors("C")
-        {'A', 'B', 'C'}
-        >>> G.get_ancestors("B")
-        {'A', 'B'}
+        >>> print(sorted(G.get_ancestors("C")))
+        ['A', 'B', 'C']
+        >>> print(sorted(G.get_ancestors("B")))
+        ['A', 'B']
+
         """
         if node not in self.nodes():
             raise ValueError(f"Node {node} not in graph.")
@@ -728,13 +737,14 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph(ebunch=edges)
-        >>> G.get_descendants("A")
-        {'A', 'B', 'C'}
-        >>> G.get_descendants("B")
-        {'B', 'C'}
+        >>> print(sorted(G.get_descendants("A")))
+        ['A', 'B', 'C']
+        >>> print(sorted(G.get_descendants("B")))
+        ['B', 'C']
+
         """
         if node not in self.nodes():
             raise ValueError(f"Node {node} not in graph.")
@@ -781,7 +791,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> edges = [
         ...     ("A", "B", "->"),
         ...     ("B", "C", "->"),
@@ -789,12 +799,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         ...     ("D", "F", "<>"),
         ... ]
         >>> G = _CoreGraph(ebunch=edges)
-        >>> G.get_reachable_nodes("A", "->")
-        {'A', 'B', 'C'}
-        >>> G.get_reachable_nodes("C", "--")
-        {'C', 'D'}
-        >>> G.get_reachable_nodes("D", "<>")
-        {'D', 'F'}
+        >>> print(sorted(G.get_reachable_nodes("A", "->")))
+        ['A', 'B', 'C']
+        >>> print(sorted(G.get_reachable_nodes("C", "--")))
+        ['C', 'D']
+        >>> print(sorted(G.get_reachable_nodes("D", "<>")))
+        ['D', 'F']
+
         """
         if node not in self.nodes():
             raise ValueError(f"Node {node} not in graph.")
@@ -834,11 +845,12 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base import _CoreGraph
+        >>> from pgmpy.base.base import _CoreGraph
         >>> G1 = _CoreGraph()
         >>> G2 = _CoreGraph()
         >>> G1.__eq__(G2)
         True
+
         """
         if not isinstance(other, self.__class__):
             return False
@@ -849,13 +861,10 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         return (
             set(self.nodes()) == set(other.nodes())
             and set(self_ebunch) == set(other_ebunch)
-            and self.exposures == other.exposures
-            and self.outcomes == other.outcomes
-            and self.latents == other.latents
             and self.get_role_dict() == other.get_role_dict()
         )
 
-    def _validating_edges_value(
+    def _validate_edges(
         self,
         ebunch: Iterable[tuple[Hashable, Hashable, Hashable]],
     ):
@@ -909,7 +918,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             key=lambda x: (x[0], x[1]),
         )
 
-    def _validating_nodes_value(self, node, type):
+    def _validate_nodes(self, node, type):
         """
         Validating the input of a node-searching method.
 
