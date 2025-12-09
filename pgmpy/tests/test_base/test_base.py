@@ -3,7 +3,7 @@
 import pytest
 
 from pgmpy.base import ADMG, DAG, PDAG
-from pgmpy.base.base import _CoreGraph
+from pgmpy.base._base import _CoreGraph
 
 
 def sample_graph1(edge_type=None):

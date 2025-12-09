@@ -45,7 +45,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
     --------
     Create an empty `_CoreGraph` with no nodes and no edges.
 
-    >>> from pgmpy.base.base import _CoreGraph
+    >>> from pgmpy.base._base import _CoreGraph
     >>> G = _CoreGraph()
 
     Edges and vertices can be passed to the constructor as an edge list.
@@ -59,7 +59,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
     Add one node,
 
-    >>> from pgmpy.base.base import _CoreGraph
+    >>> from pgmpy.base._base import _CoreGraph
     >>> G = _CoreGraph()
     >>> G.add_node("A")
     >>> G.nodes
@@ -71,7 +71,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
     Add one edge,
 
-    >>> from pgmpy.base.base import _CoreGraph
+    >>> from pgmpy.base._base import _CoreGraph
     >>> G = _CoreGraph()
     >>> G.add_edge("A", "B", "->")
     >>> G.get_edges(edge_type=True)
@@ -193,7 +193,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> G = _CoreGraph()
         >>> G.add_edge("A", "B", "->")
         >>> G.get_edges(edge_type=True)
@@ -252,7 +252,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph()
         >>> G.add_edges_from(ebunch=edges)
@@ -302,7 +302,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> G.remove_edge("A", "B", "->")
@@ -357,7 +357,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
@@ -390,11 +390,11 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> G1 = _CoreGraph()
         >>> G2 = G1.copy()
         >>> G2.__class__
-        <class 'pgmpy.base.base._CoreGraph'>
+        <class 'pgmpy.base._base._CoreGraph'>
 
         """
         ebunch = self._get_edges_edge_type_key()
@@ -430,7 +430,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> G = _CoreGraph(ebunch=[("A", "B", "->"), ("B", "C", "--")])
         >>> G.get_edges()
         [('A', 'B'), ('B', 'C')]
@@ -493,7 +493,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> print(sorted(G.get_neighbors("B", "->")))
@@ -560,7 +560,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> print(sorted(G.get_parents("B")))
@@ -602,7 +602,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> print(sorted(G.get_children("A")))
@@ -643,7 +643,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "<>")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> print(sorted(G.get_spouses("B")))
@@ -685,7 +685,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> print(sorted(G.get_ancestors("C")))
@@ -737,7 +737,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> print(sorted(G.get_descendants("A")))
@@ -791,7 +791,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [
         ...     ("A", "B", "->"),
         ...     ("B", "C", "->"),
@@ -845,7 +845,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
         Examples
         --------
-        >>> from pgmpy.base.base import _CoreGraph
+        >>> from pgmpy.base._base import _CoreGraph
         >>> G1 = _CoreGraph()
         >>> G2 = _CoreGraph()
         >>> G1.__eq__(G2)
