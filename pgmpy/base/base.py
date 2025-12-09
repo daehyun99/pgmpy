@@ -113,11 +113,11 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
     >>> G = _CoreGraph(ebunch=edges)
     >>> G = G.with_role("Custom_role", "A", inplace=False)
     >>> G = G.with_role("latents", "D", inplace=False)
-    >>> G.get_role_dict()
-    {'latents': ['D'], 'Custom_role': ['A']}
+    >>> G.get_role_dict() == {"latents": ["D"], "Custom_role": ["A"]}
+    True
     >>> G = G.without_role("Custom_role", "A", inplace=False)
-    >>> G.get_role_dict()
-    {'latents': ['D']}
+    >>> G.get_role_dict() == {"latents": ["D"]}
+    True
 
     """
 
