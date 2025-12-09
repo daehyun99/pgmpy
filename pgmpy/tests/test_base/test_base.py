@@ -6,7 +6,7 @@ from pgmpy.base import ADMG, DAG, PDAG
 from pgmpy.base.base import _CoreGraph
 
 
-def sample_graph1(type=None):
+def sample_graph1(edge_type=None):
     """
     Sample graph for testing node searching(`get_*`) method of `_CoreGraph` class.
     Tests node searching methods centered on node `C`.
@@ -18,15 +18,15 @@ def sample_graph1(type=None):
         +---+             +---+             +---+             +---+             +---+
     """
     edges = [
-        ("A", "B", type),
-        ("B", "C", type),
-        ("C", "D", type),
-        ("D", "E", type),
+        ("A", "B", edge_type),
+        ("B", "C", edge_type),
+        ("C", "D", edge_type),
+        ("D", "E", edge_type),
     ]
     return _CoreGraph(ebunch=edges)
 
 
-def sample_graph2(type=None):
+def sample_graph2(edge_type=None):
     """
     Sample graph for testing node searching(`get_*`) method of `_CoreGraph` class.
     Tests node searching methods centered on node `B`.
@@ -44,9 +44,9 @@ def sample_graph2(type=None):
 
     """
     edges = [
-        ("A", "B", type),
-        ("B", "C", type),
-        ("B", "D", type),
+        ("A", "B", edge_type),
+        ("B", "C", edge_type),
+        ("B", "D", edge_type),
     ]
     return _CoreGraph(ebunch=edges)
 
@@ -88,7 +88,7 @@ def check_graph_status(
 ):
     """Common graph state checking function."""
     assert len(graph.nodes) == node_count
-    assert len(graph.get_edges(type=True)) == edge_count
+    assert len(graph.get_edges(edge_type=True)) == edge_count
     assert graph.exposures == exposures
     assert graph.outcomes == outcomes
     assert graph.latents == latents
@@ -114,10 +114,10 @@ class TestCoreGraph:
         edges = [("A", "B", "--"), ("A", "B", "-o"), ("B", "C", "<>")]
         graph = _CoreGraph(ebunch=edges)
 
-        assert graph.get_edges(type=True) == [
-            ("A", "B", {"type": "--"}),
-            ("A", "B", {"type": "-o"}),
-            ("B", "C", {"type": "<>"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "B", {"edge_type": "--"}),
+            ("A", "B", {"edge_type": "-o"}),
+            ("B", "C", {"edge_type": "<>"}),
         ]
         check_graph_status(graph, 3, 3, set(), set(), set(), {})
 
@@ -204,17 +204,17 @@ class TestCoreGraph:
             graph = _CoreGraph(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-        with pytest.raises(ValueError):  # invalid `type` value
+        with pytest.raises(ValueError):  # invalid `edge_type` value
             edges = [("A", "B", "-->")]
             graph = _CoreGraph(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-        with pytest.raises(ValueError):  # miss `type` value
+        with pytest.raises(ValueError):  # miss `edge_type` value
             edges = [("A", "B")]
             graph = _CoreGraph(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-        with pytest.raises(ValueError):  # invalid `type` values
+        with pytest.raises(ValueError):  # invalid `edge_type` values
             edges = [("A", "B", "->"), ("A", "C", "o-->"), ("C", "D", "--")]
             graph = _CoreGraph(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
@@ -239,9 +239,9 @@ class TestCoreGraph:
         assert graph.has_edge("A", "C")
         assert graph.has_edge("B", "C")
 
-        assert graph.get_edges(type=True) == [
-            ("A", "C", {"type": "->"}),
-            ("B", "C", {"type": "->"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "C", {"edge_type": "->"}),
+            ("B", "C", {"edge_type": "->"}),
         ]
 
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
@@ -255,9 +255,9 @@ class TestCoreGraph:
         assert graph.has_edge("A", "C")
         assert graph.has_edge("C", "B")
 
-        assert graph.get_edges(type=True) == [
-            ("A", "C", {"type": "--"}),
-            ("B", "C", {"type": "--"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "C", {"edge_type": "--"}),
+            ("B", "C", {"edge_type": "--"}),
         ]
 
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
@@ -271,9 +271,9 @@ class TestCoreGraph:
         assert graph.has_edge("A", "C")
         assert graph.has_edge("C", "B")
 
-        assert graph.get_edges(type=True) == [
-            ("A", "C", {"type": "<>"}),
-            ("B", "C", {"type": "<>"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "C", {"edge_type": "<>"}),
+            ("B", "C", {"edge_type": "<>"}),
         ]
 
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
@@ -290,12 +290,12 @@ class TestCoreGraph:
         assert graph.has_edge("A", "C")
         assert graph.has_edge("C", "B")
 
-        assert graph.get_edges(type=True) == [
-            ("A", "C", {"type": "-o"}),
-            ("B", "C", {"type": "-o"}),
-            ("D", "E", {"type": "o>"}),
-            ("F", "E", {"type": "o>"}),
-            ("G", "H", {"type": "oo"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "C", {"edge_type": "-o"}),
+            ("B", "C", {"edge_type": "-o"}),
+            ("D", "E", {"edge_type": "o>"}),
+            ("F", "E", {"edge_type": "o>"}),
+            ("G", "H", {"edge_type": "oo"}),
         ]
 
         check_graph_status(graph, 8, 5, set(), set(), set(), {})
@@ -310,11 +310,11 @@ class TestCoreGraph:
 
         assert graph.has_edge("A", "B")
 
-        assert graph.get_edges(type=True) == [
-            ("A", "B", {"type": "->"}),
-            ("A", "B", {"type": "<>"}),
-            ("A", "B", {"type": "--"}),
-            ("A", "B", {"type": "oo"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "B", {"edge_type": "->"}),
+            ("A", "B", {"edge_type": "<>"}),
+            ("A", "B", {"edge_type": "--"}),
+            ("A", "B", {"edge_type": "oo"}),
         ]
 
         check_graph_status(graph, 2, 4, set(), set(), set(), {})
@@ -337,7 +337,7 @@ class TestCoreGraph:
 
         assert not graph.has_edge("A", "B")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
@@ -347,9 +347,9 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert graph.get_edges(type=True) == [
-            ("A", "B", {"type": "->"}),
-            ("B", "C", {"type": "->"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "B", {"edge_type": "->"}),
+            ("B", "C", {"edge_type": "->"}),
         ]
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
@@ -359,9 +359,9 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert graph.get_edges(type=True) == [
-            ("A", "B", {"type": "--"}),
-            ("B", "C", {"type": "--"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "B", {"edge_type": "--"}),
+            ("B", "C", {"edge_type": "--"}),
         ]
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
@@ -371,9 +371,9 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert graph.get_edges(type=True) == [
-            ("A", "B", {"type": "<>"}),
-            ("B", "C", {"type": "<>"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "B", {"edge_type": "<>"}),
+            ("B", "C", {"edge_type": "<>"}),
         ]
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
@@ -383,10 +383,10 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert graph.get_edges(type=True) == [
-            ("A", "B", {"type": "-o"}),
-            ("B", "C", {"type": "o-"}),
-            ("C", "D", {"type": "oo"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "B", {"edge_type": "-o"}),
+            ("B", "C", {"edge_type": "o-"}),
+            ("C", "D", {"edge_type": "oo"}),
         ]
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
@@ -396,10 +396,10 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert graph.get_edges(type=True) == [
-            ("A", "B", {"type": "->"}),
-            ("B", "C", {"type": "--"}),
-            ("C", "D", {"type": "<>"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "B", {"edge_type": "->"}),
+            ("B", "C", {"edge_type": "--"}),
+            ("C", "D", {"edge_type": "<>"}),
         ]
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
@@ -409,10 +409,10 @@ class TestCoreGraph:
         graph = _CoreGraph()
         graph.add_edges_from(ebunch=edges)
 
-        assert graph.get_edges(type=True) == [
-            ("A", "B", {"type": "->"}),
-            ("A", "B", {"type": "--"}),
-            ("A", "B", {"type": "oo"}),
+        assert graph.get_edges(edge_type=True) == [
+            ("A", "B", {"edge_type": "->"}),
+            ("A", "B", {"edge_type": "--"}),
+            ("A", "B", {"edge_type": "oo"}),
         ]
         check_graph_status(graph, 2, 3, set(), set(), set(), {})
 
@@ -430,7 +430,7 @@ class TestCoreGraph:
             graph.add_edges_from(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-        with pytest.raises(ValueError):  # miss `type` value
+        with pytest.raises(ValueError):  # miss `edge_type` value
             edges = [("A", "B", "->"), ("A", "C"), ("B", "C", "->")]
             graph.add_edges_from(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
@@ -440,7 +440,7 @@ class TestCoreGraph:
             graph.add_edges_from(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-        with pytest.raises(ValueError):  # invalid `type` value
+        with pytest.raises(ValueError):  # invalid `edge_type` value
             edges = [("A", "B", "->"), ("B", "C", "-->"), ("C", "D", "->")]
             graph.add_edges_from(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
@@ -456,7 +456,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -471,7 +471,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -486,7 +486,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -503,7 +503,7 @@ class TestCoreGraph:
         assert not graph.has_edge("B", "C")
         assert not graph.has_edge("C", "D")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 4, 0, set(), set(), set(), {})
 
@@ -517,7 +517,7 @@ class TestCoreGraph:
 
         assert not graph.has_edge("A", "B")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
@@ -539,7 +539,7 @@ class TestCoreGraph:
 
         graph = _CoreGraph(ebunch=edges)
         graph.remove_edge("A", "B", "->")
-        with pytest.raises(ValueError):  # miss `type` value
+        with pytest.raises(ValueError):  # miss `edge_type` value
             graph.remove_edge("B", "C")
         check_graph_status(graph, 3, 1, set(), set(), set(), {})
 
@@ -551,7 +551,7 @@ class TestCoreGraph:
 
         graph = _CoreGraph(ebunch=edges)
         graph.remove_edge("A", "B", "->")
-        with pytest.raises(ValueError):  # invalid `type` value
+        with pytest.raises(ValueError):  # invalid `edge_type` value
             graph.remove_edge("B", "C", "invalid_value")
         check_graph_status(graph, 3, 1, set(), set(), set(), {})
 
@@ -565,7 +565,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -579,7 +579,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -593,7 +593,7 @@ class TestCoreGraph:
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 3, 0, set(), set(), set(), {})
 
@@ -608,7 +608,7 @@ class TestCoreGraph:
         assert not graph.has_edge("B", "C")
         assert not graph.has_edge("C", "D")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 4, 0, set(), set(), set(), {})
 
@@ -623,7 +623,7 @@ class TestCoreGraph:
         assert not graph.has_edge("B", "C")
         assert not graph.has_edge("C", "D")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 4, 0, set(), set(), set(), {})
 
@@ -637,7 +637,7 @@ class TestCoreGraph:
 
         assert not graph.has_edge("A", "B")
 
-        assert graph.get_edges(type=True) == []
+        assert graph.get_edges(edge_type=True) == []
 
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
@@ -656,7 +656,7 @@ class TestCoreGraph:
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
         graph = _CoreGraph(ebunch=edges)
-        with pytest.raises(ValueError):  # miss `type` value
+        with pytest.raises(ValueError):  # miss `edge_type` value
             graph.remove_edges_from([("A", "B", "->"), ("B", "C")])
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
@@ -666,7 +666,7 @@ class TestCoreGraph:
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
         graph = _CoreGraph(ebunch=edges)
-        with pytest.raises(ValueError):  # invalid `type` value
+        with pytest.raises(ValueError):  # invalid `edge_type` value
             graph.remove_edges_from([("A", "B", "->"), ("B", "C", "invalid_value")])
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
@@ -940,84 +940,84 @@ class TestCoreGraph:
     def test_get_neighbors_with_direct_edges(self):
         """Test `get_neighbors` method of the `_CoreGraph` class with direct edges."""
         # Test1: edge.
-        graph = sample_graph1(type="->")
+        graph = sample_graph1(edge_type="->")
         assert graph.get_neighbors("C") == {"B", "D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="->")
+        graph = sample_graph2(edge_type="->")
         assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         # Test2: reverse edge.
-        graph = sample_graph1(type="<-")
+        graph = sample_graph1(edge_type="<-")
         assert graph.get_neighbors("C") == {"B", "D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<-")
+        graph = sample_graph2(edge_type="<-")
         assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_neighbors_with_undirect_edges(self):
         """Test `get_neighbors` method of the `_CoreGraph` class with undirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="--")
+        graph = sample_graph1(edge_type="--")
         assert graph.get_neighbors("C") == {"B", "D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="--")
+        graph = sample_graph2(edge_type="--")
         assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_neighbors_with_bidirect_edges(self):
         """Test `get_neighbors` method of the `_CoreGraph` class with bidirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="<>")
+        graph = sample_graph1(edge_type="<>")
         assert graph.get_neighbors("C") == {"B", "D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<>")
+        graph = sample_graph2(edge_type="<>")
         assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_neighbors_with_unknown_edges(self):
         """Test `get_neighbors` method of the `_CoreGraph` class with unknown edges."""
-        graph = sample_graph1(type="o>")
+        graph = sample_graph1(edge_type="o>")
         assert graph.get_neighbors("C") == {"B", "D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="<o")
+        graph = sample_graph1(edge_type="<o")
         assert graph.get_neighbors("C") == {"B", "D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="-o")
+        graph = sample_graph1(edge_type="-o")
         assert graph.get_neighbors("C") == {"B", "D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="o-")
+        graph = sample_graph1(edge_type="o-")
         assert graph.get_neighbors("C") == {"B", "D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="oo")
+        graph = sample_graph1(edge_type="oo")
         assert graph.get_neighbors("C") == {"B", "D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o>")
+        graph = sample_graph2(edge_type="o>")
         assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<o")
+        graph = sample_graph2(edge_type="<o")
         assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="-o")
+        graph = sample_graph2(edge_type="-o")
         assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o-")
+        graph = sample_graph2(edge_type="o-")
         assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="oo")
+        graph = sample_graph2(edge_type="oo")
         assert graph.get_neighbors("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
@@ -1031,29 +1031,29 @@ class TestCoreGraph:
         assert graph.get_neighbors("C") == {"A", "Y"}
         check_graph_status(graph, 12, 11, set(), set(), set(), {})
 
-    def test_get_neighbors_with_type_values(self):
-        """Test `get_neighbors` method of the `_CoreGraph` class with type values."""
-        graph = sample_graph1(type="->")
+    def test_get_neighbors_with_edge_type_values(self):
+        """Test `get_neighbors` method of the `_CoreGraph` class with edge_type values."""
+        graph = sample_graph1(edge_type="->")
         assert graph.get_neighbors("C", "->") == {"D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="->")
+        graph = sample_graph2(edge_type="->")
         assert graph.get_neighbors("B", "->") == {"C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph1(type="->")
+        graph = sample_graph1(edge_type="->")
         assert graph.get_neighbors("C", "<-") == {"B"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="->")
+        graph = sample_graph2(edge_type="->")
         assert graph.get_neighbors("B", "<-") == {"A"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph1(type="-o")
+        graph = sample_graph1(edge_type="-o")
         assert graph.get_neighbors("C", "o-") == {"B"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="-o")
+        graph = sample_graph2(edge_type="-o")
         assert graph.get_neighbors("B", "o-") == {"A"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
@@ -1094,7 +1094,7 @@ class TestCoreGraph:
             graph.get_neighbors(1)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-        # Test4: Wrong input type values.
+        # Test4: Wrong input edge_type values.
         graph = _CoreGraph()
         graph.add_edge("A", "B", "->")
 
@@ -1106,84 +1106,84 @@ class TestCoreGraph:
     def test_get_parents_with_direct_edges(self):
         """Test `get_parents` method of the `_CoreGraph` class with direct edges."""
         # Test1: edge.
-        graph = sample_graph1(type="->")
+        graph = sample_graph1(edge_type="->")
         assert graph.get_parents("C") == {"B"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="->")
+        graph = sample_graph2(edge_type="->")
         assert graph.get_parents("B") == {"A"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         # Test2: reverse edge.
-        graph = sample_graph1(type="<-")
+        graph = sample_graph1(edge_type="<-")
         assert graph.get_parents("C") == {"D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<-")
+        graph = sample_graph2(edge_type="<-")
         assert graph.get_parents("B") == {"C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_parents_with_undirect_edges(self):
         """Test `get_parents` method of the `_CoreGraph` class with undirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="--")
+        graph = sample_graph1(edge_type="--")
         assert graph.get_parents("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="--")
+        graph = sample_graph2(edge_type="--")
         assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_parents_with_bidirect_edges(self):
         """Test `get_parents` method of the `_CoreGraph` class with bidirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="<>")
+        graph = sample_graph1(edge_type="<>")
         assert graph.get_parents("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<>")
+        graph = sample_graph2(edge_type="<>")
         assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_parents_with_unknown_edges(self):
         """Test `get_parents` method of the `_CoreGraph` class with unknown edges."""
-        graph = sample_graph1(type="o>")
+        graph = sample_graph1(edge_type="o>")
         assert graph.get_parents("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="<o")
+        graph = sample_graph1(edge_type="<o")
         assert graph.get_parents("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="-o")
+        graph = sample_graph1(edge_type="-o")
         assert graph.get_parents("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="o-")
+        graph = sample_graph1(edge_type="o-")
         assert graph.get_parents("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="oo")
+        graph = sample_graph1(edge_type="oo")
         assert graph.get_parents("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o>")
+        graph = sample_graph2(edge_type="o>")
         assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<o")
+        graph = sample_graph2(edge_type="<o")
         assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="-o")
+        graph = sample_graph2(edge_type="-o")
         assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o-")
+        graph = sample_graph2(edge_type="o-")
         assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="oo")
+        graph = sample_graph2(edge_type="oo")
         assert graph.get_parents("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
@@ -1225,84 +1225,84 @@ class TestCoreGraph:
     def test_get_spouses_with_direct_edges(self):
         """Test `get_spouses` method of the `_CoreGraph` class with direct edges."""
         # Test1: edge.
-        graph = sample_graph1(type="->")
+        graph = sample_graph1(edge_type="->")
         assert graph.get_spouses("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="->")
+        graph = sample_graph2(edge_type="->")
         assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         # Test2: reverse edge.
-        graph = sample_graph1(type="<-")
+        graph = sample_graph1(edge_type="<-")
         assert graph.get_spouses("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<-")
+        graph = sample_graph2(edge_type="<-")
         assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_spouses_with_undirect_edges(self):
         """Test `get_spouses` method of the `_CoreGraph` class with undirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="--")
+        graph = sample_graph1(edge_type="--")
         assert graph.get_spouses("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="--")
+        graph = sample_graph2(edge_type="--")
         assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_spouses_with_bidirect_edges(self):
         """Test `get_spouses` method of the `_CoreGraph` class with bidirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="<>")
+        graph = sample_graph1(edge_type="<>")
         assert graph.get_spouses("C") == {"B", "D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<>")
+        graph = sample_graph2(edge_type="<>")
         assert graph.get_spouses("B") == {"A", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_spouses_with_unknown_edges(self):
         """Test `get_spouses` method of the `_CoreGraph` class with unknown edges."""
-        graph = sample_graph1(type="o>")
+        graph = sample_graph1(edge_type="o>")
         assert graph.get_spouses("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="<o")
+        graph = sample_graph1(edge_type="<o")
         assert graph.get_spouses("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="-o")
+        graph = sample_graph1(edge_type="-o")
         assert graph.get_spouses("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="o-")
+        graph = sample_graph1(edge_type="o-")
         assert graph.get_spouses("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="oo")
+        graph = sample_graph1(edge_type="oo")
         assert graph.get_spouses("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o>")
+        graph = sample_graph2(edge_type="o>")
         assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<o")
+        graph = sample_graph2(edge_type="<o")
         assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="-o")
+        graph = sample_graph2(edge_type="-o")
         assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o-")
+        graph = sample_graph2(edge_type="o-")
         assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="oo")
+        graph = sample_graph2(edge_type="oo")
         assert graph.get_spouses("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
@@ -1344,84 +1344,84 @@ class TestCoreGraph:
     def test_get_children_with_direct_edges(self):
         """Test `get_children` method of the `_CoreGraph` class with direct edges."""
         # Test1: edge.
-        graph = sample_graph1(type="->")
+        graph = sample_graph1(edge_type="->")
         assert graph.get_children("C") == {"D"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="->")
+        graph = sample_graph2(edge_type="->")
         assert graph.get_children("B") == {"C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         # Test2: reverse edge.
-        graph = sample_graph1(type="<-")
+        graph = sample_graph1(edge_type="<-")
         assert graph.get_children("C") == {"B"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<-")
+        graph = sample_graph2(edge_type="<-")
         assert graph.get_children("B") == {"A"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_children_with_undirect_edges(self):
         """Test `get_children` method of the `_CoreGraph` class with undirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="--")
+        graph = sample_graph1(edge_type="--")
         assert graph.get_children("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="--")
+        graph = sample_graph2(edge_type="--")
         assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_children_with_bidirect_edges(self):
         """Test `get_children` method of the `_CoreGraph` class with bidirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="<>")
+        graph = sample_graph1(edge_type="<>")
         assert graph.get_children("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<>")
+        graph = sample_graph2(edge_type="<>")
         assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_children_with_unknown_edges(self):
         """Test `get_children` method of the `_CoreGraph` class with unknown edges."""
-        graph = sample_graph1(type="o>")
+        graph = sample_graph1(edge_type="o>")
         assert graph.get_children("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="<o")
+        graph = sample_graph1(edge_type="<o")
         assert graph.get_children("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="-o")
+        graph = sample_graph1(edge_type="-o")
         assert graph.get_children("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="o-")
+        graph = sample_graph1(edge_type="o-")
         assert graph.get_children("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="oo")
+        graph = sample_graph1(edge_type="oo")
         assert graph.get_children("C") == set()
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o>")
+        graph = sample_graph2(edge_type="o>")
         assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<o")
+        graph = sample_graph2(edge_type="<o")
         assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="-o")
+        graph = sample_graph2(edge_type="-o")
         assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o-")
+        graph = sample_graph2(edge_type="o-")
         assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="oo")
+        graph = sample_graph2(edge_type="oo")
         assert graph.get_children("B") == set()
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
@@ -1463,84 +1463,84 @@ class TestCoreGraph:
     def test_get_ancestors_with_direct_edges(self):
         """Test `get_ancestors` method of the `_CoreGraph` class with direct edges."""
         # Test1: edge.
-        graph = sample_graph1(type="->")
+        graph = sample_graph1(edge_type="->")
         assert graph.get_ancestors("C") == {"A", "B", "C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="->")
+        graph = sample_graph2(edge_type="->")
         assert graph.get_ancestors("B") == {"A", "B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         # Test2: reverse edge.
-        graph = sample_graph1(type="<-")
+        graph = sample_graph1(edge_type="<-")
         assert graph.get_ancestors("C") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<-")
+        graph = sample_graph2(edge_type="<-")
         assert graph.get_ancestors("B") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_ancestors_with_undirect_edges(self):
         """Test `get_ancestors` method of the `_CoreGraph` class with undirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="--")
+        graph = sample_graph1(edge_type="--")
         assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="--")
+        graph = sample_graph2(edge_type="--")
         assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_ancestors_with_bidirect_edges(self):
         """Test `get_ancestors` method of the `_CoreGraph` class with bidirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="<>")
+        graph = sample_graph1(edge_type="<>")
         assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<>")
+        graph = sample_graph2(edge_type="<>")
         assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_ancestors_with_unknown_edges(self):
         """Test `get_ancestors` method of the `_CoreGraph` class with unknown edges."""
-        graph = sample_graph1(type="o>")
+        graph = sample_graph1(edge_type="o>")
         assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="<o")
+        graph = sample_graph1(edge_type="<o")
         assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="-o")
+        graph = sample_graph1(edge_type="-o")
         assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="o-")
+        graph = sample_graph1(edge_type="o-")
         assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="oo")
+        graph = sample_graph1(edge_type="oo")
         assert graph.get_ancestors("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o>")
+        graph = sample_graph2(edge_type="o>")
         assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<o")
+        graph = sample_graph2(edge_type="<o")
         assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="-o")
+        graph = sample_graph2(edge_type="-o")
         assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o-")
+        graph = sample_graph2(edge_type="o-")
         assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="oo")
+        graph = sample_graph2(edge_type="oo")
         assert graph.get_ancestors("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
@@ -1581,84 +1581,84 @@ class TestCoreGraph:
     def test_get_descendants_with_direct_edges(self):
         """Test `get_descendants` method of the `_CoreGraph` class with direct edges."""
         # Test1: edge.
-        graph = sample_graph1(type="->")
+        graph = sample_graph1(edge_type="->")
         assert graph.get_descendants("C") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="->")
+        graph = sample_graph2(edge_type="->")
         assert graph.get_descendants("B") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         # Test2: reverse edge.
-        graph = sample_graph1(type="<-")
+        graph = sample_graph1(edge_type="<-")
         assert graph.get_descendants("C") == {"A", "B", "C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<-")
+        graph = sample_graph2(edge_type="<-")
         assert graph.get_descendants("B") == {"A", "B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_descendants_with_undirect_edges(self):
         """Test `get_descendants` method of the `_CoreGraph` class with undirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="--")
+        graph = sample_graph1(edge_type="--")
         assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="--")
+        graph = sample_graph2(edge_type="--")
         assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_descendants_with_bidirect_edges(self):
         """Test `get_descendants` method of the `_CoreGraph` class with bidirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="<>")
+        graph = sample_graph1(edge_type="<>")
         assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<>")
+        graph = sample_graph2(edge_type="<>")
         assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_descendants_with_unknown_edges(self):
         """Test `get_descendants` method of the `_CoreGraph` class with unknown edges."""
-        graph = sample_graph1(type="o>")
+        graph = sample_graph1(edge_type="o>")
         assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="<o")
+        graph = sample_graph1(edge_type="<o")
         assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="-o")
+        graph = sample_graph1(edge_type="-o")
         assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="o-")
+        graph = sample_graph1(edge_type="o-")
         assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="oo")
+        graph = sample_graph1(edge_type="oo")
         assert graph.get_descendants("C") == {"C"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o>")
+        graph = sample_graph2(edge_type="o>")
         assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<o")
+        graph = sample_graph2(edge_type="<o")
         assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="-o")
+        graph = sample_graph2(edge_type="-o")
         assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o-")
+        graph = sample_graph2(edge_type="o-")
         assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="oo")
+        graph = sample_graph2(edge_type="oo")
         assert graph.get_descendants("B") == {"B"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
@@ -1699,84 +1699,84 @@ class TestCoreGraph:
     def test_get_reachable_nodes_with_direct_edges(self):
         """Test `get_reachable_nodes` method of the `_CoreGraph` class with direct edges."""
         # Test1: edge.
-        graph = sample_graph1(type="->")
+        graph = sample_graph1(edge_type="->")
         assert graph.get_reachable_nodes("C", "->") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="->")
+        graph = sample_graph2(edge_type="->")
         assert graph.get_reachable_nodes("B", "->") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
         # Test2: reverse edge.
-        graph = sample_graph1(type="<-")
+        graph = sample_graph1(edge_type="<-")
         assert graph.get_reachable_nodes("C", "<-") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<-")
+        graph = sample_graph2(edge_type="<-")
         assert graph.get_reachable_nodes("B", "<-") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_reachable_nodes_with_undirect_edges(self):
         """Test `get_reachable_nodes` method of the `_CoreGraph` class with undirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="--")
+        graph = sample_graph1(edge_type="--")
         assert graph.get_reachable_nodes("C", "--") == {"A", "B", "C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="--")
+        graph = sample_graph2(edge_type="--")
         assert graph.get_reachable_nodes("B", "--") == {"A", "B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_reachable_nodes_with_bidirect_edges(self):
         """Test `get_reachable_nodes` method of the `_CoreGraph` class with bidirect edges."""
         # Test1: edge.
-        graph = sample_graph1(type="<>")
+        graph = sample_graph1(edge_type="<>")
         assert graph.get_reachable_nodes("C", "<>") == {"A", "B", "C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<>")
+        graph = sample_graph2(edge_type="<>")
         assert graph.get_reachable_nodes("B", "<>") == {"A", "B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
     def test_get_reachable_nodes_with_unknown_edges(self):
         """Test `get_reachable_nodes` method of the `_CoreGraph` class with unknown edges."""
-        graph = sample_graph1(type="o>")
+        graph = sample_graph1(edge_type="o>")
         assert graph.get_reachable_nodes("C", "o>") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="<o")
+        graph = sample_graph1(edge_type="<o")
         assert graph.get_reachable_nodes("C", "<o") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="-o")
+        graph = sample_graph1(edge_type="-o")
         assert graph.get_reachable_nodes("C", "-o") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="o-")
+        graph = sample_graph1(edge_type="o-")
         assert graph.get_reachable_nodes("C", "o-") == {"C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph1(type="oo")
+        graph = sample_graph1(edge_type="oo")
         assert graph.get_reachable_nodes("C", "oo") == {"A", "B", "C", "D", "E"}
         check_graph_status(graph, 5, 4, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o>")
+        graph = sample_graph2(edge_type="o>")
         assert graph.get_reachable_nodes("B", "o>") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="<o")
+        graph = sample_graph2(edge_type="<o")
         assert graph.get_reachable_nodes("B", "<o") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="-o")
+        graph = sample_graph2(edge_type="-o")
         assert graph.get_reachable_nodes("B", "-o") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="o-")
+        graph = sample_graph2(edge_type="o-")
         assert graph.get_reachable_nodes("B", "o-") == {"B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-        graph = sample_graph2(type="oo")
+        graph = sample_graph2(edge_type="oo")
         assert graph.get_reachable_nodes("B", "oo") == {"A", "B", "C", "D"}
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
