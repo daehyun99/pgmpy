@@ -397,7 +397,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         <class 'pgmpy.base._base._CoreGraph'>
 
         """
-        ebunch = self._get_edges_edge_type_key()
+        ebunch = [(u, v, edge_type) for u, v, edge_type in self.edges(keys=True)]
 
         graph_copy = self.__class__()
         graph_copy.add_edges_from(ebunch=ebunch)
@@ -438,7 +438,9 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         [('A', 'B', {'edge_type': '->'}), ('B', 'C', {'edge_type': '--'})]
 
         """
-        edges_edge_type = self._get_edges_edge_type_key()
+        edges_edge_type = [
+            (u, v, edge_type) for u, v, edge_type in self.edges(keys=True)
+        ]
         result = []
         seen = set()
 
@@ -886,32 +888,6 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
                 raise ValueError("Nodes cannot be the same for an edge.")
             if (edge_type is None) or (edge_type not in self.SUPPORTED_EDGE_TYPES):
                 raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
-
-    def _get_edges_edge_type_key(self):
-        """
-        Returns the all edge's edge_type value connecting the two nodes as a list of tuples.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        ebunch : list of tuples
-            [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...]
-
-        Notes
-        -----
-        The edge_type value is matched with the key value of networkx.
-        Helper method for
-            `copy()`,
-            `__eq__()`,
-            `get_edges()`,
-        """
-        return sorted(
-            [(u, v, edge_type) for u, v, edge_type in self.edges(keys=True)],
-            key=lambda x: (x[0], x[1]),
-        )
 
     def _validate_nodes(self, node, edge_type):
         """
