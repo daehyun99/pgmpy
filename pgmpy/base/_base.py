@@ -854,13 +854,8 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         """
         if not isinstance(other, self.__class__):
             return False
-
-        self_ebunch = self._get_edges_edge_type_key()
-        other_ebunch = other._get_edges_edge_type_key()
-
         return (
-            set(self.nodes()) == set(other.nodes())
-            and set(self_ebunch) == set(other_ebunch)
+            nx.utils.graphs_equal(self, other)
             and self.get_role_dict() == other.get_role_dict()
         )
 
