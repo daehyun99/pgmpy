@@ -299,8 +299,9 @@ class BIFReader(object):
             arr = np.zeros((n_rows, arr_length))
             values_dict = {}
             for prob_line in cpds:
-                states = prob_line[: len(parents)]
-                vals = [float(i) for i in prob_line[len(parents) :]]
+                len_parents = len(parents)
+                states = prob_line[:len_parents]
+                vals = [float(i) for i in prob_line[len_parents:]]
                 values_dict[tuple(states)] = vals
             for index, combination in enumerate(
                 product(*[self.variable_states[var] for var in parents])
