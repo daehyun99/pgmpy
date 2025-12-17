@@ -283,18 +283,20 @@ class BIFReader(object):
         var_name, parents = names[0][0], names[0][1:]
         cpds = self.cpd_expr.searchString(block)
 
+        n_rows = len(self.variable_states[var_name])
+
         # Check if the block is a table.
-        if bool(re.search(".*\n[ ]*(table|default) .*\n.*", block)):
+        if ("table " in block) or ("default " in block):
             arr = np.array([float(j) for i in cpds for j in i])
             arr = arr.reshape(
                 (
-                    len(self.variable_states[var_name]),
-                    arr.size // len(self.variable_states[var_name]),
+                    n_rows,
+                    -1,
                 )
             )
         else:
             arr_length = np.prod([len(self.variable_states[var]) for var in parents])
-            arr = np.zeros((len(self.variable_states[var_name]), arr_length))
+            arr = np.zeros((n_rows, arr_length))
             values_dict = {}
             for prob_line in cpds:
                 states = prob_line[: len(parents)]
