@@ -163,10 +163,9 @@ class BIFReader(object):
         return probability_expr, cpd_expr
 
     def variable_block(self):
-        start = re.finditer("variable", self.network)
-        for index in start:
-            end = self.network.find("}\n", index.start())
-            yield self.network[index.start() : end]
+        pattern = re.compile(r"variable.*?\}\n", re.DOTALL)
+        for match in pattern.finditer(self.network):
+            yield match.group()
 
     def probability_block(self):
         start = re.finditer("probability", self.network)
@@ -229,8 +228,8 @@ class BIFReader(object):
         'light-on': ['true','false']}
         """
         variable_states = {}
-        for block in self.variable_block():
-            name = self.name_expr.searchString(block)[0][0]
+        for index, block in enumerate(self.variable_block()):
+            name = self.variable_names[index]
             variable_states[name] = list(self.state_expr.searchString(block)[0][0])
 
         return variable_states
@@ -251,8 +250,8 @@ class BIFReader(object):
         'light-on': ['position = (218, 195)']}
         """
         variable_properties = {}
-        for block in self.variable_block():
-            name = self.name_expr.searchString(block)[0][0]
+        for index, block in enumerate(self.variable_block()):
+            name = self.variable_names[index]
             properties = self.property_expr.searchString(block)
             variable_properties[name] = [y.strip() for x in properties for y in x]
         return variable_properties
