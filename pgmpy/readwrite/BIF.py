@@ -168,10 +168,9 @@ class BIFReader(object):
             yield match.group()
 
     def probability_block(self):
-        start = re.finditer("probability", self.network)
-        for index in start:
-            end = self.network.find("}\n", index.start())
-            yield self.network[index.start() : end]
+        pattern = re.compile(r"probability.*?\}\n", re.DOTALL)
+        for match in pattern.finditer(self.network):
+            yield match.group()
 
     def get_network_name(self):
         """
