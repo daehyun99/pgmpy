@@ -26,6 +26,11 @@ class _GraphAlgorithmMixin:
 
         Examples
         --------
+
+        References
+        ----------
+        [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
+        Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
         ...
 
@@ -42,9 +47,28 @@ class _GraphAlgorithmMixin:
 
         See Also
         --------
+        is_m_connected()
 
         Notes
         -----
+        This implementation is based on the 'TestSep' algorithm [1].
+        The pseudo-code logic is as follows:
+
+        .. code-block:: text
+
+            function TestSep(G, X, Y, Z)
+                P <- { (Wait_Direction, x) | x in X }   # Pending visits
+                Q <- P                                  # History (visited)
+
+                while P is not empty do
+                    Let (e, T) be a pair in P
+                    Remove (e, T) from P
+
+                    for all neighbors N of T do
+                        Let T and N be connected by edge f
+                        if (e, T, f) is m-connecting given Z and (f, N) not in Q then
+                            Add (f, N) to P and Q
+                return true
 
         Examples
         --------
@@ -70,6 +94,7 @@ class _GraphAlgorithmMixin:
 
         See Also
         --------
+        is_m_separator()
 
         Notes
         -----
@@ -101,6 +126,7 @@ class _GraphAlgorithmMixin:
 
         Notes
         -----
+        [TESTMINSEP]
 
         Examples
         --------
@@ -130,6 +156,7 @@ class _GraphAlgorithmMixin:
 
         Notes
         -----
+        [FINDSEP]
 
         Examples
         --------
@@ -159,6 +186,7 @@ class _GraphAlgorithmMixin:
 
         Notes
         -----
+        [FINDMINSEP]
 
         Examples
         --------
@@ -187,6 +215,7 @@ class _GraphAlgorithmMixin:
 
         Notes
         -----
+        [LISTSEP]
 
         Examples
         --------
@@ -215,6 +244,7 @@ class _GraphAlgorithmMixin:
 
         Notes
         -----
+        [LISTMINSEP]
 
         Examples
         --------
