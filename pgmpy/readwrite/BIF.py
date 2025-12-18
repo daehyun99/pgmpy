@@ -295,18 +295,30 @@ class BIFReader(object):
                 )
             )
         else:
-            arr_length = np.prod([len(self.variable_states[var]) for var in parents])
+            parent_cards = [len(self.variable_states[p]) for p in parents]
+            arr_length = int(np.prod(parent_cards))
             arr = np.zeros((n_rows, arr_length))
-            values_dict = {}
+
+            len_parents = len(parents)
+
+            strides = [1] * len_parents
+            current_stride = 1
+            for i in range(len_parents - 1, -1, -1):
+                strides[i] = current_stride
+                current_stride *= parent_cards[i]
+
+            parent_maps = [
+                {state: i for i, state in enumerate(self.variable_states[p])}
+                for p in parents
+            ]
             for prob_line in cpds:
-                len_parents = len(parents)
-                states = prob_line[:len_parents]
+                index = 0
+                for i in range(len_parents):
+                    state_name = prob_line[i]
+                    index += parent_maps[i][state_name] * strides[i]
                 vals = [float(i) for i in prob_line[len_parents:]]
-                values_dict[tuple(states)] = vals
-            for index, combination in enumerate(
-                product(*[self.variable_states[var] for var in parents])
-            ):
-                arr[:, index] = values_dict[combination]
+                arr[:, index] = vals
+
         return var_name, arr
 
     def get_values(self):
