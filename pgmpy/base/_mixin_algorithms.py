@@ -57,6 +57,34 @@ class _GraphAlgorithmMixin:
         """
         ...
 
+    def is_m_connected(self, x: Set, y: Set, z: Set):
+        """
+
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        bool
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        References
+        ----------
+        [1] zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
+        "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
+        Artificial Intelligence 270 (2019): 1-40.
+        """
+        return not self.is_m_separator(x, y, z)
+
     def is_minimal_m_separator(self, x: Set, y: Set, z: Set):
         """
 
