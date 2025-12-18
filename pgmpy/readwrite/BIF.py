@@ -368,8 +368,8 @@ class BIFReader(object):
         """
         edges = [
             [value, key]
-            for key in self.variable_parents.keys()
-            for value in self.variable_parents[key]
+            for key, values in self.variable_parents.items()
+            for value in values
         ]
         return edges
 
