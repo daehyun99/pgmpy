@@ -1,4 +1,3 @@
-import collections
 import re
 from itertools import product
 from string import Template
@@ -655,10 +654,9 @@ $values
         property_tag = {}
         for variable in sorted(variables):
             properties = self.model.nodes[variable]
-            properties = collections.OrderedDict(sorted(properties.items()))
-            property_tag[variable] = []
-            for prop, val in properties.items():
-                property_tag[variable].append(str(prop) + " = " + str(val))
+            property_tag[variable] = [
+                f"{prop} = {val}" for prop, val in sorted(properties.items())
+            ]
         return property_tag
 
     def get_parents(self):
