@@ -248,6 +248,16 @@ class TestGraphAlgorithmMixin:
         assert graph.is_m_connected("T", "B", "M") == False
         assert graph.is_m_connected("T", "U", "M") == False
 
+    def test_is_minimal_m_separator(self):
+        """
+        References
+        ----------
+        [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
+        "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
+        Artificial Intelligence 270 (2019): 1-40. Figure 1.
+        """
+        ...
+
     def test_get_m_separator(self):
         """
         References
@@ -268,6 +278,16 @@ class TestGraphAlgorithmMixin:
         """
         ...
 
+    def test_get_minimal_m_separator(self):
+        """
+        References
+        ----------
+        [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
+        "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
+        Artificial Intelligence 270 (2019): 1-40. Figure 1.
+        """
+        ...
+
     def test_get_m_separators(self):
         """
         References
@@ -276,4 +296,32 @@ class TestGraphAlgorithmMixin:
         "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
         Artificial Intelligence 270 (2019): 1-40. Figure 1.
         """
+        ...
+
+    def test_get_m_separators_with_latent(self):
+        """
+        References
+        ----------
+        [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
+        "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
+        Artificial Intelligence 270 (2019): 1-40. Figure 1.
+        """
+        ...
+
+    def test_get_minimal_m_separators(self):
+        """
+        References
+        ----------
+        [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
+        "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
+        Artificial Intelligence 270 (2019): 1-40. Figure 1.
+
+        [2] Takata, Ken.
+        "Space-optimal, backtracking algorithms to list the minimal vertex separators of a graph."
+        Discrete Applied Mathematics 158 (2010): 1660-1667. Figure 1.
+        """
+        graph = _CoreGraph()
+        graph.add_nodes_from(["A", "two", "three", "four", "five", "B"])
+
+        # Creating edges
         ...
