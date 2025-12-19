@@ -517,7 +517,9 @@ $values
         network += network_template.substitute(name=self.network_name)
         variables = self.model.nodes()
 
-        for var in sorted(variables):
+        sorted_variables = sorted(variables)
+
+        for var in sorted_variables:
             no_of_states = str(len(self.variable_states[var]))
             states = ", ".join(self.variable_states[var])
             if not self.property_tag[var]:
@@ -533,7 +535,7 @@ $values
                 properties=properties,
             )
 
-        for var in sorted(variables):
+        for var in sorted_variables:
             if not self.variable_parents[var]:
                 parents = ""
                 separator = ""
