@@ -94,11 +94,36 @@ class BIFReader(object):
             self.property_expr,
         ) = self.get_variable_grammar()
         self.probability_expr, self.cpd_expr = self.get_probability_grammar()
-        self.network_name = self.get_network_name()
-        self.variable_names = self.get_variables()
-        self.variable_states = self.get_states()
+
+        # self.get_network_name()
+        match = re.search(r"network\s+([\w-]+)\s*\{", self.network)
+
+        if match:
+            self.network_name = match.group(1)
+
+        # self.get_variables(), self.get_states(), self.get_property()
+        self.variable_states = {}
+        self.variable_names = []
         if self.include_properties:
-            self.variable_properties = self.get_property()
+            self.variable_properties = {}
+            for block in self.variable_block():
+                name = self.name_expr.searchString(block)[0][0]
+                self.variable_names.append(name)
+                self.variable_states[name] = list(
+                    self.state_expr.searchString(block)[0][0]
+                )
+                properties = self.property_expr.searchString(block)
+                self.variable_properties[name] = [
+                    y.strip() for x in properties for y in x
+                ]
+        else:
+            for block in self.variable_block():
+                name = self.name_expr.searchString(block)[0][0]
+                self.variable_names.append(name)
+                self.variable_states[name] = list(
+                    self.state_expr.searchString(block)[0][0]
+                )
+
         self.variable_parents = self.get_parents()
         self.variable_cpds = self.get_values()
         self.variable_edges = self.get_edges()
@@ -182,11 +207,14 @@ class BIFReader(object):
         >>> reader.network_name()
         'Dog-Problem'
         """
-        match = re.search(r"network\s+([\w-]+)\s*\{", self.network)
+        if self.network_name:
+            return self.network_name
+        else:
+            match = re.search(r"network\s+([\w-]+)\s*\{", self.network)
 
-        if match:
-            return match.group(1)
-        return None
+            if match:
+                return match.group(1)
+            return None
 
     def get_variables(self):
         """
@@ -199,12 +227,15 @@ class BIFReader(object):
         >>> reader.get_variables()
         ['light-on','bowel_problem','dog-out','hear-bark','family-out']
         """
-        variable_names = []
-        for block in self.variable_block():
-            name = self.name_expr.searchString(block)[0][0]
-            variable_names.append(name)
+        if len(self.variable_names) > 0:
+            return self.variable_names
+        else:
+            variable_names = []
+            for block in self.variable_block():
+                name = self.name_expr.searchString(block)[0][0]
+                variable_names.append(name)
 
-        return variable_names
+            return variable_names
 
     def get_states(self):
         """
@@ -221,12 +252,15 @@ class BIFReader(object):
         'hear-bark': ['true','false'],
         'light-on': ['true','false']}
         """
-        variable_states = {}
-        for index, block in enumerate(self.variable_block()):
-            name = self.variable_names[index]
-            variable_states[name] = list(self.state_expr.searchString(block)[0][0])
+        if len(self.variable_states) > 0:
+            return self.variable_states
+        else:
+            variable_states = {}
+            for index, block in enumerate(self.variable_block()):
+                name = self.variable_names[index]
+                variable_states[name] = list(self.state_expr.searchString(block)[0][0])
 
-        return variable_states
+            return variable_states
 
     def get_property(self):
         """
@@ -243,12 +277,17 @@ class BIFReader(object):
         'hear-bark': ['position = (296, 268)'],
         'light-on': ['position = (218, 195)']}
         """
-        variable_properties = {}
-        for index, block in enumerate(self.variable_block()):
-            name = self.variable_names[index]
-            properties = self.property_expr.searchString(block)
-            variable_properties[name] = [y.strip() for x in properties for y in x]
-        return variable_properties
+        if self.include_properties and len(self.variable_properties) > 0:
+            return self.variable_properties
+        elif not self.include_properties:
+            return None
+        else:
+            variable_properties = {}
+            for index, block in enumerate(self.variable_block()):
+                name = self.variable_names[index]
+                properties = self.property_expr.searchString(block)
+                variable_properties[name] = [y.strip() for x in properties for y in x]
+            return variable_properties
 
     def get_parents(self):
         """
