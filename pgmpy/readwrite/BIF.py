@@ -97,11 +97,12 @@ class BIFReader(object):
 
         # self.get_network_name()
         match = re.search(r"network\s+([\w-]+)\s*\{", self.network)
-
-        if match:
-            self.network_name = match.group(1)
+        self.network_name = match.group(1) if match else None
 
         # self.get_variables(), self.get_states(), self.get_property()
+        self._variables_pattern = re.compile(r"variable.*?\}\n", re.DOTALL)
+        self._probability_pattern = re.compile(r"probability.*?\}\n", re.DOTALL)
+
         self.variable_states = {}
         self.variable_names = []
         if self.include_properties:
@@ -187,13 +188,11 @@ class BIFReader(object):
         return probability_expr, cpd_expr
 
     def variable_block(self):
-        pattern = re.compile(r"variable.*?\}\n", re.DOTALL)
-        for match in pattern.finditer(self.network):
+        for match in self._variables_pattern.finditer(self.network):
             yield match.group()
 
     def probability_block(self):
-        pattern = re.compile(r"probability.*?\}\n", re.DOTALL)
-        for match in pattern.finditer(self.network):
+        for match in self._probability_pattern.finditer(self.network):
             yield match.group()
 
     def get_network_name(self):
