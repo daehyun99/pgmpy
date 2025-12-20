@@ -587,6 +587,10 @@ class TestBIFReaderTorch(unittest.TestCase):
         name_expected = "Dog-Problem"
         self.assertEqual(self.reader.network_name, name_expected)
 
+    def test_get_network_name(self):
+        name_expected = "Dog-Problem"
+        self.assertEqual(self.reader.get_network_name(), name_expected)
+
     def test_get_variables(self):
         var_expected = [
             "light-on",
