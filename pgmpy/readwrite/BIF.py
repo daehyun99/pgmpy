@@ -188,66 +188,6 @@ class BIFReader(object):
         for match in self._probability_pattern.finditer(self.network):
             yield match.group()
 
-    def get_network_name(self):
-        """
-        Returns the name of the network
-
-        Example
-        ---------------
-        >>> from pgmpy.readwrite import BIFReader
-        >>> reader = BIF.BifReader("bif_test.bif")
-        >>> reader.network_name()
-        'Dog-Problem'
-        """
-        return self.network_name
-
-    def get_variables(self):
-        """
-        Returns list of variables of the network
-
-        Example
-        -------------
-        >>> from pgmpy.readwrite import BIFReader
-        >>> reader = BIFReader("bif_test.bif")
-        >>> reader.get_variables()
-        ['light-on','bowel_problem','dog-out','hear-bark','family-out']
-        """
-        return self.variable_names
-
-    def get_states(self):
-        """
-        Returns the states of variables present in the network
-
-        Example
-        -----------
-        >>> from pgmpy.readwrite import BIFReader
-        >>> reader = BIFReader("bif_test.bif")
-        >>> reader.get_states()
-        {'bowel-problem': ['true','false'],
-        'dog-out': ['true','false'],
-        'family-out': ['true','false'],
-        'hear-bark': ['true','false'],
-        'light-on': ['true','false']}
-        """
-        return self.variable_states
-
-    def get_property(self):
-        """
-        Returns the property of the variable
-
-        Example
-        -------------
-        >>> from pgmpy.readwrite import BIFReader
-        >>> reader = BIFReader("bif_test.bif")
-        >>> reader.get_property()
-        {'bowel-problem': ['position = (335, 99)'],
-        'dog-out': ['position = (300, 195)'],
-        'family-out': ['position = (257, 99)'],
-        'hear-bark': ['position = (296, 268)'],
-        'light-on': ['position = (218, 195)']}
-        """
-        return self.variable_properties
-
     def get_parents(self):
         """
         Returns the parents of the variables present in the network

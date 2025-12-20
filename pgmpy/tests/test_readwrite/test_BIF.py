@@ -71,7 +71,7 @@ class TestBIFReader(unittest.TestCase):
         name_expected = "Dog-Problem"
         self.assertEqual(self.reader.network_name, name_expected)
 
-    def test_get_variables(self):
+    def test_variable_names(self):
         var_expected = [
             "light-on",
             "bowel-problem",
@@ -79,9 +79,9 @@ class TestBIFReader(unittest.TestCase):
             "hear-bark",
             "family-out",
         ]
-        self.assertListEqual(self.reader.get_variables(), var_expected)
+        self.assertListEqual(self.reader.variable_names, var_expected)
 
-    def test_states(self):
+    def test_variable_states(self):
         states_expected = {
             "bowel-problem": ["true", "false"],
             "dog-out": ["true", "false"],
@@ -89,11 +89,11 @@ class TestBIFReader(unittest.TestCase):
             "hear-bark": ["true", "false"],
             "light-on": ["true", "false"],
         }
-        states = self.reader.get_states()
+        states = self.reader.variable_states
         for variable in states_expected:
             self.assertListEqual(states_expected[variable], states[variable])
 
-    def test_get_property(self):
+    def test_variable_properties(self):
         property_expected = {
             "bowel-problem": ["position = (335, 99)"],
             "dog-out": ["position = (300, 195)"],
@@ -101,7 +101,7 @@ class TestBIFReader(unittest.TestCase):
             "hear-bark": ["position = (296, 268)"],
             "light-on": ["position = (218, 195)"],
         }
-        prop = self.reader.get_property()
+        prop = self.reader.variable_properties
         for variable in property_expected:
             self.assertListEqual(property_expected[variable], prop[variable])
 
@@ -587,11 +587,7 @@ class TestBIFReaderTorch(unittest.TestCase):
         name_expected = "Dog-Problem"
         self.assertEqual(self.reader.network_name, name_expected)
 
-    def test_get_network_name(self):
-        name_expected = "Dog-Problem"
-        self.assertEqual(self.reader.get_network_name(), name_expected)
-
-    def test_get_variables(self):
+    def test_variable_names(self):
         var_expected = [
             "light-on",
             "bowel-problem",
@@ -599,9 +595,9 @@ class TestBIFReaderTorch(unittest.TestCase):
             "hear-bark",
             "family-out",
         ]
-        self.assertListEqual(self.reader.get_variables(), var_expected)
+        self.assertListEqual(self.reader.variable_names, var_expected)
 
-    def test_states(self):
+    def test_variable_states(self):
         states_expected = {
             "bowel-problem": ["true", "false"],
             "dog-out": ["true", "false"],
@@ -609,11 +605,11 @@ class TestBIFReaderTorch(unittest.TestCase):
             "hear-bark": ["true", "false"],
             "light-on": ["true", "false"],
         }
-        states = self.reader.get_states()
+        states = self.reader.variable_states
         for variable in states_expected:
             self.assertListEqual(states_expected[variable], states[variable])
 
-    def test_get_property(self):
+    def test_variable_properties(self):
         property_expected = {
             "bowel-problem": ["position = (335, 99)"],
             "dog-out": ["position = (300, 195)"],
@@ -621,7 +617,7 @@ class TestBIFReaderTorch(unittest.TestCase):
             "hear-bark": ["position = (296, 268)"],
             "light-on": ["position = (218, 195)"],
         }
-        prop = self.reader.get_property()
+        prop = self.reader.variable_properties
         for variable in property_expected:
             self.assertListEqual(property_expected[variable], prop[variable])
 
