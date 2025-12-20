@@ -276,12 +276,13 @@ class BIFReader(object):
             variable_parents[names[0]] = names[1:]
         return variable_parents
 
-    def _get_values_from_block(self, block):
-        names = self.probability_expr.searchString(block)
+    @staticmethod
+    def _get_values_from_block(block, prob_expr, cpd_expr, var_states):
+        names = prob_expr.searchString(block)
         var_name, parents = names[0][0], names[0][1:]
-        cpds = self.cpd_expr.searchString(block)
+        cpds = cpd_expr.searchString(block)
 
-        n_rows = len(self.variable_states[var_name])
+        n_rows = len(var_states[var_name])
 
         # Check if the block is a table.
         if ("table " in block) or ("default " in block):
@@ -293,7 +294,7 @@ class BIFReader(object):
                 )
             )
         else:
-            parent_cards = [len(self.variable_states[p]) for p in parents]
+            parent_cards = [len(var_states[p]) for p in parents]
             arr_length = int(np.prod(parent_cards))
             arr = np.zeros((n_rows, arr_length))
 
@@ -306,8 +307,7 @@ class BIFReader(object):
                 current_stride *= parent_cards[i]
 
             parent_maps = [
-                {state: i for i, state in enumerate(self.variable_states[p])}
-                for p in parents
+                {state: i for i, state in enumerate(var_states[p])} for p in parents
             ]
             for prob_line in cpds:
                 index = 0
@@ -339,15 +339,20 @@ class BIFReader(object):
         'light-on': np.array([[0.6, 0.05],
                             [0.4, 0.95]])}
         """
-        cpd_values = Parallel(n_jobs=self.n_jobs)(
-            delayed(self._get_values_from_block)(block)
-            for block in self.probability_block()
+        prob_expr = self.probability_expr
+        cpd_expr = self.cpd_expr
+        var_states = self.variable_states
+
+        blocks = self.probability_block()
+
+        variable_cpds = dict(
+            Parallel(n_jobs=self.n_jobs)(
+                delayed(self._get_values_from_block)(
+                    block, prob_expr, cpd_expr, var_states
+                )
+                for block in blocks
+            )
         )
-
-        variable_cpds = {}
-        for var_name, arr in cpd_values:
-            variable_cpds[var_name] = arr
-
         return variable_cpds
 
     def get_edges(self):
