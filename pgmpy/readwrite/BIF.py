@@ -107,23 +107,16 @@ class BIFReader(object):
         self.variable_names = []
         if self.include_properties:
             self.variable_properties = {}
-            for block in self.variable_block():
-                name = self.name_expr.searchString(block)[0][0]
-                self.variable_names.append(name)
-                self.variable_states[name] = list(
-                    self.state_expr.searchString(block)[0][0]
-                )
+
+        for block in self.variable_block():
+            name = self.name_expr.searchString(block)[0][0]
+            self.variable_names.append(name)
+            self.variable_states[name] = list(self.state_expr.searchString(block)[0][0])
+            if self.include_properties:
                 properties = self.property_expr.searchString(block)
                 self.variable_properties[name] = [
                     y.strip() for x in properties for y in x
                 ]
-        else:
-            for block in self.variable_block():
-                name = self.name_expr.searchString(block)[0][0]
-                self.variable_names.append(name)
-                self.variable_states[name] = list(
-                    self.state_expr.searchString(block)[0][0]
-                )
 
         self.variable_parents = self.get_parents()
         self.variable_cpds = self.get_values()
