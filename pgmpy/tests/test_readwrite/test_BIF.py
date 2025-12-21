@@ -105,7 +105,7 @@ class TestBIFReader(unittest.TestCase):
         for variable in property_expected:
             self.assertListEqual(property_expected[variable], prop[variable])
 
-    def test_get_values(self):
+    def test_variable_cpds(self):
         cpd_expected = {
             "bowel-problem": np.array([[0.01], [0.99]]),
             "dog-out": np.array([[0.99, 0.97, 0.9, 0.3], [0.01, 0.03, 0.1, 0.7]]),
@@ -117,7 +117,7 @@ class TestBIFReader(unittest.TestCase):
         for variable in cpd_expected:
             np_test.assert_array_equal(cpd_expected[variable], cpd[variable])
 
-    def test_get_values_reordered(self):
+    def test_variable_cpds_reordered(self):
         cancer_values1 = BIFReader(
             string="""
                 network unknown {
@@ -137,7 +137,7 @@ class TestBIFReader(unittest.TestCase):
                   (high, True) 0.05, 0.95;
                   (high, False) 0.02, 0.98;
                 }"""
-        ).get_values()
+        ).variable_cpds
 
         cancer_values2 = BIFReader(
             string="""
@@ -158,12 +158,12 @@ class TestBIFReader(unittest.TestCase):
                   (low, False) 0.001, 0.999;
                   (high, False) 0.02, 0.98;
                 }"""
-        ).get_values()
+        ).variable_cpds
 
         for var in cancer_values1:
             np_test.assert_array_equal(cancer_values1[var], cancer_values2[var])
 
-    def test_get_parents(self):
+    def test_variable_parents(self):
         parents_expected = {
             "bowel-problem": [],
             "dog-out": ["bowel-problem", "family-out"],
@@ -171,11 +171,11 @@ class TestBIFReader(unittest.TestCase):
             "hear-bark": ["dog-out"],
             "light-on": ["family-out"],
         }
-        parents = self.reader.get_parents()
+        parents = self.reader.variable_parents
         for variable in parents_expected:
             self.assertListEqual(parents_expected[variable], parents[variable])
 
-    def test_get_edges(self):
+    def test_variable_edges(self):
         edges_expected = [
             ["family-out", "dog-out"],
             ["bowel-problem", "dog-out"],
@@ -649,7 +649,7 @@ class TestBIFReaderTorch(unittest.TestCase):
         for variable in property_expected:
             self.assertListEqual(property_expected[variable], prop[variable])
 
-    def test_get_values(self):
+    def test_variable_cpds(self):
         cpd_expected = {
             "bowel-problem": np.array([[0.01], [0.99]]),
             "dog-out": np.array([[0.99, 0.97, 0.9, 0.3], [0.01, 0.03, 0.1, 0.7]]),
@@ -661,7 +661,7 @@ class TestBIFReaderTorch(unittest.TestCase):
         for variable in cpd_expected:
             np_test.assert_array_equal(cpd_expected[variable], cpd[variable])
 
-    def test_get_values_reordered(self):
+    def test_variable_cpds_reordered(self):
         cancer_values1 = BIFReader(
             string="""
                 network unknown {
@@ -681,7 +681,7 @@ class TestBIFReaderTorch(unittest.TestCase):
                   (high, True) 0.05, 0.95;
                   (high, False) 0.02, 0.98;
                 }"""
-        ).get_values()
+        ).variable_cpds
 
         cancer_values2 = BIFReader(
             string="""
@@ -702,12 +702,12 @@ class TestBIFReaderTorch(unittest.TestCase):
                   (low, False) 0.001, 0.999;
                   (high, False) 0.02, 0.98;
                 }"""
-        ).get_values()
+        ).variable_cpds
 
         for var in cancer_values1:
             np_test.assert_array_equal(cancer_values1[var], cancer_values2[var])
 
-    def test_get_parents(self):
+    def test_variable_parents(self):
         parents_expected = {
             "bowel-problem": [],
             "dog-out": ["bowel-problem", "family-out"],
@@ -715,11 +715,11 @@ class TestBIFReaderTorch(unittest.TestCase):
             "hear-bark": ["dog-out"],
             "light-on": ["family-out"],
         }
-        parents = self.reader.get_parents()
+        parents = self.reader.variable_parents
         for variable in parents_expected:
             self.assertListEqual(parents_expected[variable], parents[variable])
 
-    def test_get_edges(self):
+    def test_variable_edges(self):
         edges_expected = [
             ["family-out", "dog-out"],
             ["bowel-problem", "dog-out"],

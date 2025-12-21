@@ -120,9 +120,29 @@ class BIFReader(object):
                     y.strip() for x in properties for y in x
                 ]
 
-        self.variable_parents = self.get_parents()
-        self.variable_cpds = self.get_values()
-        self.variable_edges = self.get_edges()
+        # self.get_values()
+        probability_expr = self.probability_expr
+        cpd_expr = self.cpd_expr
+        variable_states = self.variable_states
+
+        blocks = self.probability_block()
+
+        self.variable_cpds = dict(
+            Parallel(n_jobs=self.n_jobs)(
+                delayed(self._get_values_from_block)(
+                    block, probability_expr, cpd_expr, variable_states
+                )
+                for block in blocks
+            )
+        )
+
+        # self.get_parents(), self.get_edges()
+        self.variable_parents = {}
+        self.variable_edges = []
+        for block in self.probability_block():
+            names = self.probability_expr.searchString(block.split("\n")[0])[0]
+            self.variable_parents[names[0]] = names[1:]
+            self.variable_edges.extend([[p, names[0]] for p in names[1:]])
 
     def get_variable_grammar(self):
         """
@@ -190,27 +210,6 @@ class BIFReader(object):
         for match in self._probability_pattern.finditer(self.network):
             yield match.group()
 
-    def get_parents(self):
-        """
-        Returns the parents of the variables present in the network
-
-        Example
-        --------
-        >>> from pgmpy.readwrite import BIFReader
-        >>> reader = BIFReader("bif_test.bif")
-        >>> reader.get_parents()
-        {'bowel-problem': [],
-        'dog-out': ['family-out', 'bowel-problem'],
-        'family-out': [],
-        'hear-bark': ['dog-out'],
-        'light-on': ['family-out']}
-        """
-        variable_parents = {}
-        for block in self.probability_block():
-            names = self.probability_expr.searchString(block.split("\n")[0])[0]
-            variable_parents[names[0]] = names[1:]
-        return variable_parents
-
     @staticmethod
     def _get_values_from_block(block, probability_expr, cpd_expr, variable_states):
         names = probability_expr.searchString(block)
@@ -254,63 +253,6 @@ class BIFReader(object):
                 arr[:, index] = vals
 
         return var_name, arr
-
-    def get_values(self):
-        """
-        Returns the CPD of the variables present in the network
-
-        Example
-        --------
-        >>> from pgmpy.readwrite import BIFReader
-        >>> reader = BIFReader("bif_test.bif")
-        >>> reader.get_values()
-        {'bowel-problem': np.array([[0.01],
-                                    [0.99]]),
-        'dog-out': np.array([[0.99, 0.97, 0.9, 0.3],
-                            [0.01, 0.03, 0.1, 0.7]]),
-        'family-out': np.array([[0.15],
-                                [0.85]]),
-        'hear-bark': np.array([[0.7, 0.01],
-                                [0.3, 0.99]]),
-        'light-on': np.array([[0.6, 0.05],
-                            [0.4, 0.95]])}
-        """
-        probability_expr = self.probability_expr
-        cpd_expr = self.cpd_expr
-        variable_states = self.variable_states
-
-        blocks = self.probability_block()
-
-        variable_cpds = dict(
-            Parallel(n_jobs=self.n_jobs)(
-                delayed(self._get_values_from_block)(
-                    block, probability_expr, cpd_expr, variable_states
-                )
-                for block in blocks
-            )
-        )
-        return variable_cpds
-
-    def get_edges(self):
-        """
-        Returns the edges of the network
-
-        Example
-        --------
-        >>> from pgmpy.readwrite import BIFReader
-        >>> reader = BIFReader("bif_test.bif")
-        >>> reader.get_edges()
-        [['family-out', 'light-on'],
-         ['family-out', 'dog-out'],
-         ['bowel-problem', 'dog-out'],
-         ['dog-out', 'hear-bark']]
-        """
-        edges = [
-            [value, key]
-            for key, values in self.variable_parents.items()
-            for value in values
-        ]
-        return edges
 
     def get_model(self, state_name_type=str):
         """
