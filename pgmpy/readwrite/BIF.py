@@ -15,7 +15,6 @@ try:
         Suppress,
         Word,
         ZeroOrMore,
-        cppStyleComment,
         nums,
         printables,
     )
@@ -84,9 +83,12 @@ class BIFReader(object):
             self.network = self.network.replace('"', " ")
 
         if "/*" in self.network or "//" in self.network:
-            self.network = cppStyleComment.suppress().transformString(
-                self.network
-            )  # removing comments from the file
+            # removing comments from the file
+            pattern = r'("[^"\\]*(?:\\.[^"\\]*)*")|(/\*.*?\*/|//[^\n]*)'
+            regex = re.compile(pattern, re.DOTALL)
+            self.network = regex.sub(
+                lambda m: m.group(1) if m.group(1) else "", self.network
+            )
 
         (
             self.name_expr,
