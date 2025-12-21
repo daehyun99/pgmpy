@@ -331,6 +331,34 @@ class TestBIFReader(unittest.TestCase):
         for var in table_model.nodes():
             self.assertEqual(table_model.get_cpds(var), default_model.get_cpds(var))
 
+    def test_cpp_style_comments(self):
+        reader = BIFReader(
+            string=r"""
+            // BIF file example: Causal graph for lung cancer diagnosis
+            // Author: Senior Engineer
+            // Date: 2024-05-20
+
+            network "Cancer_Research" {
+                // 1. This contains a URL that may cause parsing errors.
+                property "version" = "1.0";
+                property "author" = "Medical AI Team";
+                property "source" = "http://health-data.org/lung-cancer";
+                /* If // is simply treated as the start of a comment,
+                the http:// part above will be truncated, resulting in an error.
+                */
+            }
+
+            variable "Smoking" {
+                type discrete [ 2 ] { "True", "False" };
+                property "position = (100, 100)";
+                property "description = "Patient's smoking status"";
+            }
+                """,
+            include_properties=True,
+        )
+        assert reader.network_name == "Cancer_Research"
+        assert "http://health-data.org/lung-cancer" in reader.network
+
 
 class TestBIFWriter(unittest.TestCase):
     def setUp(self):
@@ -847,6 +875,34 @@ class TestBIFReaderTorch(unittest.TestCase):
     def tearDown(self):
         del self.reader
         config.set_backend("numpy")
+
+    def test_cpp_style_comments(self):
+        reader = BIFReader(
+            string=r"""
+            // BIF file example: Causal graph for lung cancer diagnosis
+            // Author: Senior Engineer
+            // Date: 2024-05-20
+
+            network "Cancer_Research" {
+                // 1. This contains a URL that may cause parsing errors.
+                property "version" = "1.0";
+                property "author" = "Medical AI Team";
+                property "source" = "http://health-data.org/lung-cancer";
+                /* If // is simply treated as the start of a comment,
+                the http:// part above will be truncated, resulting in an error.
+                */
+            }
+
+            variable "Smoking" {
+                type discrete [ 2 ] { "True", "False" };
+                property "position = (100, 100)";
+                property "description = "Patient's smoking status"";
+            }
+                """,
+            include_properties=True,
+        )
+        assert reader.network_name == "Cancer_Research"
+        assert "http://health-data.org/lung-cancer" in reader.network
 
 
 @unittest.skipUnless(

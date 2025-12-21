@@ -76,12 +76,6 @@ class BIFReader(object):
         self.n_jobs = n_jobs
         self.include_properties = include_properties
 
-        if '"' in self.network:
-            # Replacing quotes by spaces to remove case sensitivity like:
-            # "Dog-Problem" and Dog-problem
-            # or "true""false" and "true" "false" and true false
-            self.network = self.network.replace('"', " ")
-
         if "/*" in self.network or "//" in self.network:
             # removing comments from the file
             pattern = r'("[^"\\]*(?:\\.[^"\\]*)*")|(/\*.*?\*/|//[^\n]*)'
@@ -89,6 +83,12 @@ class BIFReader(object):
             self.network = regex.sub(
                 lambda m: m.group(1) if m.group(1) else "", self.network
             )
+
+        if '"' in self.network:
+            # Replacing quotes by spaces to remove case sensitivity like:
+            # "Dog-Problem" and Dog-problem
+            # or "true""false" and "true" "false" and true false
+            self.network = self.network.replace('"', " ")
 
         (
             self.name_expr,
