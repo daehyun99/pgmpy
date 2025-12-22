@@ -91,11 +91,11 @@ class BIFReader(object):
             self.network = self.network.replace('"', " ")
 
         (
-            self.name_expr,
-            self.state_expr,
-            self.property_expr,
+            name_expr,
+            state_expr,
+            property_expr,
         ) = self.get_variable_grammar()
-        self.probability_expr, self.cpd_expr = self.get_probability_grammar()
+        probability_expr, cpd_expr = self.get_probability_grammar()
 
         # self.get_network_name()
         match = re.search(r"network\s+([\w-]+)\s*\{", self.network)
@@ -116,29 +116,25 @@ class BIFReader(object):
 
             # self.get_variables(), self.get_states(), self.get_property()
             if block_content.startswith("variable"):
-                name = self.name_expr.searchString(block_content)[0][0]
+                name = name_expr.searchString(block_content)[0][0]
                 self.variable_names.append(name)
                 self.variable_states[name] = list(
-                    self.state_expr.searchString(block_content)[0][0]
+                    state_expr.searchString(block_content)[0][0]
                 )
                 if self.include_properties:
-                    properties = self.property_expr.searchString(block_content)
+                    properties = property_expr.searchString(block_content)
                     self.variable_properties[name] = [
                         y.strip() for x in properties for y in x
                     ]
 
             # self.get_parents(), self.get_edges()
             elif block_content.startswith("probability"):
-                names = self.probability_expr.searchString(
-                    block_content.split("\n")[0]
-                )[0]
+                names = probability_expr.searchString(block_content.split("\n")[0])[0]
                 self.variable_parents[names[0]] = names[1:]
                 self.variable_edges.extend([[p, names[0]] for p in names[1:]])
                 probability_blocks.append(block_content)
 
         # self.get_values()
-        probability_expr = self.probability_expr
-        cpd_expr = self.cpd_expr
         variable_states = self.variable_states
 
         self.variable_cpds = dict(
