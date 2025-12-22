@@ -101,48 +101,54 @@ class BIFReader(object):
         match = re.search(r"network\s+([\w-]+)\s*\{", self.network)
         self.network_name = match.group(1) if match else None
 
-        # self.get_variables(), self.get_states(), self.get_property()
-        self._variables_pattern = re.compile(r"variable.*?\}\n", re.DOTALL)
-        self._probability_pattern = re.compile(r"probability.*?\}\n", re.DOTALL)
+        block_pattern = re.compile(r"(variable|probability).*?\}\n", re.DOTALL)
 
         self.variable_states = {}
         self.variable_names = []
         if self.include_properties:
             self.variable_properties = {}
+        self.variable_parents = {}
+        self.variable_edges = []
+        probability_blocks = []
 
-        for block in self.variable_block():
-            name = self.name_expr.searchString(block)[0][0]
-            self.variable_names.append(name)
-            self.variable_states[name] = list(self.state_expr.searchString(block)[0][0])
-            if self.include_properties:
-                properties = self.property_expr.searchString(block)
-                self.variable_properties[name] = [
-                    y.strip() for x in properties for y in x
-                ]
+        for match in block_pattern.finditer(self.network):
+            block_content = match.group(0)
+
+            # self.get_variables(), self.get_states(), self.get_property()
+            if block_content.startswith("variable"):
+                name = self.name_expr.searchString(block_content)[0][0]
+                self.variable_names.append(name)
+                self.variable_states[name] = list(
+                    self.state_expr.searchString(block_content)[0][0]
+                )
+                if self.include_properties:
+                    properties = self.property_expr.searchString(block_content)
+                    self.variable_properties[name] = [
+                        y.strip() for x in properties for y in x
+                    ]
+
+            # self.get_parents(), self.get_edges()
+            elif block_content.startswith("probability"):
+                names = self.probability_expr.searchString(
+                    block_content.split("\n")[0]
+                )[0]
+                self.variable_parents[names[0]] = names[1:]
+                self.variable_edges.extend([[p, names[0]] for p in names[1:]])
+                probability_blocks.append(block_content)
 
         # self.get_values()
         probability_expr = self.probability_expr
         cpd_expr = self.cpd_expr
         variable_states = self.variable_states
 
-        blocks = self.probability_block()
-
         self.variable_cpds = dict(
             Parallel(n_jobs=self.n_jobs)(
                 delayed(self._get_values_from_block)(
                     block, probability_expr, cpd_expr, variable_states
                 )
-                for block in blocks
+                for block in probability_blocks
             )
         )
-
-        # self.get_parents(), self.get_edges()
-        self.variable_parents = {}
-        self.variable_edges = []
-        for block in self.probability_block():
-            names = self.probability_expr.searchString(block.split("\n")[0])[0]
-            self.variable_parents[names[0]] = names[1:]
-            self.variable_edges.extend([[p, names[0]] for p in names[1:]])
 
     def get_variable_grammar(self):
         """
@@ -201,14 +207,6 @@ class BIFReader(object):
         cpd_expr = probab_attributes + OneOrMore(num_expr)
 
         return probability_expr, cpd_expr
-
-    def variable_block(self):
-        for match in self._variables_pattern.finditer(self.network):
-            yield match.group()
-
-    def probability_block(self):
-        for match in self._probability_pattern.finditer(self.network):
-            yield match.group()
 
     @staticmethod
     def _get_values_from_block(block, probability_expr, cpd_expr, variable_states):
