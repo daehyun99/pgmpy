@@ -44,9 +44,6 @@ class BIFReader(object):
     include_properties: boolean
         If True, gets the properties tag from the file and stores in graph properties.
 
-    n_jobs: int (default: 1)
-        Number of jobs to run in parallel. `-1` means use all processors.
-
     Examples
     --------
     >>> # dog-problem.bif file is present at
@@ -62,7 +59,7 @@ class BIFReader(object):
         http://www.cs.washington.edu/dm/vfml/appendixes/bif.htm, 2003.
     """
 
-    def __init__(self, path=None, string=None, include_properties=False, n_jobs=1):
+    def __init__(self, path=None, string=None, include_properties=False):
         if path:
             with open(path, "r") as network:
                 self.network = network.read()
@@ -73,7 +70,6 @@ class BIFReader(object):
         else:
             raise ValueError("Must specify either path or string")
 
-        self.n_jobs = n_jobs
         self.include_properties = include_properties
 
         if "/*" in self.network or "//" in self.network:
