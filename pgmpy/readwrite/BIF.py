@@ -158,7 +158,7 @@ class BIFReader(object):
                 if len(cpds_list) > 0:
                     df = pd.DataFrame(cpds_list)
 
-                    state_df = df.iloc[:, :len_parents]
+                    state_df = df.iloc[:, :len_parents].copy()
                     values_df = df.iloc[:, len_parents:]
 
                     for idx, parent in enumerate(parents):
@@ -168,14 +168,9 @@ class BIFReader(object):
 
                         state_df.iloc[:, idx] = state_df.iloc[:, idx].map(mapping)
 
-                    if len_parents > 0:
-                        strides = np.cumprod([1] + parent_cards[::-1])[:-1][::-1]
-                    else:
-                        strides = np.array([1])
+                    strides = np.cumprod([1] + parent_cards[::-1])[:-1][::-1]
                     col_indices = state_df.dot(strides).astype(int)
-
                     arr[:, col_indices] = values_df.astype(float).T
-
                 self.variable_cpds[var_name] = arr
 
     def get_variable_grammar(self):
