@@ -3,8 +3,8 @@ from itertools import product
 from string import Template
 
 import numpy as np
+import pandas as pd
 import pyparsing as pp
-from joblib import Parallel, delayed
 
 try:
     from pyparsing import (
@@ -129,22 +129,54 @@ class BIFReader(object):
 
             # self.get_parents(), self.get_edges()
             elif block_content.startswith("probability"):
-                names = probability_expr.searchString(block_content.split("\n")[0])[0]
-                self.variable_parents[names[0]] = names[1:]
-                self.variable_edges.extend([[p, names[0]] for p in names[1:]])
-                probability_blocks.append(block_content)
+                header_line = block_content.split("\n")[0]
+                names = probability_expr.searchString(header_line)[0]
+                var_name, parents = names[0], names[1:]
+
+                self.variable_parents[var_name] = parents
+                self.variable_edges.extend([[p, var_name] for p in parents])
+                probability_blocks.append((block_content, var_name, parents))
 
         # self.get_values()
-        variable_states = self.variable_states
+        self.variable_cpds = {}
 
-        self.variable_cpds = dict(
-            Parallel(n_jobs=self.n_jobs)(
-                delayed(self._get_values_from_block)(
-                    block, probability_expr, cpd_expr, variable_states
-                )
-                for block in probability_blocks
-            )
-        )
+        for block_content, var_name, parents in probability_blocks:
+            cpds_list = cpd_expr.searchString(block_content)
+            n_rows = len(self.variable_states[var_name])
+
+            if ("table " in block_content) or ("default " in block_content):
+                arr = [float(j) for i in cpds_list for j in i]
+                arr = np.array(arr).reshape(n_rows, -1)
+                self.variable_cpds[var_name] = arr
+            else:
+                parent_cards = [len(self.variable_states[p]) for p in parents]
+                arr_length = int(np.prod(parent_cards))
+                arr = np.zeros((n_rows, arr_length))
+
+                len_parents = len(parents)
+
+                if len(cpds_list) > 0:
+                    df = pd.DataFrame(cpds_list)
+
+                    state_df = df.iloc[:, :len_parents]
+                    values_df = df.iloc[:, len_parents:]
+
+                    for idx, parent in enumerate(parents):
+                        mapping = {
+                            s: i for i, s in enumerate(self.variable_states[parent])
+                        }
+
+                        state_df.iloc[:, idx] = state_df.iloc[:, idx].map(mapping)
+
+                    if len_parents > 0:
+                        strides = np.cumprod([1] + parent_cards[::-1])[:-1][::-1]
+                    else:
+                        strides = np.array([1])
+                    col_indices = state_df.dot(strides).astype(int)
+
+                    arr[:, col_indices] = values_df.astype(float).T
+
+                self.variable_cpds[var_name] = arr
 
     def get_variable_grammar(self):
         """
@@ -203,49 +235,6 @@ class BIFReader(object):
         cpd_expr = probab_attributes + OneOrMore(num_expr)
 
         return probability_expr, cpd_expr
-
-    @staticmethod
-    def _get_values_from_block(block, probability_expr, cpd_expr, variable_states):
-        names = probability_expr.searchString(block)
-        var_name, parents = names[0][0], names[0][1:]
-        cpds = cpd_expr.searchString(block)
-
-        n_rows = len(variable_states[var_name])
-
-        # Check if the block is a table.
-        if ("table " in block) or ("default " in block):
-            arr = np.array([float(j) for i in cpds for j in i])
-            arr = arr.reshape(
-                (
-                    n_rows,
-                    -1,
-                )
-            )
-        else:
-            parent_cards = [len(variable_states[p]) for p in parents]
-            arr_length = int(np.prod(parent_cards))
-            arr = np.zeros(
-                (n_rows, arr_length)
-            )  # arr = np.empty((n_rows, arr_length), dtype=float)
-
-            len_parents = len(parents)
-
-            strides = [1] * len_parents  # strides = np.empty(len(parents), dtype=int)
-            current_stride = 1
-            for i in range(len_parents - 1, -1, -1):
-                strides[i] = current_stride
-                current_stride *= parent_cards[i]
-
-            parent_maps = [
-                {state: i for i, state in enumerate(variable_states[p])}
-                for p in parents
-            ]
-            for prob_line in cpds:
-                idxs = [parent_maps[i][prob_line[i]] for i in range(len_parents)]
-                col = int(np.dot(idxs, strides))
-                arr[:, col] = prob_line[len_parents:]
-
-        return var_name, arr
 
     def get_model(self, state_name_type=str):
         """
