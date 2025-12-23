@@ -140,6 +140,11 @@ class BIFReader(object):
         # self.get_values()
         self.variable_cpds = {}
 
+        state_maps = {
+            var: {state: i for i, state in enumerate(states)}
+            for var, states in self.variable_states.items()
+        }
+
         for block_content, var_name, parents in probability_blocks:
             cpds_list = cpd_expr.searchString(block_content)
             n_rows = len(self.variable_states[var_name])
@@ -162,11 +167,9 @@ class BIFReader(object):
                     values_df = df.iloc[:, len_parents:]
 
                     for idx, parent in enumerate(parents):
-                        mapping = {
-                            s: i for i, s in enumerate(self.variable_states[parent])
-                        }
-
-                        state_df.iloc[:, idx] = state_df.iloc[:, idx].map(mapping)
+                        state_df.iloc[:, idx] = state_df.iloc[:, idx].map(
+                            state_maps[parent]
+                        )
 
                     strides = np.cumprod([1] + parent_cards[::-1])[:-1][::-1]
                     col_indices = state_df.dot(strides).astype(int)
