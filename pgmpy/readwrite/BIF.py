@@ -246,49 +246,41 @@ class BIFReader(object):
         >>> reader.get_model()
         <pgmpy.models.DiscreteBayesianNetwork.DiscreteBayesianNetwork object at 0x7f20af154320>
         """
-        try:
-            model = DiscreteBayesianNetwork()
-            model.add_nodes_from(self.variable_names)
-            model.add_edges_from(self.variable_edges)
-            model.name = self.network_name
+        model = DiscreteBayesianNetwork()
+        model.add_nodes_from(self.variable_names)
+        model.add_edges_from(self.variable_edges)
+        model.name = self.network_name
 
-            tabular_cpds = []
-            for var in sorted(self.variable_cpds.keys()):
-                values = self.variable_cpds[var]
-                sn = {
-                    p_var: list(map(state_name_type, self.variable_states[p_var]))
-                    for p_var in self.variable_parents[var]
-                }
-                sn[var] = list(map(state_name_type, self.variable_states[var]))
-                cpd = TabularCPD(
-                    var,
-                    len(self.variable_states[var]),
-                    values,
-                    evidence=self.variable_parents[var],
-                    evidence_card=[
-                        len(self.variable_states[evidence_var])
-                        for evidence_var in self.variable_parents[var]
-                    ],
-                    state_names=sn,
-                )
-                tabular_cpds.append(cpd)
-
-            model.add_cpds(*tabular_cpds)
-
-            if self.include_properties:
-                for node, properties in self.variable_properties.items():
-                    for prop in properties:
-                        prop_name, prop_value = map(
-                            lambda t: t.strip(), prop.split("=")
-                        )
-                        model.nodes[node][prop_name] = prop_value
-
-            return model
-
-        except AttributeError:
-            raise AttributeError(
-                "First get states of variables, edges, parents and network name"
+        tabular_cpds = []
+        for var in sorted(self.variable_cpds.keys()):
+            values = self.variable_cpds[var]
+            sn = {
+                p_var: list(map(state_name_type, self.variable_states[p_var]))
+                for p_var in self.variable_parents[var]
+            }
+            sn[var] = list(map(state_name_type, self.variable_states[var]))
+            cpd = TabularCPD(
+                var,
+                len(self.variable_states[var]),
+                values,
+                evidence=self.variable_parents[var],
+                evidence_card=[
+                    len(self.variable_states[evidence_var])
+                    for evidence_var in self.variable_parents[var]
+                ],
+                state_names=sn,
             )
+            tabular_cpds.append(cpd)
+
+        model.add_cpds(*tabular_cpds)
+
+        if self.include_properties:
+            for node, properties in self.variable_properties.items():
+                for prop in properties:
+                    prop_name, prop_value = map(lambda t: t.strip(), prop.split("="))
+                    model.nodes[node][prop_name] = prop_value
+
+        return model
 
 
 class BIFWriter(object):
