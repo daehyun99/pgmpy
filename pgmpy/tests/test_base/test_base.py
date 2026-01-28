@@ -1826,3 +1826,69 @@ class TestCoreGraph:
             graph.get_reachable_nodes("A")
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
+    def test_preprocess_edge(self):
+        """Test `_preprocess_edge` method of the `_CoreGraph` class"""
+        # Test1: direct edge
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        u, v, edge_type = graph._preprocess_edge("A", "B", "->")
+        assert u == "A"
+        assert v == "B"
+        assert edge_type == "->"
+
+        # Test2: reverse direct edge
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "<-")
+        u, v, edge_type = graph._preprocess_edge("A", "B", "<-")
+        assert u == "B"
+        assert v == "A"
+        assert edge_type == "->"
+
+        # Test3: unknown edge
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "-o")
+        u, v, edge_type = graph._preprocess_edge("A", "B", "-o")
+        assert u == "A"
+        assert v == "B"
+        assert edge_type == "-o"
+
+        # Test4: reverse unknown edge
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "o-")
+        u, v, edge_type = graph._preprocess_edge("A", "B", "o-")
+        assert u == "B"
+        assert v == "A"
+        assert edge_type == "-o"
+
+        # Test5: unknown edge
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "o>")
+        u, v, edge_type = graph._preprocess_edge("A", "B", "o>")
+        assert u == "A"
+        assert v == "B"
+        assert edge_type == "o>"
+
+        # Test6: reverse unknown edge
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "<o")
+        u, v, edge_type = graph._preprocess_edge("A", "B", "<o")
+        assert u == "B"
+        assert v == "A"
+        assert edge_type == "o>"
+
+        # Test7: bidirect edge
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "<>")
+        u, v, edge_type = graph._preprocess_edge("A", "B", "<>")
+        assert u == "A"
+        assert v == "B"
+        assert edge_type == ">>"
+
+        # Test8: undirect edge
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "--")
+        u, v, edge_type = graph._preprocess_edge("A", "B", "--")
+        assert u == "A"
+        assert v == "B"
+        assert edge_type == "--"
