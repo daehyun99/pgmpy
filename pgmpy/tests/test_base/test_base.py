@@ -241,7 +241,7 @@ class TestCoreGraph:
 
         assert sorted(graph.edges(keys=True, data=True)) == [
             ("A", "C", 0, {"A": "-", "C": ">"}),
-            ("B", "C", 0, {"B": "-", "C": ">"}),
+            ("C", "B", 0, {"B": "-", "C": ">"}),
         ]
 
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
@@ -257,7 +257,7 @@ class TestCoreGraph:
 
         assert sorted(graph.edges(keys=True, data=True)) == [
             ("A", "C", 0, {"A": "-", "C": "-"}),
-            ("B", "C", 0, {"B": "-", "C": "-"}),
+            ("C", "B", 0, {"B": "-", "C": "-"}),
         ]
 
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
@@ -273,7 +273,7 @@ class TestCoreGraph:
 
         assert sorted(graph.edges(keys=True, data=True)) == [
             ("A", "C", 0, {"A": ">", "C": ">"}),
-            ("B", "C", 0, {"B": ">", "C": ">"}),
+            ("C", "B", 0, {"B": ">", "C": ">"}),
         ]
 
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
@@ -292,9 +292,9 @@ class TestCoreGraph:
 
         assert sorted(graph.edges(keys=True, data=True)) == [
             ("A", "C", 0, {"A": "-", "C": "o"}),
-            ("B", "C", 0, {"B": "-", "C": "o"}),
+            ("C", "B", 0, {"B": "-", "C": "o"}),
             ("D", "E", 0, {"D": "o", "E": ">"}),
-            ("F", "E", 0, {"F": "o", "E": ">"}),
+            ("E", "F", 0, {"F": "o", "E": ">"}),
             ("G", "H", 0, {"G": "o", "H": "o"}),
         ]
 
@@ -318,6 +318,17 @@ class TestCoreGraph:
         ]
 
         check_graph_status(graph, 2, 4, set(), set(), set(), {})
+
+    def test_add_edge_with_kwargs(self):
+        """Test adding edge of with kwargs."""
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->", weight=5)
+        graph.add_edge("B", "C", "->", weight=8)
+
+        assert sorted(graph.edges(keys=True, data=True)) == [
+            ("A", "B", 0, {"weight": 5, "A": "-", "B": ">"}),
+            ("B", "C", 0, {"weight": 8, "B": "-", "C": ">"}),
+        ]
 
     def test_add_edge_fails(self):
         """Test failing add edge of a `_CoreGraph`."""
@@ -834,6 +845,16 @@ class TestCoreGraph:
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
+    def test_copy_with_nodes(self):
+        """Test the `copy` method of a `_CoreGraph` with nodes."""
+        nodes = ["A", "B", "C"]
+        graph = _CoreGraph()
+        graph.add_nodes_from(nodes)
+        graph_copy = graph.copy()
+
+        assert graph.__eq__(graph_copy) == True
+        assert graph_copy.__eq__(graph) == True
+
     def test_copy_with_ebunch(self):
         """Test the `copy` method of a `_CoreGraph` with an ebunch."""
         edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
@@ -863,7 +884,7 @@ class TestCoreGraph:
         check_graph_status(
             graph,
             4,
-            3,
+            4,
             {"A"},
             {"C"},
             {"D"},
@@ -1826,3 +1847,22 @@ class TestCoreGraph:
             graph.get_reachable_nodes("A")
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
+    @pytest.mark.parametrize(
+        "edge_in, edge_out",
+        [
+            (("A", "B", "->"), ("A", "B", "->")),
+            (("A", "B", "<-"), ("B", "A", "->")),
+            (("A", "B", "-o"), ("A", "B", "-o")),
+            (("A", "B", "o-"), ("B", "A", "-o")),
+            (("A", "B", "o>"), ("A", "B", "o>")),
+            (("A", "B", "<o"), ("B", "A", "o>")),
+            (("A", "B", "<>"), ("A", "B", ">>")),
+            (("A", "B", "--"), ("A", "B", "--")),
+        ],
+    )
+    def test_preprocess_edge(self, edge_in, edge_out):
+        """Test `_preprocess_edge` method of the `_CoreGraph` class"""
+        graph = _CoreGraph()
+        result = graph._preprocess_edge(*edge_in)
+        assert result == edge_out

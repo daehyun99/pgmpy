@@ -6,7 +6,7 @@ import networkx as nx
 from pgmpy.base._mixin_roles import _GraphRolesMixin
 
 
-class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
+class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
     """
     Base graph class for pgmpy.
 
@@ -52,7 +52,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
     >>> edges = [("A", "B", "->"), ("B", "C", "->")]
     >>> G = _CoreGraph(ebunch=edges)
-    >>> G.get_edges(edge_type=True)
+    >>> graph.edges(keys=True, data=True)  # [need to fix]
     [('A', 'B', {'edge_type': '->'}), ('B', 'C', {'edge_type': '->'})]
 
     **Nodes:**
@@ -74,7 +74,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
     >>> from pgmpy.base._base import _CoreGraph
     >>> G = _CoreGraph()
     >>> G.add_edge("A", "B", "->")
-    >>> G.get_edges(edge_type=True)
+    >>> graph.edges(keys=True, data=True)  # [need to fix]
     [('A', 'B', {'edge_type': '->'})]
 
     Remove one edge,
@@ -82,7 +82,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
     >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
     >>> G = _CoreGraph(ebunch=edges)
     >>> G.remove_edge("A", "B", "->")
-    >>> G.get_edges(edge_type=True)
+    >>> graph.edges(keys=True, data=True)  # [need to fix]
     [('B', 'C', {'edge_type': '->'}), ('C', 'D', {'edge_type': '--'})]
 
     **Exposures, Outcomes, and Latents:**
@@ -156,7 +156,8 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         self,
         u: Hashable,
         v: Hashable,
-        edge_type: str = None,
+        edge_type: str | dict = None,
+        key=None,
         **kwargs,
     ):
         """
@@ -178,6 +179,8 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             Edge data (or labels or objects) can be assigned using
             keyword arguments.
 
+        key : Hashable
+
         Returns
         -------
         None
@@ -196,34 +199,28 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> from pgmpy.base._base import _CoreGraph
         >>> G = _CoreGraph()
         >>> G.add_edge("A", "B", "->")
-        >>> G.get_edges(edge_type=True)
+        >>> graph.edges(keys=True, data=True)  # [need to fix]
         [('A', 'B', {'edge_type': '->'})]
 
         """
+        if isinstance(edge_type, dict):  # Use case for `copy` method
+            _, _, edge_type = self._unpreprocess_edge(u, v, edge_type)
+
         self._validate_edges(ebunch=[(u, v, edge_type)])
 
-        # Adding edge base on edge_type value.
-        if edge_type in ["<-", "<o"]:
-            u, v = v, u
-            edge_type = f"{edge_type[1]}>"
-        super().add_edge(u, v, key=edge_type, **kwargs)
-
-        # Further adding edge based on the edge's edge_type.
-        if edge_type in ["--", "-o", "o-"]:
-            reverse_edge_type = f"{edge_type[1]}{edge_type[0]}"
-            super().add_edge(v, u, key=reverse_edge_type, **kwargs)
-        elif edge_type in ["<>", "oo"]:
-            super().add_edge(v, u, key=edge_type, **kwargs)
-        elif edge_type in ["->", "<-", "o>", "<o"]:
-            pass
+        u, v, edge_type = self._preprocess_edge(u, v, edge_type)
+        if key is None:
+            _key = super().add_edge(u, v, **kwargs)
         else:
-            raise AssertionError(
-                "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
-            )
+            _key = super().add_edge(u, v, key=key, **kwargs)
+        self.edges[u, v, _key].update({u: edge_type[0], v: edge_type[1]})
 
     def add_edges_from(
         self,
-        ebunch: Iterable[tuple[Hashable, Hashable, Hashable]],
+        ebunch: (
+            Iterable[tuple[Hashable, Hashable, Hashable]]
+            | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
+        ),
         **kwargs,
     ):
         """
@@ -233,6 +230,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         ----------
         ebunch : list of tuples
             [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...]
+            [(`u`, `v`, `key`, `edge_type`), (`u`, `v`, `key`, `edge_type`), ...]
 
         kwargs : keyword arguments, optional
             Edge data (or labels or objects) can be assigned using
@@ -256,14 +254,19 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph()
         >>> G.add_edges_from(ebunch=edges)
-        >>> G.get_edges(edge_type=True)
+        >>> graph.edges(keys=True, data=True)  # [need to fix]
         [('A', 'B', {'edge_type': '->'}), ('B', 'C', {'edge_type': '->'})]
 
         """
         self._validate_edges(ebunch=ebunch)
 
-        for u, v, edge_type in ebunch:
-            self.add_edge(u, v, edge_type, **kwargs)
+        if ebunch:
+            if len(ebunch[0]) == 4:
+                for u, v, key, edge_type in ebunch:
+                    self.add_edge(u, v, edge_type, key=key, **kwargs)
+            elif len(ebunch[0]) != 0:
+                for u, v, edge_type in ebunch:
+                    self.add_edge(u, v, edge_type, **kwargs)
 
     def remove_edge(
         self,
@@ -306,30 +309,28 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> G.remove_edge("A", "B", "->")
-        >>> G.get_edges(edge_type=True)
+        >>> graph.edges(keys=True, data=True)  # [need to fix]
         [('B', 'C', {'edge_type': '->'}), ('C', 'D', {'edge_type': '--'})]
 
         """
         self._validate_edges(ebunch=[(u, v, edge_type)])
 
-        # Removing edge base on `edge_type` value.
-        if edge_type in ["<-", "<o"]:
-            u, v = v, u
-            edge_type = f"{edge_type[1]}>"
-        super().remove_edge(u, v, key=edge_type)
+        u, v, edge_type = self._preprocess_edge(u, v, edge_type)
 
-        # Further removing edge based on the edge's edge_type.
-        if edge_type in ["--", "-o", "o-"]:
-            reverse_edge_type = f"{edge_type[1]}{edge_type[0]}"
-            super().remove_edge(v, u, key=reverse_edge_type)
-        elif edge_type in ["<>", "oo"]:
-            super().remove_edge(v, u, key=edge_type)
-        elif edge_type in ["->", "<-", "o>", "<o"]:
-            pass
+        keys_to_remove = []
+        edges = self.get_edge_data(u, v)
+        if edge_type is None:
+            keys_to_remove = list(edges.keys())
         else:
-            raise AssertionError(
-                "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
-            )
+            for key, data in edges.items():
+                if data[u] == edge_type[0] and data[v] == edge_type[1]:
+                    keys_to_remove.append(key)
+
+        if len(keys_to_remove) == 0:
+            raise ValueError(f"Edge ({u}, {v}, {edge_type}) not in graph.")
+        else:
+            for key in keys_to_remove:
+                super().remove_edge(u, v, key=key)
 
     def remove_edges_from(
         self,
@@ -362,7 +363,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph(ebunch=edges)
         >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
         >>> G.remove_edges_from(ebunch=remove_edges)
-        >>> G.get_edges(edge_type=True)
+        >>> graph.edges(keys=True, data=True)  # [need to fix]
         [('A', 'B', {'edge_type': '->'})]
 
         """
@@ -397,9 +398,13 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         <class 'pgmpy.base._base._CoreGraph'>
 
         """
-        ebunch = [(u, v, edge_type) for u, v, edge_type in self.edges(keys=True)]
+        ebunch = [
+            (u, v, key, edge_type)
+            for u, v, key, edge_type in self.edges(keys=True, data=True)
+        ]
 
         graph_copy = self.__class__()
+        graph_copy.add_nodes_from(self.nodes(data=True))
         graph_copy.add_edges_from(ebunch=ebunch)
         for role, vars in self.get_role_dict().items():
             graph_copy.with_role(role=role, variables=vars, inplace=True)
@@ -434,7 +439,7 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph(ebunch=[("A", "B", "->"), ("B", "C", "--")])
         >>> G.get_edges()
         [('A', 'B'), ('B', 'C')]
-        >>> G.get_edges(edge_type=True)
+        >>> graph.edges(keys=True, data=True)  # [need to fix]
         [('A', 'B', {'edge_type': '->'}), ('B', 'C', {'edge_type': '--'})]
 
         """
@@ -506,31 +511,24 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         """
         self._validate_nodes(node=node, edge_type=edge_type)
 
-        if edge_type is None:
-            return set(nx.all_neighbors(self, node))
+        neighboring_nodes = self.neighbors(node)
 
-        result = set()
-        if edge_type in ["->", "o>", "--", "<>", "oo"]:
-            for neighbor in nx.all_neighbors(self, node):
-                if self.has_edge(node, neighbor, key=edge_type):
-                    result.add(neighbor)
-        elif edge_type in ["<-", "<o"]:
-            reverse_edge_type = f"{edge_type[1]}>"
-            for neighbor in nx.all_neighbors(self, node):
-                if self.has_edge(neighbor, node, key=reverse_edge_type):
-                    result.add(neighbor)
-        elif edge_type in ["-o", "o-"]:
-            reverse_edge_type = f"{edge_type[1]}{edge_type[0]}"
-            for neighbor in nx.all_neighbors(self, node):
-                if (self.has_edge(node, neighbor, key=edge_type)) or (
-                    self.has_edge(neighbor, node, key=reverse_edge_type)
-                ):
-                    result.add(neighbor)
+        if edge_type is None:
+            return set(neighboring_nodes)
+
         else:
-            raise AssertionError(
-                "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
-            )
-        return result
+            if edge_type[0] == "<":
+                edge_type = f">{edge_type[1]}"
+
+            filtered_neighbors = set()
+            for neighbor in neighboring_nodes:
+                edge_data = self.get_edge_data(node, neighbor)
+                for _, data in edge_data.items():
+                    if data[node] == edge_type[0] and data[neighbor] == edge_type[1]:
+                        filtered_neighbors.add(neighbor)
+                        break
+
+        return filtered_neighbors
 
     def get_parents(self, node):
         """
@@ -863,7 +861,10 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
 
     def _validate_edges(
         self,
-        ebunch: Iterable[tuple[Hashable, Hashable, Hashable]],
+        ebunch: (
+            Iterable[tuple[Hashable, Hashable, Hashable]]
+            | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
+        ),
     ):
         """
         Validates the value input by the user, then either raises an error.
@@ -881,13 +882,35 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
             `remove_edge()`,
             `remove_edges_from()`.
         """
-        for u, v, edge_type in ebunch:
-            if (u is None) or (v is None):
-                raise ValueError("Nodes cannot be None.")
-            if u == v:
-                raise ValueError("Nodes cannot be the same for an edge.")
-            if (edge_type is None) or (edge_type not in self.SUPPORTED_EDGE_TYPES):
-                raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
+        if ebunch:
+            if len(ebunch[0]) == 3:
+                for u, v, edge_type in ebunch:
+                    if (u is None) or (v is None):
+                        raise ValueError("Nodes cannot be None.")
+                    if u == v:
+                        raise ValueError("Nodes cannot be the same for an edge.")
+                    if isinstance(edge_type, dict):
+                        _, _, edge_type = self._unpreprocess_edge(u, v, edge_type)
+                    if (edge_type is None) or (
+                        edge_type not in self.SUPPORTED_EDGE_TYPES
+                    ):
+                        raise ValueError(
+                            f"Types must be one of {self.SUPPORTED_EDGE_TYPES}."
+                        )
+            elif len(ebunch[0]) == 4:
+                for u, v, _, edge_type in ebunch:
+                    if (u is None) or (v is None):
+                        raise ValueError("Nodes cannot be None.")
+                    if u == v:
+                        raise ValueError("Nodes cannot be the same for an edge.")
+                    if isinstance(edge_type, dict):
+                        _, _, edge_type = self._unpreprocess_edge(u, v, edge_type)
+                    if (edge_type is None) or (
+                        edge_type not in self.SUPPORTED_EDGE_TYPES
+                    ):
+                        raise ValueError(
+                            f"Types must be one of {self.SUPPORTED_EDGE_TYPES}."
+                        )
 
     def _validate_nodes(self, node, edge_type):
         """
@@ -926,3 +949,35 @@ class _CoreGraph(nx.MultiDiGraph, _GraphRolesMixin):
         # Check edge_type's value
         if (edge_type is not None) and (edge_type not in self.SUPPORTED_EDGE_TYPES):
             raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
+
+    def _preprocess_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        edge_type: str,
+    ) -> tuple[Hashable, Hashable, Hashable]:
+        if edge_type == "<-":
+            return (v, u, "->")
+        elif edge_type == "o-":
+            return (v, u, "-o")
+        elif edge_type == "<o":
+            return (v, u, "o>")
+        elif edge_type == "<>":
+            return (u, v, ">>")
+        else:
+            return (u, v, edge_type)
+
+    def _unpreprocess_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        edge_type: dict,
+    ) -> tuple[Hashable, Hashable, Hashable]:
+        u_symbol = edge_type[u]
+        v_symbol = edge_type[v]
+        edge_type = f"{u_symbol}{v_symbol}"
+
+        if edge_type == ">>":
+            edge_type = "<>"
+
+        return u, v, edge_type
