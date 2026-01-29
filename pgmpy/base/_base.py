@@ -411,62 +411,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         return graph_copy
 
-    def get_edges(self, edge_type: bool = False):
-        """
-        Returns a list of edges in the graph.
-
-        For undirected and bidirected edges, which are stored as two directed
-        edges internally, this method returns only one of them.
-
-        Parameters
-        ----------
-        edge_type: bool (default: False)
-            If True, returns edge data. The edge data is a dict with 'edge_type'.
-
-        Returns
-        -------
-        list of tuples:
-            If `edge_type` is `True`, return `(u, v, {'edge_type': edge_type})`,
-            and if `False`, return `(u, v)`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
-
-        Examples
-        --------
-        >>> from pgmpy.base._base import _CoreGraph
-        >>> G = _CoreGraph(ebunch=[("A", "B", "->"), ("B", "C", "--")])
-        >>> G.get_edges()
-        [('A', 'B'), ('B', 'C')]
-        >>> graph.edges(keys=True, data=True)  # [need to fix]
-        [('A', 'B', {'edge_type': '->'}), ('B', 'C', {'edge_type': '--'})]
-
-        """
-        edges_edge_type = [
-            (u, v, edge_type) for u, v, edge_type in self.edges(keys=True)
-        ]
-        result = []
-        seen = set()
-
-        # Removing duplicates
-        for u, v, edge_type_val in edges_edge_type:
-            if (u, v, edge_type_val) not in seen:
-                seen.add((u, v, edge_type_val))
-                if edge_type_val in ["--", "<>", "oo"]:
-                    seen.add((v, u, edge_type_val))
-                elif edge_type_val in ["-o", "o-"]:
-                    reverse_edge_type = f"{edge_type_val[1]}{edge_type_val[0]}"
-                    seen.add((v, u, reverse_edge_type))
-
-                # Output format according to `edge_type`
-                if edge_type:
-                    output_form = (u, v, {"edge_type": edge_type_val})  # (u, v, data)
-                else:
-                    output_form = (u, v)  # (u, v)
-                result.append(output_form)
-        return result
-
     def get_neighbors(self, node, edge_type=None):
         """
         Returns a set of neighbors nodes in the graph.
