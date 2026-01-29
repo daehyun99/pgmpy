@@ -1848,68 +1848,21 @@ class TestCoreGraph:
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-    def test_preprocess_edge(self):
+    @pytest.mark.parametrize(
+        "edge_in, edge_out",
+        [
+            (("A", "B", "->"), ("A", "B", "->")),
+            (("A", "B", "<-"), ("B", "A", "->")),
+            (("A", "B", "-o"), ("A", "B", "-o")),
+            (("A", "B", "o-"), ("B", "A", "-o")),
+            (("A", "B", "o>"), ("A", "B", "o>")),
+            (("A", "B", "<o"), ("B", "A", "o>")),
+            (("A", "B", "<>"), ("A", "B", ">>")),
+            (("A", "B", "--"), ("A", "B", "--")),
+        ],
+    )
+    def test_preprocess_edge(self, edge_in, edge_out):
         """Test `_preprocess_edge` method of the `_CoreGraph` class"""
-        # Test1: direct edge
         graph = _CoreGraph()
-        graph.add_edge("A", "B", "->")
-        u, v, edge_type = graph._preprocess_edge("A", "B", "->")
-        assert u == "A"
-        assert v == "B"
-        assert edge_type == "->"
-
-        # Test2: reverse direct edge
-        graph = _CoreGraph()
-        graph.add_edge("A", "B", "<-")
-        u, v, edge_type = graph._preprocess_edge("A", "B", "<-")
-        assert u == "B"
-        assert v == "A"
-        assert edge_type == "->"
-
-        # Test3: unknown edge
-        graph = _CoreGraph()
-        graph.add_edge("A", "B", "-o")
-        u, v, edge_type = graph._preprocess_edge("A", "B", "-o")
-        assert u == "A"
-        assert v == "B"
-        assert edge_type == "-o"
-
-        # Test4: reverse unknown edge
-        graph = _CoreGraph()
-        graph.add_edge("A", "B", "o-")
-        u, v, edge_type = graph._preprocess_edge("A", "B", "o-")
-        assert u == "B"
-        assert v == "A"
-        assert edge_type == "-o"
-
-        # Test5: unknown edge
-        graph = _CoreGraph()
-        graph.add_edge("A", "B", "o>")
-        u, v, edge_type = graph._preprocess_edge("A", "B", "o>")
-        assert u == "A"
-        assert v == "B"
-        assert edge_type == "o>"
-
-        # Test6: reverse unknown edge
-        graph = _CoreGraph()
-        graph.add_edge("A", "B", "<o")
-        u, v, edge_type = graph._preprocess_edge("A", "B", "<o")
-        assert u == "B"
-        assert v == "A"
-        assert edge_type == "o>"
-
-        # Test7: bidirect edge
-        graph = _CoreGraph()
-        graph.add_edge("A", "B", "<>")
-        u, v, edge_type = graph._preprocess_edge("A", "B", "<>")
-        assert u == "A"
-        assert v == "B"
-        assert edge_type == ">>"
-
-        # Test8: undirect edge
-        graph = _CoreGraph()
-        graph.add_edge("A", "B", "--")
-        u, v, edge_type = graph._preprocess_edge("A", "B", "--")
-        assert u == "A"
-        assert v == "B"
-        assert edge_type == "--"
+        result = graph._preprocess_edge(*edge_in)
+        assert result == edge_out
