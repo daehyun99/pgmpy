@@ -210,9 +210,9 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         u, v, edge_type = self._preprocess_edge(u, v, edge_type)
         if key is None:
-            _key = super().add_edge(u, v)
+            _key = super().add_edge(u, v, **kwargs)
         else:
-            _key = super().add_edge(u, v, key=key)
+            _key = super().add_edge(u, v, key=key, **kwargs)
         self.edges[u, v, _key].update({u: edge_type[0], v: edge_type[1]})
 
     def add_edges_from(

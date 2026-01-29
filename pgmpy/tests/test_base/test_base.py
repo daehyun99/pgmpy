@@ -319,6 +319,17 @@ class TestCoreGraph:
 
         check_graph_status(graph, 2, 4, set(), set(), set(), {})
 
+    def test_add_edge_with_kwargs(self):
+        """Test adding edge of with kwargs."""
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->", weight=5)
+        graph.add_edge("B", "C", "->", weight=8)
+
+        assert sorted(graph.edges(keys=True, data=True)) == [
+            ("A", "B", 0, {"weight": 5, "A": "-", "B": ">"}),
+            ("B", "C", 0, {"weight": 8, "B": "-", "C": ">"}),
+        ]
+
     def test_add_edge_fails(self):
         """Test failing add edge of a `_CoreGraph`."""
         graph = _CoreGraph()
