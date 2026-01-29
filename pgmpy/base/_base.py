@@ -203,7 +203,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         [('A', 'B', {'edge_type': '->'})]
 
         """
-        if isinstance(edge_type, dict):
+        if isinstance(edge_type, dict):  # Use case for `copy` method
             _, _, edge_type = self._unpreprocess_edge(u, v, edge_type)
 
         self._validate_edges(ebunch=[(u, v, edge_type)])
@@ -510,31 +510,24 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         self._validate_nodes(node=node, edge_type=edge_type)
 
-        if edge_type is None:
-            return set(nx.all_neighbors(self, node))
+        neighboring_nodes = self.neighbors(node)
 
-        result = set()
-        if edge_type in ["->", "o>", "--", "<>", "oo"]:
-            for neighbor in nx.all_neighbors(self, node):
-                if self.has_edge(node, neighbor, key=edge_type):
-                    result.add(neighbor)
-        elif edge_type in ["<-", "<o"]:
-            reverse_edge_type = f"{edge_type[1]}>"
-            for neighbor in nx.all_neighbors(self, node):
-                if self.has_edge(neighbor, node, key=reverse_edge_type):
-                    result.add(neighbor)
-        elif edge_type in ["-o", "o-"]:
-            reverse_edge_type = f"{edge_type[1]}{edge_type[0]}"
-            for neighbor in nx.all_neighbors(self, node):
-                if (self.has_edge(node, neighbor, key=edge_type)) or (
-                    self.has_edge(neighbor, node, key=reverse_edge_type)
-                ):
-                    result.add(neighbor)
+        if edge_type is None:
+            return set(neighboring_nodes)
+
         else:
-            raise AssertionError(
-                "This is an unexpected error in pgmpy. If you see this error, please file an issue on the pgmpy GitHub."
-            )
-        return result
+            if edge_type[0] == "<":
+                edge_type = f">{edge_type[1]}"
+
+            filtered_neighbors = set()
+            for neighbor in neighboring_nodes:
+                edge_data = self.get_edge_data(node, neighbor)
+                for _, data in edge_data.items():
+                    if data[node] == edge_type[0] and data[neighbor] == edge_type[1]:
+                        filtered_neighbors.add(neighbor)
+                        break
+
+        return filtered_neighbors
 
     def get_parents(self, node):
         """
