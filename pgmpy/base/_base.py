@@ -404,6 +404,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         ]
 
         graph_copy = self.__class__()
+        graph_copy.add_nodes_from(self.nodes(data=True))
         graph_copy.add_edges_from(ebunch=ebunch)
         for role, vars in self.get_role_dict().items():
             graph_copy.with_role(role=role, variables=vars, inplace=True)
