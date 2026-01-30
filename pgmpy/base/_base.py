@@ -822,35 +822,30 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             `remove_edge()`,
             `remove_edges_from()`.
         """
-        if ebunch:
-            if len(ebunch[0]) == 3:
-                for u, v, edge_type in ebunch:
-                    if (u is None) or (v is None):
-                        raise ValueError("Nodes cannot be None.")
-                    if u == v:
-                        raise ValueError("Nodes cannot be the same for an edge.")
-                    if isinstance(edge_type, dict):
-                        _, _, edge_type = self._unpreprocess_edge(u, v, edge_type)
-                    if (edge_type is None) or (
-                        edge_type not in self.SUPPORTED_EDGE_TYPES
-                    ):
-                        raise ValueError(
-                            f"Types must be one of {self.SUPPORTED_EDGE_TYPES}."
-                        )
-            elif len(ebunch[0]) == 4:
-                for u, v, _, edge_type in ebunch:
-                    if (u is None) or (v is None):
-                        raise ValueError("Nodes cannot be None.")
-                    if u == v:
-                        raise ValueError("Nodes cannot be the same for an edge.")
-                    if isinstance(edge_type, dict):
-                        _, _, edge_type = self._unpreprocess_edge(u, v, edge_type)
-                    if (edge_type is None) or (
-                        edge_type not in self.SUPPORTED_EDGE_TYPES
-                    ):
-                        raise ValueError(
-                            f"Types must be one of {self.SUPPORTED_EDGE_TYPES}."
-                        )
+        if not ebunch:
+            return
+        supported_types = self.SUPPORTED_EDGE_TYPES
+
+        for edge in ebunch:
+            if len(edge) == 3:
+                u, v, edge_type = edge
+            elif len(edge) == 4:
+                u, v, _, edge_type = edge
+            else:
+                raise ValueError(
+                    f"Edge tuple must have 3 or 4 elements. Got {len(edge)}."
+                )
+
+            if (u is None) or (v is None):
+                raise ValueError("Nodes cannot be None.")
+            if u == v:
+                raise ValueError("Nodes cannot be the same for an edge.")
+
+            if isinstance(edge_type, dict):
+                _, _, edge_type = self._unpreprocess_edge(u, v, edge_type)
+
+            if edge_type is None or edge_type not in supported_types:
+                raise ValueError(f"Types must be one of {supported_types}.")
 
     def _validate_nodes(self, node, edge_type):
         """
