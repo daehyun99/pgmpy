@@ -209,11 +209,6 @@ class TestCoreGraph:
             graph = _CoreGraph(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-        with pytest.raises(ValueError):  # miss `edge_type` value
-            edges = [("A", "B")]
-            graph = _CoreGraph(ebunch=edges)
-        check_graph_status(graph, 0, 0, set(), set(), set(), {})
-
         with pytest.raises(ValueError):  # invalid `edge_type` values
             edges = [("A", "B", "->"), ("A", "C", "o-->"), ("C", "D", "--")]
             graph = _CoreGraph(ebunch=edges)
@@ -339,9 +334,6 @@ class TestCoreGraph:
 
         with pytest.raises(ValueError):
             graph.add_edge("A", "B", "-->")
-
-        with pytest.raises(ValueError):
-            graph.add_edge("A", "B")
 
         with pytest.raises(ValueError):
             graph.add_edge("A", "B", "Invalid_value")
@@ -532,6 +524,13 @@ class TestCoreGraph:
 
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
+    def test_remove_no_edge_type(self):
+        """Test removing edges of a `_CoreGraph`."""
+        edges = [("A", "B", "->"), ("A", "B", "->"), ("A", "B", "--")]
+        graph = _CoreGraph(ebunch=edges)
+        graph.remove_edge("A", "B")
+        check_graph_status(graph, 2, 0, set(), set(), set(), {})
+
     def test_remove_edge_fails(self):
         """Test failing remove edge of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("B", "C", "->")]
@@ -546,12 +545,6 @@ class TestCoreGraph:
         graph.remove_edge("A", "B", "->")
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             graph.remove_edge("B", None, "->")
-        check_graph_status(graph, 3, 1, set(), set(), set(), {})
-
-        graph = _CoreGraph(ebunch=edges)
-        graph.remove_edge("A", "B", "->")
-        with pytest.raises(ValueError):  # miss `edge_type` value
-            graph.remove_edge("B", "C")
         check_graph_status(graph, 3, 1, set(), set(), set(), {})
 
         graph = _CoreGraph(ebunch=edges)
@@ -855,7 +848,7 @@ class TestCoreGraph:
         assert graph.__eq__(graph_copy) == True
         assert graph_copy.__eq__(graph) == True
 
-    def test_copy_with_ebunch(self):
+    def test_copy_with_ebunch1(self):
         """Test the `copy` method of a `_CoreGraph` with an ebunch."""
         edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
         graph = _CoreGraph(ebunch=edges)
@@ -865,6 +858,18 @@ class TestCoreGraph:
         assert graph_copy.__eq__(graph) == True
 
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
+
+    def test_copy_with_ebunch2(self):
+        """Test the `copy` method of a `_CoreGraph` with an ebunch."""
+        graph = _CoreGraph()
+        graph.add_edge("A", "C", "->")
+        graph.add_edge("C", "B", "<-")
+        graph_copy = graph.copy()
+
+        assert graph.__eq__(graph_copy) == True
+        assert graph_copy.__eq__(graph) == True
+
+        check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
     def test_copy_with_attributes(self):
         """Test the `copy` method of a `_CoreGraph` with attributes."""
@@ -1848,21 +1853,45 @@ class TestCoreGraph:
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-    @pytest.mark.parametrize(
-        "edge_in, edge_out",
-        [
-            (("A", "B", "->"), ("A", "B", "->")),
-            (("A", "B", "<-"), ("B", "A", "->")),
-            (("A", "B", "-o"), ("A", "B", "-o")),
-            (("A", "B", "o-"), ("B", "A", "-o")),
-            (("A", "B", "o>"), ("A", "B", "o>")),
-            (("A", "B", "<o"), ("B", "A", "o>")),
-            (("A", "B", "<>"), ("A", "B", ">>")),
-            (("A", "B", "--"), ("A", "B", "--")),
-        ],
-    )
-    def test_preprocess_edge(self, edge_in, edge_out):
-        """Test `_preprocess_edge` method of the `_CoreGraph` class"""
+    def test_convert_edge_type_cases(self):
+        # 1. Circle-Line Edge
+        edge_tuple = ("A", "B", "o-")
         graph = _CoreGraph()
-        result = graph._preprocess_edge(*edge_in)
-        assert result == edge_out
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"B": "-", "A": "o"}
+
+        # 2. Arrow-Circle Edge
+        edge_tuple = ("X", "Y", "<o")
+        graph = _CoreGraph()
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"Y": "o", "X": ">"}
+
+        # 3. Bidirected Edge
+        edge_tuple = ("U", "V", "<>")
+        graph = _CoreGraph()
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"U": ">", "V": ">"}
+
+        # 4. Undirected Edge (General case via else block)
+        edge_tuple = ("N1", "N2", "--")
+        graph = _CoreGraph()
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"N1": "-", "N2": "-"}
+
+        # 5. Directed Edge (Forward - General case via else block)
+        edge_tuple = ("N1", "N2", "->")
+        graph = _CoreGraph()
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"N1": "-", "N2": ">"}
+
+        # 6. Arbitrary Characters (General case via else block)
+        edge_tuple = ("A", "B", "xy")
+        graph = _CoreGraph()
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"A": "x", "B": "y"}
+
+    def test_invalid_input_structure(self):
+        invalid_edge = ("A", "B", "key", "<-")
+        graph = _CoreGraph()
+        with pytest.raises(ValueError):
+            graph._convert_edge_type(invalid_edge)
