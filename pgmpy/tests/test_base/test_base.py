@@ -847,7 +847,7 @@ class TestCoreGraph:
         assert graph.__eq__(graph_copy) == True
         assert graph_copy.__eq__(graph) == True
 
-    def test_copy_with_ebunch(self):
+    def test_copy_with_ebunch1(self):
         """Test the `copy` method of a `_CoreGraph` with an ebunch."""
         edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
         graph = _CoreGraph(ebunch=edges)
@@ -857,6 +857,18 @@ class TestCoreGraph:
         assert graph_copy.__eq__(graph) == True
 
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
+
+    def test_copy_with_ebunch2(self):
+        """Test the `copy` method of a `_CoreGraph` with an ebunch."""
+        graph = _CoreGraph()
+        graph.add_edge("A", "C", "->")
+        graph.add_edge("C", "B", "<-")
+        graph_copy = graph.copy()
+
+        assert graph.__eq__(graph_copy) == True
+        assert graph_copy.__eq__(graph) == True
+
+        check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
     def test_copy_with_attributes(self):
         """Test the `copy` method of a `_CoreGraph` with attributes."""
