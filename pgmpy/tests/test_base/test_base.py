@@ -1852,3 +1852,46 @@ class TestCoreGraph:
             graph.get_reachable_nodes("A")
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
+    def test_convert_edge_type_cases(self):
+        # 1. Circle-Line Edge
+        edge_tuple = ("A", "B", "o-")
+        graph = _CoreGraph()
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"B": "-", "A": "o"}
+
+        # 2. Arrow-Circle Edge
+        edge_tuple = ("X", "Y", "<o")
+        graph = _CoreGraph()
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"Y": "o", "X": ">"}
+
+        # 3. Bidirected Edge
+        edge_tuple = ("U", "V", "<>")
+        graph = _CoreGraph()
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"U": ">", "V": ">"}
+
+        # 4. Undirected Edge (General case via else block)
+        edge_tuple = ("N1", "N2", "--")
+        graph = _CoreGraph()
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"N1": "-", "N2": "-"}
+
+        # 5. Directed Edge (Forward - General case via else block)
+        edge_tuple = ("N1", "N2", "->")
+        graph = _CoreGraph()
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"N1": "-", "N2": ">"}
+
+        # 6. Arbitrary Characters (General case via else block)
+        edge_tuple = ("A", "B", "xy")
+        graph = _CoreGraph()
+        result = graph._convert_edge_type(edge_tuple)
+        assert result == {"A": "x", "B": "y"}
+
+    def test_invalid_input_structure(self):
+        invalid_edge = ("A", "B", "key", "<-")
+        graph = _CoreGraph()
+        with pytest.raises(ValueError):
+            graph._convert_edge_type(invalid_edge)

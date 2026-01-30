@@ -211,14 +211,14 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         [('A', 'B', {'edge_type': '->'})]
 
         """
-        if isinstance(edge_type, dict):  # Use case for `copy` method
-            _, _, edge_type = self._unpreprocess_edge(u, v, edge_type)
+        if isinstance(edge_type, str):
+            self._validate_edges(ebunch=[(u, v, edge_type)])
+            _ebunch_dict = self._convert_edge_type(ebunch=[u, v, edge_type])
+        else:
+            _ebunch_dict = edge_type
 
-        self._validate_edges(ebunch=[(u, v, edge_type)])
-
-        u, v, edge_type = self._preprocess_edge(u, v, edge_type)
         _key = super().add_edge(u, v, key=key, **kwargs)
-        self.edges[u, v, _key].update({u: edge_type[0], v: edge_type[1]})
+        self.edges[u, v, _key].update({u: _ebunch_dict[u], v: _ebunch_dict[v]})
 
     def add_edges_from(
         self,
@@ -264,7 +264,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         """
         self._validate_edges(ebunch=ebunch)
-
         for edge in ebunch:
             if len(edge) == 3:
                 u, v, edge_type = edge
@@ -318,9 +317,11 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         [('B', 'C', {'edge_type': '->'}), ('C', 'D', {'edge_type': '--'})]
 
         """
-        self._validate_edges(ebunch=[(u, v, edge_type)])
-
-        u, v, edge_type = self._preprocess_edge(u, v, edge_type)
+        if isinstance(edge_type, str):
+            self._validate_edges(ebunch=[(u, v, edge_type)])
+            _ebunch_dict = self._convert_edge_type(ebunch=[u, v, edge_type])
+        else:
+            _ebunch_dict = edge_type
 
         keys_to_remove = []
         edges = self.get_edge_data(u, v)
@@ -328,7 +329,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             keys_to_remove = list(edges.keys())
         else:
             for key, data in edges.items():
-                if data[u] == edge_type[0] and data[v] == edge_type[1]:
+                if data[u] == _ebunch_dict[u] and data[v] == _ebunch_dict[v]:
                     keys_to_remove.append(key)
 
         if len(keys_to_remove) == 0:
@@ -373,7 +374,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         """
         self._validate_edges(ebunch=ebunch)
-
         for u, v, edge_type in ebunch:
             self.remove_edge(u, v, edge_type)
 
@@ -474,17 +474,17 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         if edge_type is None:
             return set(neighboring_nodes)
 
-        else:
-            if edge_type[0] == "<":
-                edge_type = f">{edge_type[1]}"
-
-            filtered_neighbors = set()
-            for neighbor in neighboring_nodes:
-                edge_data = self.get_edge_data(node, neighbor)
-                for _, data in edge_data.items():
-                    if data[node] == edge_type[0] and data[neighbor] == edge_type[1]:
-                        filtered_neighbors.add(neighbor)
-                        break
+        filtered_neighbors = set()
+        for neighbor in neighboring_nodes:
+            edge_data = self.get_edge_data(node, neighbor)
+            _ebunch_dict = self._convert_edge_type(ebunch=[node, neighbor, edge_type])
+            for _, data in edge_data.items():
+                if (
+                    data[node] == _ebunch_dict[node]
+                    and data[neighbor] == _ebunch_dict[neighbor]
+                ):
+                    filtered_neighbors.add(neighbor)
+                    break
 
         return filtered_neighbors
 
@@ -856,40 +856,24 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             if u == v:
                 raise ValueError("Nodes cannot be the same for an edge.")
 
-            if isinstance(edge_type, dict):
-                _, _, edge_type = self._unpreprocess_edge(u, v, edge_type)
-
             if edge_type is None or edge_type not in supported_types:
                 raise ValueError(f"Types must be one of {supported_types}.")
 
-    def _preprocess_edge(
+    def _convert_edge_type(
         self,
-        u: Hashable,
-        v: Hashable,
-        edge_type: str,
-    ) -> tuple[Hashable, Hashable, Hashable]:
+        ebunch: (
+            Iterable[tuple[Hashable, Hashable, Hashable]]
+            | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
+        ),
+    ) -> dict:
+        u, v, edge_type = ebunch
         if edge_type == "<-":
-            return (v, u, "->")
+            return {v: "-", u: ">"}
         elif edge_type == "o-":
-            return (v, u, "-o")
+            return {v: "-", u: "o"}
         elif edge_type == "<o":
-            return (v, u, "o>")
+            return {v: "o", u: ">"}
         elif edge_type == "<>":
-            return (u, v, ">>")
+            return {u: ">", v: ">"}
         else:
-            return (u, v, edge_type)
-
-    def _unpreprocess_edge(
-        self,
-        u: Hashable,
-        v: Hashable,
-        edge_type: dict,
-    ) -> tuple[Hashable, Hashable, Hashable]:
-        u_symbol = edge_type[u]
-        v_symbol = edge_type[v]
-        edge_type = f"{u_symbol}{v_symbol}"
-
-        if edge_type == ">>":
-            edge_type = "<>"
-
-        return u, v, edge_type
+            return {u: edge_type[0], v: edge_type[1]}
