@@ -452,7 +452,15 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         ['A']
 
         """
-        self._validate_nodes(node=node, edge_type=edge_type)
+        # Check node's value
+        if node is None:
+            raise ValueError("Node cannot be None.")
+        if node not in self.nodes():
+            raise ValueError(f"Node {node} not in graph.")
+
+        # Check edge_type's value
+        if (edge_type is not None) and (edge_type not in self.SUPPORTED_EDGE_TYPES):
+            raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
 
         neighboring_nodes = self.neighbors(node)
 
@@ -846,44 +854,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
             if edge_type is None or edge_type not in supported_types:
                 raise ValueError(f"Types must be one of {supported_types}.")
-
-    def _validate_nodes(self, node, edge_type):
-        """
-        Validating the input of a node-searching method.
-
-        Parameters
-        ----------
-        node : Hashable
-            Nodes can be, for example, strings or numbers.
-            Nodes must be hashable (and not None) Python objects.
-
-        edge_type : str
-            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
-
-        Returns
-        -------
-        None
-
-        See Also
-        --------
-        `get_neighbors()`
-        `get_parents()`
-        `get_children()`
-        `get_ancestors()`
-        `get_descendants()`
-        `get_spouses()`
-        `get_reachable_nodes()`
-
-        """
-        # Check node's value
-        if node is None:
-            raise ValueError("Node cannot be None.")
-        if node not in self.nodes():
-            raise ValueError(f"Node {node} not in graph.")
-
-        # Check edge_type's value
-        if (edge_type is not None) and (edge_type not in self.SUPPORTED_EDGE_TYPES):
-            raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
 
     def _preprocess_edge(
         self,
