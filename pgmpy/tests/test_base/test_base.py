@@ -524,6 +524,13 @@ class TestCoreGraph:
 
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
+    def test_remove_no_edge_type(self):
+        """Test removing edges of a `_CoreGraph`."""
+        edges = [("A", "B", "->"), ("A", "B", "->"), ("A", "B", "--")]
+        graph = _CoreGraph(ebunch=edges)
+        graph.remove_edge("A", "B")
+        check_graph_status(graph, 2, 0, set(), set(), set(), {})
+
     def test_remove_edge_fails(self):
         """Test failing remove edge of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("B", "C", "->")]
@@ -538,12 +545,6 @@ class TestCoreGraph:
         graph.remove_edge("A", "B", "->")
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             graph.remove_edge("B", None, "->")
-        check_graph_status(graph, 3, 1, set(), set(), set(), {})
-
-        graph = _CoreGraph(ebunch=edges)
-        graph.remove_edge("A", "B", "->")
-        with pytest.raises(ValueError):  # miss `edge_type` value
-            graph.remove_edge("B", "C")
         check_graph_status(graph, 3, 1, set(), set(), set(), {})
 
         graph = _CoreGraph(ebunch=edges)
@@ -1851,22 +1852,3 @@ class TestCoreGraph:
             graph.get_reachable_nodes("A")
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
-
-    @pytest.mark.parametrize(
-        "edge_in, edge_out",
-        [
-            (("A", "B", "->"), ("A", "B", "->")),
-            (("A", "B", "<-"), ("B", "A", "->")),
-            (("A", "B", "-o"), ("A", "B", "-o")),
-            (("A", "B", "o-"), ("B", "A", "-o")),
-            (("A", "B", "o>"), ("A", "B", "o>")),
-            (("A", "B", "<o"), ("B", "A", "o>")),
-            (("A", "B", "<>"), ("A", "B", ">>")),
-            (("A", "B", "--"), ("A", "B", "--")),
-        ],
-    )
-    def test_preprocess_edge(self, edge_in, edge_out):
-        """Test `_preprocess_edge` method of the `_CoreGraph` class"""
-        graph = _CoreGraph()
-        result = graph._preprocess_edge(*edge_in)
-        assert result == edge_out
