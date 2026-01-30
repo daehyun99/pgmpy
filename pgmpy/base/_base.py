@@ -135,7 +135,13 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
     ):
         super().__init__()
         if ebunch:
-            self.add_edges_from(ebunch)
+            for edge in ebunch:
+                if len(edge) == 4:
+                    u, v, key, edge_type = edge
+                elif len(edge) == 3:
+                    u, v, edge_type = edge
+                    key = None
+                self.add_edge(u, v, edge_type=edge_type, key=key)
 
         self.exposures = set() if exposures is None else set(exposures)
         self.outcomes = set() if outcomes is None else set(outcomes)
@@ -404,7 +410,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
         graph_copy = self.__class__()
         graph_copy.add_nodes_from(self.nodes(data=True))
-        graph_copy.add_edges_from(ebunch=ebunch)
+        for u, v, key, edge_type in ebunch:
+            graph_copy.add_edge(u, v, edge_type=edge_type, key=key)
         for role, vars in self.get_role_dict().items():
             graph_copy.with_role(role=role, variables=vars, inplace=True)
 
