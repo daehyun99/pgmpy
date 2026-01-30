@@ -515,7 +515,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         ['B']
 
         """
-        self._validate_nodes(node=node, edge_type="<-")
         return self.get_neighbors(node=node, edge_type="<-")
 
     def get_children(self, node):
@@ -557,7 +556,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         ['C']
 
         """
-        self._validate_nodes(node=node, edge_type="->")
         return self.get_neighbors(node=node, edge_type="->")
 
     def get_spouses(self, node):
@@ -598,7 +596,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         ['B']
 
         """
-        self._validate_nodes(node=node, edge_type="<>")
         return self.get_neighbors(node=node, edge_type="<>")
 
     def get_ancestors(self, node):
