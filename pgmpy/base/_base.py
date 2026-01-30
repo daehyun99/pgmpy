@@ -121,7 +121,9 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
     """
 
-    SUPPORTED_EDGE_TYPES = set(["--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"])
+    SUPPORTED_EDGE_TYPES = frozenset(
+        ["--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"]
+    )
 
     def __init__(
         self,
@@ -156,7 +158,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         self,
         u: Hashable,
         v: Hashable,
-        edge_type: str | dict = None,
+        edge_type: str = "->",
         key=None,
         **kwargs,
     ):
@@ -260,13 +262,13 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         self._validate_edges(ebunch=ebunch)
 
-        if ebunch:
-            if len(ebunch[0]) == 4:
-                for u, v, key, edge_type in ebunch:
-                    self.add_edge(u, v, edge_type, key=key, **kwargs)
-            elif len(ebunch[0]) != 0:
-                for u, v, edge_type in ebunch:
-                    self.add_edge(u, v, edge_type, **kwargs)
+        for edge in ebunch:
+            if len(edge) == 3:
+                u, v, edge_type = edge
+                self.add_edge(u, v, edge_type=edge_type, **kwargs)
+            elif len(edge) == 4:
+                u, v, key, edge_type = edge
+                self.add_edge(u, v, edge_type=edge_type, key=key, **kwargs)
 
     def remove_edge(
         self,
@@ -374,7 +376,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
     def copy(self):
         """
-        Returns a copy of the graph object.
+        Returns a deep copy of the graph object.
 
         Parameters
         ----------

@@ -209,11 +209,6 @@ class TestCoreGraph:
             graph = _CoreGraph(ebunch=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-        with pytest.raises(ValueError):  # miss `edge_type` value
-            edges = [("A", "B")]
-            graph = _CoreGraph(ebunch=edges)
-        check_graph_status(graph, 0, 0, set(), set(), set(), {})
-
         with pytest.raises(ValueError):  # invalid `edge_type` values
             edges = [("A", "B", "->"), ("A", "C", "o-->"), ("C", "D", "--")]
             graph = _CoreGraph(ebunch=edges)
@@ -339,9 +334,6 @@ class TestCoreGraph:
 
         with pytest.raises(ValueError):
             graph.add_edge("A", "B", "-->")
-
-        with pytest.raises(ValueError):
-            graph.add_edge("A", "B")
 
         with pytest.raises(ValueError):
             graph.add_edge("A", "B", "Invalid_value")
