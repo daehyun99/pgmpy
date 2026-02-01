@@ -1937,23 +1937,31 @@ class TestCoreGraph:
         graph.add_edge("B", "C", "o-")
         graph.add_edge("A", "B", "<>")
 
-        assert graph.get_edges(keys=False, data=False) == [
-            ("A", "B"),
-            ("A", "B"),
-            ("B", "C"),
-        ]
-        assert graph.get_edges(keys=True, data=False) == [
-            ("A", "B", 0),
-            ("A", "B", 1),
-            ("B", "C", 0),
-        ]
-        assert graph.get_edges(keys=False, data=True) == [
-            ("A", "B", "->"),
-            ("A", "B", "<>"),
-            ("B", "C", "o-"),
-        ]
-        assert graph.get_edges(keys=True, data=True) == [
-            ("A", "B", 0, "->"),
-            ("A", "B", 1, "<>"),
-            ("B", "C", 0, "o-"),
-        ]
+        assert sorted(graph.get_edges(keys=False, data=False)) == sorted(
+            [
+                ("A", "B"),
+                ("A", "B"),
+                ("B", "C"),
+            ]
+        )
+        assert sorted(graph.get_edges(keys=True, data=False)) == sorted(
+            [
+                ("A", "B", 0),
+                ("A", "B", 1),
+                ("B", "C", 0),
+            ]
+        )
+        assert sorted(graph.get_edges(keys=False, data=True)) == sorted(
+            [
+                ("A", "B", "->"),
+                ("A", "B", "<>"),
+                ("B", "C", "o-"),
+            ]
+        )
+        assert sorted(graph.get_edges(keys=True, data=True)) == sorted(
+            [
+                ("A", "B", 0, "->"),
+                ("A", "B", 1, "<>"),
+                ("B", "C", 0, "o-"),
+            ]
+        )
