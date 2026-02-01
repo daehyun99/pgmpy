@@ -52,8 +52,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
 
     >>> edges = [("A", "B", "->"), ("B", "C", "->")]
     >>> G = _CoreGraph(ebunch=edges)
-    >>> G.edges(keys=True, data=True)
-    MultiEdgeDataView([('A', 'B', 0, {'A': '-', 'B': '>'}), ('B', 'C', 0, {'B': '-', 'C': '>'})])
+    >>> G.get_edges(keys=True, data=True)
+    [('A', 'B', 0, '->'), ('B', 'C', 0, '->')]
 
     **Nodes:**
 
@@ -74,16 +74,16 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
     >>> from pgmpy.base._base import _CoreGraph
     >>> G = _CoreGraph()
     >>> G.add_edge("A", "B", "->")
-    >>> G.edges(keys=True, data=True)
-    MultiEdgeDataView([('A', 'B', 0, {'A': '-', 'B': '>'})])
+    >>> G.get_edges(keys=True, data=True)
+    [('A', 'B', 0, '->')]
 
     Remove one edge,
 
     >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
     >>> G = _CoreGraph(ebunch=edges)
     >>> G.remove_edge("A", "B", "->")
-    >>> G.edges(keys=True, data=True)
-    MultiEdgeDataView([('B', 'C', 0, {'B': '-', 'C': '>'}), ('C', 'D', 0, {'C': '-', 'D': '-'})])
+    >>> G.get_edges(keys=True, data=True)
+    [('A', 'B', 0, '->')]
 
     **Exposures, Outcomes, and Latents:**
 
@@ -210,8 +210,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> from pgmpy.base._base import _CoreGraph
         >>> G = _CoreGraph()
         >>> G.add_edge("A", "B", "->")
-        >>> G.edges(keys=True, data=True)
-        MultiEdgeDataView([('A', 'B', 0, {'A': '-', 'B': '>'})])
+        >>> G.get_edges(keys=True, data=True)
+        [('A', 'B', 0, '->')]
 
         """
         if isinstance(edge_type, str):
@@ -262,8 +262,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph()
         >>> G.add_edges_from(ebunch=edges)
-        >>> G.edges(keys=True, data=True)
-        MultiEdgeDataView([('A', 'B', 0, {'A': '-', 'B': '>'}), ('B', 'C', 0, {'B': '-', 'C': '>'})])
+        >>> G.get_edges(keys=True, data=True)
+        [('A', 'B', 0, '->'), ('B', 'C', 0, '->')]
 
         """
         self._validate_edges(ebunch=ebunch)
@@ -317,8 +317,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
         >>> G = _CoreGraph(ebunch=edges)
         >>> G.remove_edge("A", "B", "->")
-        >>> G.edges(keys=True, data=True)
-        MultiEdgeDataView([('B', 'C', 0, {'B': '-', 'C': '>'}), ('C', 'D', 0, {'C': '-', 'D': '-'})])
+        >>> G.get_edges(keys=True, data=True)
+        [('B', 'C', 0, '->'), ('C', 'D', 0, '--')]
 
         """
         if isinstance(edge_type, str):
@@ -373,8 +373,8 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         >>> G = _CoreGraph(ebunch=edges)
         >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
         >>> G.remove_edges_from(ebunch=remove_edges)
-        >>> G.edges(keys=True, data=True)
-        MultiEdgeDataView([('A', 'B', 0, {'A': '-', 'B': '>'})])
+        >>> G.get_edges(keys=True, data=True)
+        [('A', 'B', 0, '->')]
 
         """
         self._validate_edges(ebunch=ebunch)
@@ -801,6 +801,16 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             * (u, v, type)      : keys=False, data=True
             * (u, v, key)       : keys=True, data=False
             * (u, v)            : keys=False, data=False
+
+        Examples
+        --------
+        >>> edges = [("A", "B", "->"), ("A", "B", "<>"), ("B", "C", "->")]
+        >>> G = _CoreGraph(ebunch=edges)
+        >>> G.get_edges(data=True)
+        [('A', 'B', '->'), ('A', 'B', '<>'), ('B', 'C', '->')]
+        >>> G.get_edges(keys=True, data=True)
+        [('A', 'B', 0, '->'), ('A', 'B', 1, '<>'), ('B', 'C', 0, '->')]
+
         """
         networkx_ebunch = super().edges(keys=keys, data=data)
 
@@ -905,7 +915,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         The `_from_api_edge_type` method converts the user's `edge_type` input into an internal representation.
         """
-
         u, v, edge_type = edge
         if edge_type == "<-":
             return {v: "-", u: ">"}
