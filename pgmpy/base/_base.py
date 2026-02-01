@@ -803,21 +803,16 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             * (u, v)            : keys=False, data=False
         """
         networkx_ebunch = super().edges(keys=keys, data=data)
-        if keys is True and data is True:
-            pgmpy_ebunch = [
-                (u, v, key, self._to_api_edge_type(u, v, markers))
-                for u, v, key, markers in networkx_ebunch
-            ]
-        elif keys is False and data is True:
-            pgmpy_ebunch = [
-                (u, v, self._to_api_edge_type(u, v, markers))
-                for u, v, markers in networkx_ebunch
-            ]
-        elif keys is True and data is False:
-            pgmpy_ebunch = [(u, v, key) for u, v, key in networkx_ebunch]
-        elif keys is False and data is False:
-            pgmpy_ebunch = [(u, v) for u, v in networkx_ebunch]
-        return pgmpy_ebunch
+
+        # (u, v) or (u, v, key)
+        if data is False:
+            return list(networkx_ebunch)
+
+        # (u, v, edge_type) or (u, v, key, edge_type)
+        return [
+            (*edge[:-1], self._to_api_edge_type(edge[0], edge[1], edge[-1]))
+            for edge in networkx_ebunch
+        ]
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
