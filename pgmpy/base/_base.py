@@ -930,13 +930,10 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         u_marker = markers[u]
         v_marker = markers[v]
 
-        if u_marker == ">" and v_marker == "-":
-            return "<-"
-        elif u_marker == "o" and v_marker == "-":
-            return "o-"
-        elif u_marker == ">" and v_marker == "o":
-            return "<o"
-        elif u_marker == ">" and v_marker == ">":
-            return "<>"
-        else:
-            return f"{u_marker}{v_marker}"
+        marker_map = {
+            (">", "-"): "<-",
+            ("o", "-"): "o-",
+            (">", "o"): "<o",
+            (">", ">"): "<>",
+        }
+        return marker_map.get((u_marker, v_marker), f"{u_marker}{v_marker}")
