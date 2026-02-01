@@ -216,12 +216,12 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         if isinstance(edge_type, str):
             self._validate_edges(ebunch=[(u, v, edge_type)])
-            _ebunch_dict = self._convert_edge_type(edge=[u, v, edge_type])
+            _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
         else:
-            _ebunch_dict = edge_type
+            _markers_dict = edge_type
 
         _key = super().add_edge(u, v, key=key, **kwargs)
-        self.edges[u, v, _key].update({u: _ebunch_dict[u], v: _ebunch_dict[v]})
+        self.edges[u, v, _key].update({u: _markers_dict[u], v: _markers_dict[v]})
 
     def add_edges_from(
         self,
@@ -323,9 +323,9 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         """
         if isinstance(edge_type, str):
             self._validate_edges(ebunch=[(u, v, edge_type)])
-            _ebunch_dict = self._convert_edge_type(edge=[u, v, edge_type])
+            _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
         else:
-            _ebunch_dict = edge_type
+            _markers_dict = edge_type
 
         keys_to_remove = []
         edges = self.get_edge_data(u, v)
@@ -333,7 +333,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             keys_to_remove = list(edges.keys())
         else:
             for key, data in edges.items():
-                if data[u] == _ebunch_dict[u] and data[v] == _ebunch_dict[v]:
+                if data[u] == _markers_dict[u] and data[v] == _markers_dict[v]:
                     keys_to_remove.append(key)
 
         if len(keys_to_remove) == 0:
@@ -481,11 +481,11 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         filtered_neighbors = set()
         for neighbor in neighboring_nodes:
             edge_data = self.get_edge_data(node, neighbor)
-            _ebunch_dict = self._convert_edge_type(edge=[node, neighbor, edge_type])
+            _markers_dict = self._from_api_edge_type(edge=[node, neighbor, edge_type])
             for _, data in edge_data.items():
                 if (
-                    data[node] == _ebunch_dict[node]
-                    and data[neighbor] == _ebunch_dict[neighbor]
+                    data[node] == _markers_dict[node]
+                    and data[neighbor] == _markers_dict[neighbor]
                 ):
                     filtered_neighbors.add(neighbor)
                     break
@@ -781,6 +781,39 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
                 queue.extend(self.get_neighbors(current, edge_type=edge_type))
         return reachable
 
+    def get_edges(self, keys=False, data=False):
+        """
+        Retrieve edges with optional keys and API-formatted edge types.
+
+        Parameters
+        ----------
+        keys : bool, optional (default=False)
+            If True, returns the edge key. Default is False.
+        data : bool, optional (default=False)
+            If True, returns the edge type as a string (e.g., '->') instead of
+            the internal dictionary representation. Default is False.
+
+        Returns
+        -------
+        list
+            A list of edge tuples. The format varies based on parameters:
+            * (u, v, key, type) : keys=True, data=True
+            * (u, v, type)      : keys=False, data=True
+            * (u, v, key)       : keys=True, data=False
+            * (u, v)            : keys=False, data=False
+        """
+        networkx_ebunch = super().edges(keys=keys, data=data)
+
+        # (u, v) or (u, v, key)
+        if data is False:
+            return list(networkx_ebunch)
+
+        # (u, v, edge_type) or (u, v, key, edge_type)
+        return [
+            (*edge[:-1], self._to_api_edge_type(edge[0], edge[1], edge[-1]))
+            for edge in networkx_ebunch
+        ]
+
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
     # ----------------------------------------------------------------------
@@ -865,12 +898,12 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             if edge_type is None or edge_type not in supported_types:
                 raise ValueError(f"Types must be one of {supported_types}.")
 
-    def _convert_edge_type(
+    def _from_api_edge_type(
         self,
         edge: tuple[Hashable, Hashable, str] | list[Hashable],
     ) -> dict:
         """
-        The `_convert_edge_type` method converts the user's `edge_type` input into an internal representation.
+        The `_from_api_edge_type` method converts the user's `edge_type` input into an internal representation.
         """
 
         u, v, edge_type = edge
@@ -884,3 +917,23 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             return {u: ">", v: ">"}
         else:
             return {u: edge_type[0], v: edge_type[1]}
+
+    def _to_api_edge_type(
+        self,
+        u: Hashable,
+        v: Hashable,
+        markers: dict,
+    ) -> str:
+        """
+        The `_to_api_edge_type` method converts the internal representation into the user's `edge_type` input.
+        """
+        u_marker = markers[u]
+        v_marker = markers[v]
+
+        marker_map = {
+            (">", "-"): "<-",
+            ("o", "-"): "o-",
+            (">", "o"): "<o",
+            (">", ">"): "<>",
+        }
+        return marker_map.get((u_marker, v_marker), f"{u_marker}{v_marker}")

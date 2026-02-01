@@ -1853,45 +1853,115 @@ class TestCoreGraph:
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-    def test_convert_edge_type_cases(self):
+    def test_from_api_edge_type_cases(self):
         # 1. Circle-Line Edge
         edge_tuple = ("A", "B", "o-")
         graph = _CoreGraph()
-        result = graph._convert_edge_type(edge_tuple)
-        assert result == {"B": "-", "A": "o"}
+        assert graph._from_api_edge_type(edge_tuple) == {"B": "-", "A": "o"}
 
         # 2. Arrow-Circle Edge
-        edge_tuple = ("X", "Y", "<o")
+        edge_tuple = ("A", "B", "<o")
         graph = _CoreGraph()
-        result = graph._convert_edge_type(edge_tuple)
-        assert result == {"Y": "o", "X": ">"}
-
+        assert graph._from_api_edge_type(edge_tuple) == {"B": "o", "A": ">"}
         # 3. Bidirected Edge
-        edge_tuple = ("U", "V", "<>")
+        edge_tuple = ("A", "B", "<>")
         graph = _CoreGraph()
-        result = graph._convert_edge_type(edge_tuple)
-        assert result == {"U": ">", "V": ">"}
+        assert graph._from_api_edge_type(edge_tuple) == {"A": ">", "B": ">"}
 
         # 4. Undirected Edge (General case via else block)
-        edge_tuple = ("N1", "N2", "--")
+        edge_tuple = ("A", "B", "--")
         graph = _CoreGraph()
-        result = graph._convert_edge_type(edge_tuple)
-        assert result == {"N1": "-", "N2": "-"}
+        assert graph._from_api_edge_type(edge_tuple) == {"A": "-", "B": "-"}
 
         # 5. Directed Edge (Forward - General case via else block)
-        edge_tuple = ("N1", "N2", "->")
+        edge_tuple = ("A", "B", "->")
         graph = _CoreGraph()
-        result = graph._convert_edge_type(edge_tuple)
-        assert result == {"N1": "-", "N2": ">"}
+        assert graph._from_api_edge_type(edge_tuple) == {"A": "-", "B": ">"}
 
-        # 6. Arbitrary Characters (General case via else block)
-        edge_tuple = ("A", "B", "xy")
-        graph = _CoreGraph()
-        result = graph._convert_edge_type(edge_tuple)
-        assert result == {"A": "x", "B": "y"}
-
-    def test_invalid_input_structure(self):
+    def test_from_api_edge_type_fails(self):
         invalid_edge = ("A", "B", "key", "<-")
         graph = _CoreGraph()
         with pytest.raises(ValueError):
-            graph._convert_edge_type(invalid_edge)
+            graph._from_api_edge_type(invalid_edge)
+
+    def test_to_api_edge_type_cases(self):
+        # 1. Reverse Arrow Edge (Explicit check: u='>', v='-')
+        u, v = "B", "A"
+        markers = {"B": ">", "A": "-"}
+        graph = _CoreGraph()
+        assert graph._to_api_edge_type(u, v, markers) == "<-"
+
+        # 2. Circle-Line Edge (Explicit check: u='o', v='-')
+        u, v = "A", "B"
+        markers = {"A": "o", "B": "-"}
+        graph = _CoreGraph()
+        assert graph._to_api_edge_type(u, v, markers) == "o-"
+
+        # 3. Arrow-Circle Edge (Explicit check: u='>', v='o')
+        u, v = "A", "B"
+        markers = {"A": ">", "B": "o"}
+        graph = _CoreGraph()
+        assert graph._to_api_edge_type(u, v, markers) == "<o"
+
+        # 4. Bidirected Edge (Explicit check: u='>', v='>')
+        u, v = "A", "B"
+        markers = {"A": ">", "B": ">"}
+        graph = _CoreGraph()
+        assert graph._to_api_edge_type(u, v, markers) == "<>"
+
+        # 5. Directed Edge (Forward - General case via else block)
+        u, v = "A", "B"
+        markers = {"A": "-", "B": ">"}
+        graph = _CoreGraph()
+        assert graph._to_api_edge_type(u, v, markers) == "->"
+
+        # 6. Undirected Edge (General case via else block)
+        u, v = "A", "B"
+        markers = {"A": "-", "B": "-"}
+        graph = _CoreGraph()
+
+        assert graph._to_api_edge_type(u, v, markers) == "--"
+
+    def test_to_api_edge_type_fails(self):
+        # Missing marker for node 'u' or 'v'
+        u, v = "A", "B"
+        markers = {"A": "-"}  # 'B' is missing
+        graph = _CoreGraph()
+
+        with pytest.raises(KeyError):
+            graph._to_api_edge_type(u, v, markers)
+
+    def test_get_edges(self):
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("B", "C", "o-")
+        graph.add_edge("A", "B", "<>")
+
+        assert sorted(graph.get_edges(keys=False, data=False)) == sorted(
+            [
+                ("A", "B"),
+                ("A", "B"),
+                ("B", "C"),
+            ]
+        )
+        assert sorted(graph.get_edges(keys=True, data=False)) == sorted(
+            [
+                ("A", "B", 0),
+                ("A", "B", 1),
+                ("B", "C", 0),
+            ]
+        )
+        assert sorted(graph.get_edges(keys=False, data=True)) == sorted(
+            [
+                ("A", "B", "->"),
+                ("A", "B", "<>"),
+                ("B", "C", "o-"),
+            ]
+        )
+        assert sorted(graph.get_edges(keys=True, data=True)) == sorted(
+            [
+                ("A", "B", 0, "->"),
+                ("A", "B", 1, "<>"),
+                ("B", "C", 0, "o-"),
+            ]
+        )
