@@ -83,7 +83,7 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
     >>> G = _CoreGraph(ebunch=edges)
     >>> G.remove_edge("A", "B", "->")
     >>> G.get_edges(keys=True, data=True)
-    [('A', 'B', 0, '->')]
+    [('B', 'C', 0, '->'), ('C', 'D', 0, '--')]
 
     **Exposures, Outcomes, and Latents:**
 
