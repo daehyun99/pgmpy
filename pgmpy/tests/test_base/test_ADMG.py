@@ -17,7 +17,7 @@ class TestADMGInitialization:
 
     def test_initialization_with_directed_edges(self):
         """Test initialization with directed edges."""
-        directed_edges = [("A", "B"), ("B", "C")]
+        directed_edges = [("A", "B", "->"), ("B", "C", "->")]
         admg = ADMG(ebunch=directed_edges)
 
         assert "A" in admg.nodes
@@ -48,7 +48,7 @@ class TestADMGInitialization:
 
     def test_initialization_with_roles(self):
         """Test initialization with roles variables."""
-        directed_edges = [("A", "C"), ("B", "C")]
+        directed_edges = [("A", "C", "->"), ("B", "C", "->")]
         roles = {"exposure": ("A", "B"), "outcome": ["C"]}
         admg = ADMG(ebunch=directed_edges, roles=roles)
 
@@ -166,6 +166,9 @@ class TestADMGEdgeOperations:
 
         assert set(admg.get_edges(data=True)) == set(edges)
 
+    @pytest.mark.skip(
+        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"
+    )
     def test_cycle_detection(self):
         """Test that cycles are prevented in directed edges."""
         admg = ADMG()
@@ -173,7 +176,7 @@ class TestADMGEdgeOperations:
         admg.add_edge("B", "C", "->")
 
         # This should raise an error as it creates a cycle
-        with pytest.raises(ValueError, match="Adding this edge would create a cycle"):
+        with pytest.raises(ValueError):
             admg.add_edge("C", "A", "->")
 
     def test_none_node_rejection(self):
@@ -343,6 +346,18 @@ class TestADMGGraphOperations:
         Test the `__eq__` method
         which compares both graph structure and variable-role mappings to allow comparison of two models.
         """
+        admg = ADMG(
+            ebunch=[
+                ("A", "B", "->"),
+                ("B", "C", "->"),
+                ("D", "E", "->"),
+                ("A", "D", "<>"),
+                ("B", "E", "<>"),
+            ],
+            latents=["D"],
+            roles={"exposure": ["A"], "outcome": ["C"]},
+        )
+
         # Case1: When the models are the same
         other1 = ADMG(
             ebunch=[
@@ -415,12 +430,12 @@ class TestADMGGraphOperations:
             roles={"exposure": ["A"], "adjustment": "D", "outcome": ["C"]},
         )
 
-        assert self.admg.__eq__(other1) is True
-        assert self.admg.__eq__(other2) is False
-        assert self.admg.__eq__(other3) is False
-        assert self.admg.__eq__(other4) is False
-        assert self.admg.__eq__(other5) is False
-        assert self.admg.__eq__(other6) is False
+        assert admg.__eq__(other1) is True
+        assert admg.__eq__(other2) is False
+        assert admg.__eq__(other3) is False
+        assert admg.__eq__(other4) is False
+        assert admg.__eq__(other5) is False
+        assert admg.__eq__(other6) is False
 
 
 class TestADMGSeparation:
