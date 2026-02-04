@@ -22,22 +22,22 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
     ebunch : iterable of tuples, optional
         A list or iterable of edges to add at initialization.
 
-    latents : set of nodes, default=set()
+    latents : set of nodes, (default=set())
         A set of latent variables in the graph. These are not observed
         variables but are used to represent unobserved confounding or
         other latent structures.
 
-    exposures : set, default=set()
+    exposures : set, (default=set())
         Set of exposure variables in the graph. These are the variables
         that represent the treatment or intervention being studied in a
         causal analysis. Default is an empty set.
 
-    outcomes : set, default=set()
+    outcomes : set, (default=set())
         Set of outcome variables in the graph. These are the variables
         that represent the response or dependent variables being studied
         in a causal analysis. Default is an empty set.
 
-    roles : dict, optional (default: None)
+    roles : dict, optional (default=None)
         A dictionary mapping roles to node names.
         The keys are roles, and the values are role names (strings or iterables of str).
 
@@ -203,7 +203,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         Notes
         -----
         This method is expected to be usable without being implemented in a subclass of the graph class.
-        The edge_type value is matched with the key value of networkx.
 
         Examples
         --------
@@ -309,7 +308,6 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
         Notes
         -----
         This method is expected to be usable without being implemented in a subclass of the graph class.
-        The edge_type value is matched with the key value of networkx.
 
         Examples
         --------
@@ -823,6 +821,17 @@ class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
             (*edge[:-1], self._to_api_edge_type(edge[0], edge[1], edge[-1]))
             for edge in networkx_ebunch
         ]
+
+    def get_edge_type(self):
+        """
+        Retrieves the list of supported edge types for the instance.
+
+        Returns
+        -------
+        set
+
+        """
+        return self.SUPPORTED_EDGE_TYPES
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)

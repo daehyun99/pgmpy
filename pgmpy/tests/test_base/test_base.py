@@ -1965,3 +1965,10 @@ class TestCoreGraph:
                 ("B", "C", 0, "o-"),
             ]
         )
+
+    def test_get_edge_type(self):
+        graph = _CoreGraph()
+        assert (
+            set(["--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"])
+            == graph.get_edge_type()
+        )
