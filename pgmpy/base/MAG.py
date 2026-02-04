@@ -2,10 +2,10 @@ from typing import Hashable, Iterable, Optional
 
 import networkx as nx
 
-from pgmpy.base import AncestralBase
+from pgmpy.base._base import _CoreGraph
 
 
-class MAG(AncestralBase):
+class MAG(_CoreGraph):
     """
     Class for representing Maximal Ancestral Graphs (MAGs).
 
@@ -77,32 +77,21 @@ class MAG(AncestralBase):
     .. [1] Zhang, J. (2008). Causal Reasoning with Ancestral Graphs. Journal of Machine Learning Research, 9(7).
     """
 
+    SUPPORTED_EDGE_TYPES = frozenset(["--", "->", "<-", "<>"])
+
     def __init__(
         self,
-        ebunch: Optional[Iterable[tuple[Hashable, Hashable]]] = None,
-        latents: set[Hashable] = set(),
-        exposures: set[Hashable] = set(),
-        outcomes: set[Hashable] = set(),
+        ebunch: Iterable[tuple[Hashable, Hashable, Hashable]] = None,
+        exposures: Optional[set[Hashable]] = None,
+        outcomes: Optional[set[Hashable]] = None,
+        latents: Optional[set[Hashable]] = None,
         roles=None,
     ):
-        if ebunch:
-            for _, _, u_mark, v_mark in ebunch:
-                if (u_mark, v_mark) not in {
-                    ("-", ">"),
-                    (">", "-"),
-                    (">", ">"),
-                    ("-", "-"),
-                }:
-                    raise ValueError(
-                        f"Invalid edge type ({u_mark}, {v_mark}). "
-                        "MAGs only allow directed ('-', '>'), reverse directed ('>', '-'), "
-                        "bidirected ('>', '>'), and undirected ('-', '-') edges."
-                    )
         super().__init__(
             ebunch=ebunch,
-            latents=latents,
             exposures=exposures,
             outcomes=outcomes,
+            latents=latents,
             roles=roles,
         )
 
