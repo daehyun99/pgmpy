@@ -6,6 +6,10 @@ from typing import Hashable, Set
 class _GraphAlgorithmMixin:
     """Mixin class for causal graph's algorithms."""
 
+    # ----------------------------------------------------------------------
+    # Public API (or Public Methods)
+    # ----------------------------------------------------------------------
+
     def is_collider(self, u: Hashable, v: Hashable, w: Hashable):
         """
 
@@ -313,5 +317,37 @@ class _GraphAlgorithmMixin:
         [2] Takata, Ken.
         "Space-optimal, backtracking algorithms to list the minimal vertex separators of a graph."
         Discrete Applied Mathematics 158 (2010): 1660-1667.
+        """
+        ...
+
+    # ----------------------------------------------------------------------
+    # Internal Methods (or Private Methods)
+    # ----------------------------------------------------------------------
+
+    def _has_cycle(self):
+        """
+
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        bool
+
+        See Also
+        --------
+        `DAG`, `ADMG`
+
+        Notes
+        -----
+
+
+        Examples
+        --------
+
+        References
+        ----------
+
         """
         ...

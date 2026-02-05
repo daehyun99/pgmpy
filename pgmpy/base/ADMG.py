@@ -49,6 +49,24 @@ class ADMG(_CoreGraph):
             roles=roles,
         )
 
+    def add_edge(self, u, v, edge_type="->", key=None, **kwargs):
+        # No additional comments are needed, as the comments in _CoreGraph are utilized.
+
+        # Need Logic of Checking cycle.
+
+        return super().add_edge(u, v, edge_type, key, **kwargs)
+
+    def add_edges_from(self, ebunch, **kwargs):
+        # No additional comments are needed, as the comments in _CoreGraph are utilized.
+        self._validate_edges(ebunch=ebunch)
+        for edge in ebunch:
+            if len(edge) == 3:
+                u, v, edge_type = edge
+                self.add_edge(u, v, edge_type=edge_type, **kwargs)
+            elif len(edge) == 4:
+                u, v, key, edge_type = edge
+                self.add_edge(u, v, edge_type=edge_type, key=key, **kwargs)
+
     def get_district(self, nodes):
         """
         Return district of a node: maximal set connected via bidirected edges.

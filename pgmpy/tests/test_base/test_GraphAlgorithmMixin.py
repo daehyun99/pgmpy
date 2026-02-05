@@ -325,3 +325,9 @@ class TestGraphAlgorithmMixin:
 
         # Creating edges
         ...
+
+    def test_has_cycle(self):
+        """
+        Testing `_has_cycle` method of Graph class(_CoreGraph, DAG, ADMG)
+        """
+        ...
