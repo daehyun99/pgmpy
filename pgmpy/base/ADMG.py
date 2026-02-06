@@ -1,4 +1,3 @@
-import collections
 from typing import Hashable, Iterable, Optional
 
 from pgmpy.base._base import _CoreGraph
@@ -49,6 +48,25 @@ class ADMG(_CoreGraph):
             roles=roles,
         )
 
+    def add_edge(self, u, v, edge_type="->", key=None, **kwargs):
+        # No additional comments are needed, as the comments in _CoreGraph are utilized.
+
+        # TODO: Implement cycle check logic before adding the edge.
+        # ADMGs must be acyclic with respect to directed edges.
+
+        return super().add_edge(u, v, edge_type, key, **kwargs)
+
+    def add_edges_from(self, ebunch, **kwargs):
+        # No additional comments are needed, as the comments in _CoreGraph are utilized.
+        self._validate_edges(ebunch=ebunch)
+        for edge in ebunch:
+            if len(edge) == 3:
+                u, v, edge_type = edge
+                self.add_edge(u, v, edge_type=edge_type, **kwargs)
+            elif len(edge) == 4:
+                u, v, key, edge_type = edge
+                self.add_edge(u, v, edge_type=edge_type, key=key, **kwargs)
+
     def get_district(self, nodes):
         """
         Return district of a node: maximal set connected via bidirected edges.
@@ -64,49 +82,13 @@ class ADMG(_CoreGraph):
             Nodes in the same bidirected-connected component.
         """
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-        all_districts = set()
+        components = set()
 
-        for start_node in nodes_set:
-            if start_node not in self.nodes:
-                continue
+        for node in nodes_set:
+            component = self.get_reachable_nodes(node, edge_type="<>")
+            components.update(component)
 
-            district_components = set()
-            queue = collections.deque([start_node])
-            visited = {start_node}
-
-            while queue:
-                currentNode = queue.popleft()
-                district_components.add(currentNode)
-                # Iterate through all neighbors and check for bidirected edges
-                for neighbor in super().neighbors(currentNode):
-                    if (
-                        self.has_edge(currentNode, neighbor)
-                        and self.get_edge_data(currentNode, neighbor, 0).get("type")
-                        == "bidirected"
-                    ) or (
-                        self.has_edge(neighbor, currentNode)
-                        and self.get_edge_data(neighbor, currentNode, 0).get("type")
-                        == "bidirected"
-                    ):
-                        if neighbor not in visited:
-                            visited.add(neighbor)
-                            queue.append(neighbor)
-                for predecessor in super().predecessors(currentNode):
-                    if (
-                        self.has_edge(currentNode, predecessor)
-                        and self.get_edge_data(currentNode, predecessor, 0).get("type")
-                        == "bidirected"
-                    ) or (
-                        self.has_edge(predecessor, currentNode)
-                        and self.get_edge_data(predecessor, currentNode, 0).get("type")
-                        == "bidirected"
-                    ):
-                        if predecessor not in visited:
-                            visited.add(predecessor)
-                            queue.append(predecessor)
-
-            all_districts.update(district_components)
-        return all_districts
+        return components
 
     def get_ancestral_graph(self, nodes):
         """
@@ -129,35 +111,17 @@ class ADMG(_CoreGraph):
         """
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
-        if not nodes_set.issubset(self.nodes):
-            raise ValueError("Input nodes must be subset of graph's nodes.")
+        ancestors = set(nodes_set)
+        for node in nodes_set:
+            ancestor = self.get_ancestors(node)
+            ancestors.update(ancestor)
 
-        # Create a new ADMG instance for the ancestral graph
         new_admg = ADMG()
-        new_admg.add_nodes_from(list(nodes_set))  # Add all nodes in nodes_set
+        new_admg.add_nodes_from(ancestors)
 
-        # Add directed edges from the original graph that have both endpoints in nodes_set
         for u, v, key, data in self.edges(keys=True, data=True):
-            if data.get("type") == "directed" and u in nodes_set and v in nodes_set:
-                new_admg.add_directed_edges(
-                    [(u, v)]
-                )  # Use add_directed)edges to maintain cycle check
-
-        # Add bidirected edges from the original graph that have both endpoints in nodes_set
-        processed_bidirected_pairs = set()
-        for u, v, key, data in self.edges(keys=True, data=True):
-            if data.get("type") == "bidirected":
-                if u in nodes_set and v in nodes_set:
-                    # Ensure we add each bidirected pair only once in the new graph
-                    if (u, v) not in processed_bidirected_pairs and (
-                        v,
-                        u,
-                    ) not in processed_bidirected_pairs:
-                        new_admg.add_bidirected_edges([(u, v)])
-                        processed_bidirected_pairs.add((u, v))
-                        processed_bidirected_pairs.add(
-                            (v, u)
-                        )  # Mark both directions as processed
+            if (u in ancestors) and (v in ancestors):
+                new_admg.add_edge(u, v, edge_type=data, key=key)
 
         return new_admg
 
@@ -182,23 +146,13 @@ class ADMG(_CoreGraph):
             Set of nodes in the Markov blanket.
         """
         nodes_set = {nodes} if isinstance(nodes, set) else set(nodes)
-        if not nodes_set.issubset(self.nodes):
-            raise ValueError("Input nodes must be subset of graph's nodes.")
+
         markov_blanket = set()
         for node in nodes_set:
-            if node not in self.nodes:
-                raise ValueError(f"Node {node} is not in the graph.")
-            # Get parents
-            parents = self.get_directed_parents(node)
-            district_parents = self.get_bidirected_parents(node)
-            markov_blanket.update(parents)
-            markov_blanket.update(district_parents)
-            # Get children
-            children = self.get_children(node)
-            markov_blanket.update(children)
-            # Get spouses
-            spouses = self.get_spouses(node)
-            markov_blanket.update(spouses)
+            markov_blanket.update(self.get_parents(node))
+            markov_blanket.update(self.get_children(node))
+            markov_blanket.update(self.get_spouses(node))
+            markov_blanket.update(self.get_neighbors(node, edge_type="<>"))
         return markov_blanket
 
     def to_dag(self):
