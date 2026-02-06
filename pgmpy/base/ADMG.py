@@ -110,35 +110,17 @@ class ADMG(_CoreGraph):
         """
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
-        if not nodes_set.issubset(self.nodes):
-            raise ValueError("Input nodes must be subset of graph's nodes.")
+        ancestors = set(nodes_set)
+        for node in nodes_set:
+            ancestor = self.get_ancestors(node)
+            ancestors.update(ancestor)
 
-        # Create a new ADMG instance for the ancestral graph
         new_admg = ADMG()
-        new_admg.add_nodes_from(list(nodes_set))  # Add all nodes in nodes_set
+        new_admg.add_nodes_from(ancestors)
 
-        # Add directed edges from the original graph that have both endpoints in nodes_set
         for u, v, key, data in self.edges(keys=True, data=True):
-            if data.get("type") == "directed" and u in nodes_set and v in nodes_set:
-                new_admg.add_directed_edges(
-                    [(u, v)]
-                )  # Use add_directed)edges to maintain cycle check
-
-        # Add bidirected edges from the original graph that have both endpoints in nodes_set
-        processed_bidirected_pairs = set()
-        for u, v, key, data in self.edges(keys=True, data=True):
-            if data.get("type") == "bidirected":
-                if u in nodes_set and v in nodes_set:
-                    # Ensure we add each bidirected pair only once in the new graph
-                    if (u, v) not in processed_bidirected_pairs and (
-                        v,
-                        u,
-                    ) not in processed_bidirected_pairs:
-                        new_admg.add_bidirected_edges([(u, v)])
-                        processed_bidirected_pairs.add((u, v))
-                        processed_bidirected_pairs.add(
-                            (v, u)
-                        )  # Mark both directions as processed
+            if (u in ancestors) and (v in ancestors):
+                new_admg.add_edge(u, v, edge_type=data, key=key)
 
         return new_admg
 

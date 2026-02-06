@@ -290,9 +290,6 @@ class TestADMGGraphOperations:
         self.admg.with_role(role="exposure", variables={"A"}, inplace=True)
         self.admg.with_role(role="outcome", variables={"C"}, inplace=True)
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"
-    )
     def test_get_ancestral_graph(self):
         """Test getting ancestral graph of a subset of nodes."""
         ancestral = self.admg.get_ancestral_graph(["A", "B", "D"])
@@ -311,7 +308,7 @@ class TestADMGGraphOperations:
 
     def test_get_ancestral_graph_invalid_nodes(self):
         """Test ancestral graph with invalid nodes."""
-        with pytest.raises(ValueError, match="Input nodes must be subset"):
+        with pytest.raises(ValueError):
             self.admg.get_ancestral_graph(["A", "Z"])
 
     @pytest.mark.skip(
