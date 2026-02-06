@@ -51,7 +51,8 @@ class ADMG(_CoreGraph):
     def add_edge(self, u, v, edge_type="->", key=None, **kwargs):
         # No additional comments are needed, as the comments in _CoreGraph are utilized.
 
-        # Need Logic of Checking cycle.
+        # TODO: Implement cycle check logic before adding the edge.
+        # ADMGs must be acyclic with respect to directed edges.
 
         return super().add_edge(u, v, edge_type, key, **kwargs)
 
