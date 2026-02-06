@@ -1,4 +1,3 @@
-import collections
 from typing import Hashable, Iterable, Optional
 
 from pgmpy.base._base import _CoreGraph
@@ -82,49 +81,13 @@ class ADMG(_CoreGraph):
             Nodes in the same bidirected-connected component.
         """
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-        all_districts = set()
+        components = set()
 
-        for start_node in nodes_set:
-            if start_node not in self.nodes:
-                continue
+        for node in nodes_set:
+            component = self.get_reachable_nodes(node, edge_type="<>")
+            components.update(component)
 
-            district_components = set()
-            queue = collections.deque([start_node])
-            visited = {start_node}
-
-            while queue:
-                currentNode = queue.popleft()
-                district_components.add(currentNode)
-                # Iterate through all neighbors and check for bidirected edges
-                for neighbor in super().neighbors(currentNode):
-                    if (
-                        self.has_edge(currentNode, neighbor)
-                        and self.get_edge_data(currentNode, neighbor, 0).get("type")
-                        == "bidirected"
-                    ) or (
-                        self.has_edge(neighbor, currentNode)
-                        and self.get_edge_data(neighbor, currentNode, 0).get("type")
-                        == "bidirected"
-                    ):
-                        if neighbor not in visited:
-                            visited.add(neighbor)
-                            queue.append(neighbor)
-                for predecessor in super().predecessors(currentNode):
-                    if (
-                        self.has_edge(currentNode, predecessor)
-                        and self.get_edge_data(currentNode, predecessor, 0).get("type")
-                        == "bidirected"
-                    ) or (
-                        self.has_edge(predecessor, currentNode)
-                        and self.get_edge_data(predecessor, currentNode, 0).get("type")
-                        == "bidirected"
-                    ):
-                        if predecessor not in visited:
-                            visited.add(predecessor)
-                            queue.append(predecessor)
-
-            all_districts.update(district_components)
-        return all_districts
+        return components
 
     def get_ancestral_graph(self, nodes):
         """

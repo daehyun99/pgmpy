@@ -253,9 +253,6 @@ class TestADMGRelationships:
         assert "C" in descendants_a
         assert "A" in descendants_a  # Node includes itself
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"
-    )
     def test_get_district(self):
         """Test getting district (bidirected connected components)."""
         district_a = self.admg.get_district("A")
