@@ -311,9 +311,6 @@ class TestADMGGraphOperations:
         with pytest.raises(ValueError):
             self.admg.get_ancestral_graph(["A", "Z"])
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"
-    )
     def test_get_markov_blanket(self):
         """Test getting Markov blanket."""
         mb_b = self.admg.get_markov_blanket("B")

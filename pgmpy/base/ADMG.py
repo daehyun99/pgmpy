@@ -145,23 +145,13 @@ class ADMG(_CoreGraph):
             Set of nodes in the Markov blanket.
         """
         nodes_set = {nodes} if isinstance(nodes, set) else set(nodes)
-        if not nodes_set.issubset(self.nodes):
-            raise ValueError("Input nodes must be subset of graph's nodes.")
+
         markov_blanket = set()
         for node in nodes_set:
-            if node not in self.nodes:
-                raise ValueError(f"Node {node} is not in the graph.")
-            # Get parents
-            parents = self.get_directed_parents(node)
-            district_parents = self.get_bidirected_parents(node)
-            markov_blanket.update(parents)
-            markov_blanket.update(district_parents)
-            # Get children
-            children = self.get_children(node)
-            markov_blanket.update(children)
-            # Get spouses
-            spouses = self.get_spouses(node)
-            markov_blanket.update(spouses)
+            markov_blanket.update(self.get_parents(node))
+            markov_blanket.update(self.get_children(node))
+            markov_blanket.update(self.get_spouses(node))
+            markov_blanket.update(self.get_neighbors(node, edge_type="<>"))
         return markov_blanket
 
     def to_dag(self):
