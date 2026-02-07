@@ -3,10 +3,11 @@ from typing import Hashable, Iterable, Optional
 
 import networkx as nx
 
+from pgmpy.base._mixin_algorithms import _GraphAlgorithmMixin
 from pgmpy.base._mixin_roles import _GraphRolesMixin
 
 
-class _CoreGraph(nx.MultiGraph, _GraphRolesMixin):
+class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
     """
     Base graph class for pgmpy.
 

@@ -90,41 +90,6 @@ class ADMG(_CoreGraph):
 
         return components
 
-    def get_ancestral_graph(self, nodes):
-        """
-        Return the ancestral graph induced by the input nodes.
-
-        Parameters
-        ----------
-        nodes : str or iterable of str
-            Node or list of nodes to induce subgraph on.
-
-        Returns
-        -------
-        ADMG
-            Subgraph induced by ancestors of the given nodes.
-
-        Raises
-        ------
-        ValueError
-            If any input node is not in the graph.
-        """
-        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-
-        ancestors = set(nodes_set)
-        for node in nodes_set:
-            ancestor = self.get_ancestors(node)
-            ancestors.update(ancestor)
-
-        new_admg = ADMG()
-        new_admg.add_nodes_from(ancestors)
-
-        for u, v, key, data in self.edges(keys=True, data=True):
-            if (u in ancestors) and (v in ancestors):
-                new_admg.add_edge(u, v, edge_type=data, key=key)
-
-        return new_admg
-
     def get_markov_blanket(self, nodes):
         """
         Compute the Markov blanket for the given node(s).

@@ -1,5 +1,6 @@
 # import pytest
 
+from pgmpy.base import ADMG, MAG
 from pgmpy.base._base import _CoreGraph
 
 
@@ -330,4 +331,56 @@ class TestGraphAlgorithmMixin:
         """
         Testing `_has_cycle` method of Graph class(_CoreGraph, DAG, ADMG)
         """
+        ...
+
+    def test_get_ancestral_graph(self):
+        """
+        Testing `_get_ancestral_graph` method of All graph class
+        """
+        # _CoreGraph
+        graph1 = _CoreGraph()
+        edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "<>"), ("C", "E", "--")]
+        graph1.add_edges_from(edges)
+
+        new_graph1 = graph1.get_ancestral_graph("C")
+
+        assert f"{type(new_graph1)}" == "<class 'pgmpy.base._base._CoreGraph'>"
+        assert set(new_graph1.nodes()) == set(["A", "B", "C"])
+        assert set(new_graph1.get_edges(keys=True, data=True)) == set(
+            [("A", "B", 0, "->"), ("B", "C", 0, "->")]
+        )
+
+        # ADMG
+        graph2 = ADMG()
+        edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "<>"), ("C", "E", "->")]
+        graph2.add_edges_from(edges)
+
+        new_graph2 = graph2.get_ancestral_graph("C")
+
+        assert f"{type(new_graph2)}" == "<class 'pgmpy.base.ADMG.ADMG'>"
+        assert set(new_graph2.nodes()) == set(["A", "B", "C"])
+        assert set(new_graph2.get_edges(keys=True, data=True)) == set(
+            [("A", "B", 0, "->"), ("B", "C", 0, "->")]
+        )
+
+        # MAG
+        graph3 = MAG()
+        edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "<>"), ("C", "E", "--")]
+        graph3.add_edges_from(edges)
+
+        new_graph3 = graph3.get_ancestral_graph("C")
+
+        assert f"{type(new_graph3)}" == "<class 'pgmpy.base.MAG.MAG'>"
+        assert set(new_graph3.nodes()) == set(["A", "B", "C"])
+        assert set(new_graph3.get_edges(keys=True, data=True)) == set(
+            [("A", "B", 0, "->"), ("B", "C", 0, "->")]
+        )
+
+        # DAG
+        ...
+
+        # PAG
+        ...
+
+        # UndirectedGraph
         ...

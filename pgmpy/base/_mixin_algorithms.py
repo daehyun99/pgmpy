@@ -320,6 +320,41 @@ class _GraphAlgorithmMixin:
         """
         ...
 
+    def get_ancestral_graph(self, nodes):
+        """
+        Return the ancestral graph induced by the input nodes.
+
+        Parameters
+        ----------
+        nodes : str or iterable of str
+            Node or list of nodes to induce subgraph on.
+
+        Returns
+        -------
+        Graph
+            Subgraph induced by ancestors of the given nodes.
+
+        Raises
+        ------
+
+        """
+        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
+
+        ancestors = set(nodes_set)
+        for node in nodes_set:
+            ancestor = self.get_ancestors(node)
+            ancestors.update(ancestor)
+
+        new_graph = type(self)()
+
+        for u, v, key, data in self.get_edges(keys=True, data=True):
+            if (u in ancestors) and (v in ancestors):
+                new_graph.add_edge(u, v, edge_type=data, key=key)
+
+        new_graph.add_nodes_from(ancestors)
+
+        return new_graph
+
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
     # ----------------------------------------------------------------------
