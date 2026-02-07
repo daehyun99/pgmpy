@@ -377,7 +377,7 @@ class TestGraphAlgorithmMixin:
 
         new_graph1 = graph1.get_ancestral_graph("C")
 
-        assert f"{type(new_graph1)}" == "<class 'pgmpy.base._base._CoreGraph'>"
+        assert isinstance(new_graph1, _CoreGraph)
         assert set(new_graph1.nodes()) == set(["A", "B", "C"])
         assert set(new_graph1.get_edges(keys=True, data=True)) == set(
             [("A", "B", 0, "->"), ("B", "C", 0, "->")]
@@ -390,7 +390,7 @@ class TestGraphAlgorithmMixin:
 
         new_graph2 = graph2.get_ancestral_graph("C")
 
-        assert f"{type(new_graph2)}" == "<class 'pgmpy.base.ADMG.ADMG'>"
+        assert isinstance(new_graph1, ADMG)
         assert set(new_graph2.nodes()) == set(["A", "B", "C"])
         assert set(new_graph2.get_edges(keys=True, data=True)) == set(
             [("A", "B", 0, "->"), ("B", "C", 0, "->")]
@@ -403,17 +403,17 @@ class TestGraphAlgorithmMixin:
 
         new_graph3 = graph3.get_ancestral_graph("C")
 
-        assert f"{type(new_graph3)}" == "<class 'pgmpy.base.MAG.MAG'>"
+        assert isinstance(new_graph1, MAG)
         assert set(new_graph3.nodes()) == set(["A", "B", "C"])
         assert set(new_graph3.get_edges(keys=True, data=True)) == set(
             [("A", "B", 0, "->"), ("B", "C", 0, "->")]
         )
 
-        # DAG
+        # TODO: Expand DAG
         ...
 
-        # PAG
+        # TODO: Expand PAG
         ...
 
-        # UndirectedGraph
+        # TODO: Expand UndirectedGraph
         ...
