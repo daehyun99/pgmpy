@@ -28,7 +28,7 @@ def test_state_count(dataset1):
     e = BaseEstimator(dataset1)
 
     assert e.state_counts("A").values.tolist() == [[2], [1]]
-    assert e.state_counts("C", ["A", "B"]).values.tolist() == [
+    assert e.state_counts("C", parents=["A", "B"]).values.tolist() == [
         [0.0, 0.0, 1.0, 0.0],
         [1.0, 1.0, 0.0, 0.0],
     ]
