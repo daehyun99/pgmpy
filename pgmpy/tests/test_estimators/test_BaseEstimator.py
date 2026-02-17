@@ -7,11 +7,9 @@ from pgmpy.estimators import BaseEstimator
 
 @pytest.fixture
 def d1():
-    data = pd.DataFrame(
+    return pd.DataFrame(
         data={"A": [0, 0, 1], "B": [0, 1, 0], "C": [1, 1, 0], "D": ["X", "Y", "Z"]}
     )
-    yield data
-    del data
 
 
 @pytest.fixture
@@ -24,11 +22,6 @@ def d2():
             "D": [np.nan, "Y", np.nan],
         }
     )
-
-
-@pytest.fixture
-def titanic_data():
-    return pd.read_csv("pgmpy/tests/test_estimators/testdata/titanic_train.csv")
 
 
 class TestBaseEstimator:
