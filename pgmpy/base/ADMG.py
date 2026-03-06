@@ -1,13 +1,10 @@
-import collections
+from typing import Hashable, Iterable, Optional
 
-import networkx as nx
-from networkx import MultiDiGraph
-
-from pgmpy.base._mixin_roles import _GraphRolesMixin
+from pgmpy.base._base import _CoreGraph
 from pgmpy.base.DAG import DAG as pgmpy_DAG
 
 
-class ADMG(_GraphRolesMixin, MultiDiGraph):
+class ADMG(_CoreGraph):
     """
     A class representing an Acyclic Directed Mixed Graph (ADMG).
 
@@ -30,252 +27,45 @@ class ADMG(_GraphRolesMixin, MultiDiGraph):
         If provided, this will automatically assign roles to the nodes in the graph.
         Passing a key-value pair via ``roles`` is equivalent to calling
         ``with_role(role, variables)`` for each key-value pair in the dictionary.
+
     """
+
+    SUPPORTED_EDGE_TYPES = frozenset(["->", "<-", "<>"])
 
     def __init__(
         self,
-        directed_ebunch=None,
-        bidirected_ebunch=None,
-        latents=None,
+        ebunch: Iterable[tuple[Hashable, Hashable, Hashable]] = None,
+        exposures: Optional[set[Hashable]] = None,
+        outcomes: Optional[set[Hashable]] = None,
+        latents: Optional[set[Hashable]] = None,
         roles=None,
     ):
-        super().__init__()
-        # Using edge attributes to distinguish bidirected edges
-
-        if directed_ebunch:
-            self.add_directed_edges(directed_ebunch)
-        if bidirected_ebunch:
-            self.add_bidirected_edges(bidirected_ebunch)
-
-        self.latents = set(latents) if latents else set()
-
-        if roles is None:
-            roles = {}
-        elif not isinstance(roles, dict):
-            raise TypeError("Roles must be provided as a dictionary.")
-
-        # set the roles to the vertices as networkx attributes
-        for role, vars in roles.items():
-            self.with_role(role=role, variables=vars, inplace=True)
-
-    def add_directed_edges(self, ebunch):
-        """
-        Adds directed edges (u -> v) to the ADMG.
-
-        Parameters
-        ----------
-        ebunch : list of tuple
-            List of directed edges, where each tuple is (u, v).
-        """
-        for u, v in ebunch:
-            if u is None or v is None:
-                raise ValueError("Can't add since one of nodes is None")
-
-            key = super().add_edge(u, v, type="directed")
-            if not nx.is_directed_acyclic_graph(self):
-                super().remove_edge(u, v, key=key)
-                raise ValueError("Adding this edge would create a cycle in the graph.")
-
-    def add_bidirected_edges(self, ebunch):
-        """
-        Adds bidirected edges (u <-> v) to the ADMG.
-
-        Parameters
-        ----------
-        ebunch : list of tuple
-            List of bidirected edges, where each tuple is (u, v).
-        """
-        for u, v in ebunch:
-            if u is None or v is None:
-                raise ValueError("Can't add since one of the nodes is None")
-            if u == v:
-                raise ValueError("Cannot add a bidirected edge from a node to itself.")
-
-            # Add two directed edges with a 'type' attribute indicating bidirected
-            super().add_edge(u, v, type="bidirected")
-            super().add_edge(v, u, type="bidirected")
-
-    def add_edge(self, u, v, **kwargs):
-        """
-        Raises an error if trying to add a regular edge.
-        """
-        raise NotImplementedError(
-            "Use add_directed_edge or add_bidirected_edge to add edges."
+        super().__init__(
+            ebunch=ebunch,
+            exposures=exposures,
+            outcomes=outcomes,
+            latents=latents,
+            roles=roles,
         )
 
-    def get_directed_parents(self, nodes):
-        """
-        Get directed parents of given nodes.
+    def add_edge(self, u, v, edge_type="->", key=None, **kwargs):
+        # No additional comments are needed, as the comments in _CoreGraph are utilized.
 
-        Parameters
-        ----------
-        nodes : str or iterable of str
-            Node or list of nodes to query.
+        # TODO: Implement cycle check logic before adding the edge.
+        # ADMGs must be acyclic with respect to directed edges.
 
-        Returns
-        -------
-        set
-            Set of directed parents.
-        """
-        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-        directed_parents = set()
+        return super().add_edge(u, v, edge_type, key, **kwargs)
 
-        for node in nodes_set:
-            if node not in self.nodes:
-                raise ValueError(f"Node {node} is not in the graph.")
-            for pred in self.predecessors(node):
-                data = self.get_edge_data(pred, node)
-                for key in data:
-                    if data[key].get("type") == "directed":
-                        directed_parents.add(pred)
-        return directed_parents
-
-    def get_bidirected_parents(self, nodes):
-        """
-        Get bidirected parents (nodes connected via bidirected edge) of the given nodes.
-
-        Parameters
-        ----------
-        nodes : str or iterable of str
-            Node or list of nodes to query.
-
-        Returns
-        -------
-        set
-            Set of bidirected parents.
-        """
-        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-        bidirected_parents = set()
-
-        for node in nodes_set:
-            if node not in self.nodes:
-                raise ValueError(f"Node {node} is not in the graph.")
-            # Get neighbors and check for bidirected edges
-            for neighbor in super().neighbors(node):
-                if (
-                    self.has_edge(node, neighbor)
-                    and self.get_edge_data(node, neighbor, 0).get("type")
-                    == "bidirected"
-                ) or (
-                    self.has_edge(neighbor, node)
-                    and self.get_edge_data(neighbor, node, 0).get("type")
-                    == "bidirected"
-                ):
-                    bidirected_parents.add(neighbor)
-
-        return bidirected_parents
-
-    def get_children(self, nodes):
-        """
-        Get children of given nodes (i.e., targets of outgoing directed edges).
-
-        Parameters
-        ----------
-        nodes : str or iterable of str
-            Node or list of nodes.
-
-        Returns
-        -------
-        set
-            Set of children nodes.
-        """
-        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-        children = set()
-        for node in nodes_set:
-            if node not in self.nodes:
-                raise ValueError(f"Node {node} is not in the graph.")
-            for successor in super().successors(node):
-                # Only consider truly directed edges
-                if self.get_edge_data(node, successor, 0)["type"] == "directed":
-                    children.add(successor)
-        return children
-
-    def get_spouses(self, nodes):
-        """
-        Get spouses of given nodes (i.e., nodes connected via bidirected edges).
-
-        Parameters
-        ----------
-        nodes : str or iterable of str
-            Node or list of nodes.
-
-        Returns
-        -------
-        set
-            Set of spouses.
-        """
-        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-        spouses = set()
-        for node in nodes_set:
-            if node not in self.nodes:
-                raise ValueError(f"Node {node} is not in the graph.")
-            for neighbor in super().neighbors(node):
-                # Check if the edge to/from the neighbor is bidirected
-                if (
-                    self.has_edge(node, neighbor)
-                    and self.get_edge_data(node, neighbor, 0).get("type")
-                    == "bidirected"
-                ) or (
-                    self.has_edge(neighbor, node)
-                    and self.get_edge_data(neighbor, node, 0).get("type")
-                    == "bidirected"
-                ):
-                    spouses.add(neighbor)
-        return spouses
-
-    def get_ancestors(self, nodes):
-        """
-        Get ancestors of given nodes via directed paths.
-
-        Parameters
-        ----------
-        nodes : str or iterable of str
-            Node or list of nodes.
-
-        Returns
-        -------
-        set
-            Set of ancestor nodes including the input nodes.
-        """
-        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-        ancestors = set()
-        for node in nodes_set:
-            if node in self.nodes:
-                # Use a temporary graph containing only directed edges for ancestry
-                temp_dag = nx.DiGraph()
-                for u, v, key, data in self.edges(keys=True, data=True):
-                    if data.get("type") == "directed":
-                        temp_dag.add_edge(u, v)
-                if node in temp_dag:  # Ensure node exists in the temp_dag
-                    ancestors.update(nx.ancestors(temp_dag, node).union({node}))
-        return ancestors
-
-    def get_descendants(self, nodes):
-        """
-        Get descendants of given nodes via directed paths.
-
-        Parameters
-        ----------
-        nodes : str or iterable of str
-            Node or list of nodes.
-
-        Returns
-        -------
-        set
-            Set of descendant nodes including the input nodes.
-        """
-        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-        descendants = set()
-        for node in nodes_set:
-            if node in self.nodes:
-                # Use a temporary graph containing only directed edges for descendants
-                temp_dag = nx.DiGraph()
-                for u, v, key, data in self.edges(keys=True, data=True):
-                    if data.get("type") == "directed":
-                        temp_dag.add_edge(u, v)
-                if node in temp_dag:  # Ensure node exists in the temp_dag
-                    descendants.update(nx.descendants(temp_dag, node).union({node}))
-        return descendants
+    def add_edges_from(self, ebunch, **kwargs):
+        # No additional comments are needed, as the comments in _CoreGraph are utilized.
+        self._validate_edges(ebunch=ebunch)
+        for edge in ebunch:
+            if len(edge) == 3:
+                u, v, edge_type = edge
+                self.add_edge(u, v, edge_type=edge_type, **kwargs)
+            elif len(edge) == 4:
+                u, v, key, edge_type = edge
+                self.add_edge(u, v, edge_type=edge_type, key=key, **kwargs)
 
     def get_district(self, nodes):
         """
@@ -292,102 +82,13 @@ class ADMG(_GraphRolesMixin, MultiDiGraph):
             Nodes in the same bidirected-connected component.
         """
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-        all_districts = set()
+        components = set()
 
-        for start_node in nodes_set:
-            if start_node not in self.nodes:
-                continue
+        for node in nodes_set:
+            component = self.get_reachable_nodes(node, edge_type="<>")
+            components.update(component)
 
-            district_components = set()
-            queue = collections.deque([start_node])
-            visited = {start_node}
-
-            while queue:
-                currentNode = queue.popleft()
-                district_components.add(currentNode)
-                # Iterate through all neighbors and check for bidirected edges
-                for neighbor in super().neighbors(currentNode):
-                    if (
-                        self.has_edge(currentNode, neighbor)
-                        and self.get_edge_data(currentNode, neighbor, 0).get("type")
-                        == "bidirected"
-                    ) or (
-                        self.has_edge(neighbor, currentNode)
-                        and self.get_edge_data(neighbor, currentNode, 0).get("type")
-                        == "bidirected"
-                    ):
-                        if neighbor not in visited:
-                            visited.add(neighbor)
-                            queue.append(neighbor)
-                for predecessor in super().predecessors(currentNode):
-                    if (
-                        self.has_edge(currentNode, predecessor)
-                        and self.get_edge_data(currentNode, predecessor, 0).get("type")
-                        == "bidirected"
-                    ) or (
-                        self.has_edge(predecessor, currentNode)
-                        and self.get_edge_data(predecessor, currentNode, 0).get("type")
-                        == "bidirected"
-                    ):
-                        if predecessor not in visited:
-                            visited.add(predecessor)
-                            queue.append(predecessor)
-
-            all_districts.update(district_components)
-        return all_districts
-
-    def get_ancestral_graph(self, nodes):
-        """
-        Return the ancestral graph induced by the input nodes.
-
-        Parameters
-        ----------
-        nodes : str or iterable of str
-            Node or list of nodes to induce subgraph on.
-
-        Returns
-        -------
-        ADMG
-            Subgraph induced by ancestors of the given nodes.
-
-        Raises
-        ------
-        ValueError
-            If any input node is not in the graph.
-        """
-        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-
-        if not nodes_set.issubset(self.nodes):
-            raise ValueError("Input nodes must be subset of graph's nodes.")
-
-        # Create a new ADMG instance for the ancestral graph
-        new_admg = ADMG()
-        new_admg.add_nodes_from(list(nodes_set))  # Add all nodes in nodes_set
-
-        # Add directed edges from the original graph that have both endpoints in nodes_set
-        for u, v, key, data in self.edges(keys=True, data=True):
-            if data.get("type") == "directed" and u in nodes_set and v in nodes_set:
-                new_admg.add_directed_edges(
-                    [(u, v)]
-                )  # Use add_directed)edges to maintain cycle check
-
-        # Add bidirected edges from the original graph that have both endpoints in nodes_set
-        processed_bidirected_pairs = set()
-        for u, v, key, data in self.edges(keys=True, data=True):
-            if data.get("type") == "bidirected":
-                if u in nodes_set and v in nodes_set:
-                    # Ensure we add each bidirected pair only once in the new graph
-                    if (u, v) not in processed_bidirected_pairs and (
-                        v,
-                        u,
-                    ) not in processed_bidirected_pairs:
-                        new_admg.add_bidirected_edges([(u, v)])
-                        processed_bidirected_pairs.add((u, v))
-                        processed_bidirected_pairs.add(
-                            (v, u)
-                        )  # Mark both directions as processed
-
-        return new_admg
+        return components
 
     def get_markov_blanket(self, nodes):
         """
@@ -410,23 +111,13 @@ class ADMG(_GraphRolesMixin, MultiDiGraph):
             Set of nodes in the Markov blanket.
         """
         nodes_set = {nodes} if isinstance(nodes, set) else set(nodes)
-        if not nodes_set.issubset(self.nodes):
-            raise ValueError("Input nodes must be subset of graph's nodes.")
+
         markov_blanket = set()
         for node in nodes_set:
-            if node not in self.nodes:
-                raise ValueError(f"Node {node} is not in the graph.")
-            # Get parents
-            parents = self.get_directed_parents(node)
-            district_parents = self.get_bidirected_parents(node)
-            markov_blanket.update(parents)
-            markov_blanket.update(district_parents)
-            # Get children
-            children = self.get_children(node)
-            markov_blanket.update(children)
-            # Get spouses
-            spouses = self.get_spouses(node)
-            markov_blanket.update(spouses)
+            markov_blanket.update(self.get_parents(node))
+            markov_blanket.update(self.get_children(node))
+            markov_blanket.update(self.get_spouses(node))
+            markov_blanket.update(self.get_neighbors(node, edge_type="<>"))
         return markov_blanket
 
     def to_dag(self):
@@ -571,38 +262,3 @@ class ADMG(_GraphRolesMixin, MultiDiGraph):
             return m_connected_set & nodes_v_set
 
         return m_connected_set
-
-    def __eq__(self, other):
-        """
-        Checks if two ADMGs are equal. Two ADMGs are considered equal if they
-        have the same nodes, edges, latent variables, and variable roles.
-
-        Parameters
-        ----------
-        other: ADMG object
-            The other ADMG to compare with.
-
-        Returns
-        -------
-        bool
-            True if the ADMGs are equal, False otherwise.
-        """
-        if not isinstance(other, ADMG):
-            return False
-
-        if (
-            set(self.nodes()) != set(other.nodes())
-            or self.latents != other.latents
-            or self.get_role_dict() != other.get_role_dict()
-            or set(self.edges()) != set(other.edges())
-        ):
-            return False
-
-        # Check edges type more details ('directed' or 'bidirected').
-        for u, v in self.edges():
-            if (
-                self.get_edge_data(u, v, 0)["type"]
-                != other.get_edge_data(u, v, 0)["type"]
-            ):
-                return False
-        return True
