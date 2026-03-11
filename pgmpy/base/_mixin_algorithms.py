@@ -355,6 +355,122 @@ class _GraphAlgorithmMixin:
 
         return new_graph
 
+    def get_markov_blanket(self):
+        """
+
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        bool
+
+        See Also
+        --------
+        `DAG`, `ADMG`
+
+        Notes
+        -----
+
+
+        Examples
+        --------
+
+        References
+        ----------
+
+        """
+        ...
+
+    def to_dag(self):
+        """
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        bool
+
+        See Also
+        --------
+        `DAG`, `ADMG`
+
+        Notes
+        -----
+
+
+        Examples
+        --------
+
+        References
+        ----------
+
+        """
+        ...
+
+    def has_inducing_path(self, u, v, W):
+        """
+        Need to modify
+
+        Check if there exists an inducing path between two nodes relative to W.
+
+        An inducing path between u and v is a path such that:
+        - The path has length > 2 (at least one intermediate node),
+        - Every intermediate node is a collider on the path,
+        - Every intermediate node is either:
+            * in W, or
+            * an ancestor of u or v.
+
+        Parameters
+        ----------
+        u : Hashable
+            Source node.
+
+        v : Hashable
+            Target node.
+
+        W : set
+            Subset of nodes to check inducing paths through (often latents).
+
+        Returns
+        -------
+        bool
+            True if there exists an inducing path, False otherwise.
+
+        Examples
+        --------
+        >>> from pgmpy.base import MAG
+        >>> mag = MAG()
+        >>> mag.add_edge("X", "L", "-", ">")
+        >>> mag.add_edge("Y", "L", "-", ">")
+        >>> mag.latents = {"L"}
+        >>> mag.has_inducing_path("X", "Y", mag.latents)
+        True
+        """
+
+        is_inducing = True
+        import networkx as nx
+
+        for path in nx.all_simple_paths(self, source=u, target=v):
+            if len(path) <= 2:
+                continue
+
+            for i in range(1, len(path) - 1):
+                prev_node, curr_node, next_node = path[i - 1], path[i], path[i + 1]
+
+                if not self.is_collider(prev_node, curr_node, next_node):
+                    is_inducing = False
+                    break
+
+                ancestors_uv_vu = self.get_ancestors(u).union(self.get_ancestors(v))
+                if curr_node not in W and curr_node not in ancestors_uv_vu:
+                    is_inducing = False
+                    break
+
+        return is_inducing
+
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
     # ----------------------------------------------------------------------
