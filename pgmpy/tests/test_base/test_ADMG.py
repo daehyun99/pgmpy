@@ -49,13 +49,13 @@ class TestADMGInitialization:
     def test_initialization_with_roles(self):
         """Test initialization with roles variables."""
         directed_edges = [("A", "C", "->"), ("B", "C", "->")]
-        roles = {"exposure": ("A", "B"), "outcome": ["C"]}
+        roles = {"exposures": ("A", "B"), "outcomes": ["C"]}
         admg = ADMG(ebunch=directed_edges, roles=roles)
 
-        assert set(admg.get_role("exposure")) == set(["A", "B"])
-        assert admg.get_role("outcome") == ["C"]
-        assert set(admg.get_roles()) == set(["exposure", "outcome"])
-        assert admg.get_role_dict() == {"exposure": ["A", "B"], "outcome": ["C"]}
+        assert set(admg.get_role("exposures")) == set(["A", "B"])
+        assert admg.get_role("outcomes") == ["C"]
+        assert set(admg.get_roles()) == set(["exposures", "outcomes"])
+        assert admg.get_role_dict() == {"exposures": ["A", "B"], "outcomes": ["C"]}
 
     def test_latents_with_role(self):
         edges = [
@@ -69,7 +69,7 @@ class TestADMGInitialization:
         admg = ADMG(
             ebunch=edges,
             latents=["A"],
-            roles={"exposure": "X", "outcome": "Y", "latents": "B"},
+            roles={"exposures": "X", "outcomes": "Y", "latents": "B"},
         )
         admg.with_role(role="latents", variables="C", inplace=True)
         admg.with_role(role="latents", variables=["D", "E", "F"], inplace=True)
@@ -92,7 +92,7 @@ class TestADMGInitialization:
         admg = ADMG(
             ebunch=edges,
             latents=["A", "B", "C"],
-            roles={"exposure": "X", "outcome": "Y", "latents": ("D", "E", "F")},
+            roles={"exposures": "X", "outcomes": "Y", "latents": ("D", "E", "F")},
         )
 
         admg.without_role(role="latents", variables="A", inplace=True)
@@ -286,9 +286,8 @@ class TestADMGGraphOperations:
 
         self.admg.add_edges_from(edges)
         self.admg.add_node("F", latent=True)
-
-        self.admg.with_role(role="exposure", variables={"A"}, inplace=True)
-        self.admg.with_role(role="outcome", variables={"C"}, inplace=True)
+        self.admg.with_role(role="exposures", variables={"A"}, inplace=True)
+        self.admg.with_role(role="outcomes", variables={"C"}, inplace=True)
 
     def test_get_ancestral_graph(self):
         """Test getting ancestral graph of a subset of nodes."""
@@ -346,7 +345,7 @@ class TestADMGGraphOperations:
                 ("B", "E", "<>"),
             ],
             latents=["D"],
-            roles={"exposure": ["A"], "outcome": ["C"]},
+            roles={"exposures": ["A"], "outcomes": ["C"]},
         )
 
         # Case1: When the models are the same
@@ -359,14 +358,14 @@ class TestADMGGraphOperations:
                 ("B", "E", "<>"),
             ],
             latents=["D"],
-            roles={"exposure": ["A"], "outcome": ["C"]},
+            roles={"exposures": ["A"], "outcomes": ["C"]},
         )
 
         # Case2: When the models differ (DAG)
         other2 = DAG(
             ebunch=[("A", "C", "->"), ("D", "C", "->")],
             latents=["D"],
-            roles={"exposure": "A", "adjustment": "D", "outcome": "C"},
+            roles={"exposures": "A", "adjustment": "D", "outcomes": "C"},
         )
 
         # Case3: When the directed edges differ
@@ -379,7 +378,7 @@ class TestADMGGraphOperations:
                 ("B", "E", "<>"),
             ],
             latents=["D"],
-            roles={"exposure": ["A"], "outcome": ["C"]},
+            roles={"exposures": ["A"], "outcomes": ["C"]},
         )
 
         # Case4: When the bidirected edges differ
@@ -392,7 +391,7 @@ class TestADMGGraphOperations:
                 ("B", "E", "<>"),
             ],
             latents=["D"],
-            roles={"exposure": ["A"], "outcome": ["C"]},
+            roles={"exposures": ["A"], "outcomes": ["C"]},
         )
 
         # Case5: When the latents variables differ
@@ -405,7 +404,7 @@ class TestADMGGraphOperations:
                 ("B", "E", "<>"),
             ],
             latents=["B"],
-            roles={"exposure": ["A"], "outcome": ["C"]},
+            roles={"exposures": ["A"], "outcomes": ["C"]},
         )
 
         # Case6: When the roles variables differ
@@ -418,7 +417,7 @@ class TestADMGGraphOperations:
                 ("B", "E", "<>"),
             ],
             latents=["D"],
-            roles={"exposure": ["A"], "adjustment": "D", "outcome": ["C"]},
+            roles={"exposures": ["A"], "adjustment": "D", "outcomes": ["C"]},
         )
 
         assert admg.__eq__(other1) is True
