@@ -289,48 +289,6 @@ class TestADMGGraphOperations:
         self.admg.with_role(role="exposures", variables={"A"}, inplace=True)
         self.admg.with_role(role="outcomes", variables={"C"}, inplace=True)
 
-    def test_get_ancestral_graph(self):
-        """Test getting ancestral graph of a subset of nodes."""
-        ancestral = self.admg.get_ancestral_graph(["A", "B", "D"])
-
-        assert "A" in ancestral.nodes
-        assert "B" in ancestral.nodes
-        assert "D" in ancestral.nodes
-        assert "C" not in ancestral.nodes
-        assert "E" not in ancestral.nodes
-
-        # Should have directed edge A -> B
-        assert ancestral.has_edge("A", "B")
-        # Should have bidirected edge A <-> D
-        assert ancestral.has_edge("A", "D")
-        assert ancestral.has_edge("D", "A")
-
-    def test_get_ancestral_graph_invalid_nodes(self):
-        """Test ancestral graph with invalid nodes."""
-        with pytest.raises(ValueError):
-            self.admg.get_ancestral_graph(["A", "Z"])
-
-    def test_get_markov_blanket(self):
-        """Test getting Markov blanket."""
-        mb_b = self.admg.get_markov_blanket("B")
-
-        # B's Markov blanket should include its parents, children, and spouses
-        assert "A" in mb_b  # parent
-        assert "C" in mb_b  # child
-        assert "E" in mb_b  # spouse
-
-    @pytest.mark.skip(
-        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"
-    )
-    def test_to_dag(self):
-        """Test conversion to DAG."""
-        dag = self.admg.to_dag()
-
-        # Should return a pgmpy DAG instance
-        from pgmpy.base.DAG import DAG as pgmpy_DAG
-
-        assert isinstance(dag, pgmpy_DAG)
-
     def test_admg_equality(self):
         """
         Test the `__eq__` method

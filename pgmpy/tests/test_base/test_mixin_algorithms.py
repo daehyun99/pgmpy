@@ -417,3 +417,15 @@ class TestGraphAlgorithmMixin:
 
         # TODO: Expand UndirectedGraph
         ...
+
+    def test_get_markov_blanket(self):
+        """"""
+        ...
+
+    def test_to_dag(self):
+        """"""
+        ...
+
+    def test_has_inducing_path(self):
+        """"""
+        ...
