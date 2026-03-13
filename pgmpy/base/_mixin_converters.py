@@ -14,7 +14,7 @@ class GraphConverterMixin:
 
         Returns
         -------
-        bool
+        pgmpy.base.DAG
 
         See Also
         --------
