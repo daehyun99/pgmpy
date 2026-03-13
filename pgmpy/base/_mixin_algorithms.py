@@ -2,6 +2,8 @@
 
 from typing import Hashable, Set
 
+import networkx as nx
+
 
 class _GraphAlgorithmMixin:
     """Mixin class for causal graph's algorithms."""
@@ -470,6 +472,42 @@ class _GraphAlgorithmMixin:
                     break
 
         return is_inducing
+
+    def has_direct_path(self, u, v):
+        """
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        bool
+
+        See Also
+        --------
+        `nx.has_path`
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        References
+        ----------
+
+        """
+        for path in nx.all_simple_edge_paths(self, u, v):
+            is_directed_path = True
+            for edge in path:
+                src, dst, key = edge
+                markers = self[src][dst][key]
+                if self._to_api_edge_type(src, dst, markers) != "->":
+                    is_directed_path = False
+                    break
+            if is_directed_path:
+                return True
+        return False
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
