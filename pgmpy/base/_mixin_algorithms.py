@@ -385,33 +385,6 @@ class _GraphAlgorithmMixin:
         """
         ...
 
-    def to_dag(self):
-        """
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-        bool
-
-        See Also
-        --------
-        `DAG`, `ADMG`
-
-        Notes
-        -----
-
-
-        Examples
-        --------
-
-        References
-        ----------
-
-        """
-        ...
-
     def has_inducing_path(self, u, v, W):
         """
         Need to modify
@@ -501,8 +474,7 @@ class _GraphAlgorithmMixin:
             is_directed_path = True
             for edge in path:
                 src, dst, key = edge
-                markers = self[src][dst][key]
-                if self._to_api_edge_type(src, dst, markers) != "->":
+                if self[src][dst][key] != {src: "-", dst: ">"}:
                     is_directed_path = False
                     break
             if is_directed_path:

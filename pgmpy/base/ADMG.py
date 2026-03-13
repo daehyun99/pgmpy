@@ -91,3 +91,30 @@ class ADMG(_CoreGraph):
             components.update(component)
 
         return components
+
+    def to_dag(self):
+        """
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        bool
+
+        See Also
+        --------
+        `DAG`, `ADMG`
+
+        Notes
+        -----
+
+
+        Examples
+        --------
+
+        References
+        ----------
+
+        """
+        ...
