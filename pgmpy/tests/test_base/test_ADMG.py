@@ -183,6 +183,19 @@ class TestADMGEdgeOperations:
         admg.add_edge("B", "C", "<>")
         admg.add_edge("C", "A", "->")
 
+        assert admg.has_edge("C", "A") is True
+        assert admg.has_direct_path("A", "C") is False
+
+    def test_cycle_multi_edges(self):
+        """Test that cycles are prevented in directed edges."""
+        admg = ADMG()
+        admg.add_edge("A", "B", "->")
+        admg.add_edge("A", "C", "<>")
+        admg.add_edge("B", "D", "->")
+        admg.add_edge("C", "D", "<-")
+
+        assert admg.has_direct_path("A", "D")
+
     def test_none_node_rejection(self):
         """Test that None nodes are rejected."""
         admg = ADMG()

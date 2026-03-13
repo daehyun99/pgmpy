@@ -432,7 +432,7 @@ class TestGraphAlgorithmMixin:
         ...
 
     def test_has_direct_path_basic(self):
-        """"""
+        """Test code for `direct_path` method"""
         graph = _CoreGraph()
         graph.add_edge("A", "B", "->")
         graph.add_edge("B", "C", "->")
@@ -441,7 +441,7 @@ class TestGraphAlgorithmMixin:
         assert graph.has_direct_path("A", "C") is True
 
     def test_has_direct_path_reverse(self):
-        """"""
+        """Test code for `direct_path` method"""
         graph = _CoreGraph()
         graph.add_edge("A", "B", "->")
         graph.add_edge("B", "C", "<-")
@@ -451,10 +451,22 @@ class TestGraphAlgorithmMixin:
         assert graph.has_direct_path("A", "D") is False
 
     def test_has_direct_path_various_edges(self):
-        """"""
+        """Test code for `direct_path` method"""
         graph = _CoreGraph()
         graph.add_edge("A", "B", "->")
         graph.add_edge("B", "C", "<>")
 
         assert nx.has_path(graph, "A", "C") is True
         assert graph.has_direct_path("A", "C") is False
+
+    def test_has_direct_path_two_path(self):
+        """Test code for `direct_path` method"""
+        graph = _CoreGraph()
+
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("A", "C", "->")
+        graph.add_edge("B", "D", "<-")
+        graph.add_edge("C", "D", "->")
+
+        assert nx.has_path(graph, "A", "D") is True
+        assert graph.has_direct_path("A", "D") is True

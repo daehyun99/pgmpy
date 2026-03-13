@@ -50,13 +50,12 @@ class ADMG(_CoreGraph):
     def add_edge(self, u, v, edge_type="->", key=None, **kwargs):
         # No additional comments are needed, as the comments in _CoreGraph are utilized.
 
-        if edge_type in ["->", "<-"]:
-            if edge_type == "<-":
-                u, v, edge_type = v, u, edge_type
-
-            if self.has_node(u) and self.has_node(v):
-                if self.has_direct_path(v, u):
-                    raise ValueError("Cycles are not allowed in a ADMG.")
+        if edge_type == "->":
+            if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
+                raise ValueError("Cycles are not allowed in a ADMG.")
+        elif edge_type == "<-":
+            if self.has_node(u) and self.has_node(v) and self.has_direct_path(u, v):
+                raise ValueError("Cycles are not allowed in a ADMG.")
         super().add_edge(u, v, edge_type, key, **kwargs)
 
     def add_edges_from(self, ebunch, **kwargs):

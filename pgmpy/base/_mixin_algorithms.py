@@ -498,16 +498,16 @@ class _GraphAlgorithmMixin:
 
         """
         for path in nx.all_simple_edge_paths(self, u, v):
+            is_directed_path = True
             for edge in path:
                 src, dst, key = edge
                 markers = self[src][dst][key]
-                if self._to_api_edge_type(src, dst, markers) == "->":
-                    if dst == v:
-                        return True
-                    else:
-                        continue
-                else:
-                    return False
+                if self._to_api_edge_type(src, dst, markers) != "->":
+                    is_directed_path = False
+                    break
+            if is_directed_path:
+                return True
+        return False
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
