@@ -383,33 +383,6 @@ class _GraphAlgorithmMixin:
         """
         ...
 
-    def to_dag(self):
-        """
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-        bool
-
-        See Also
-        --------
-        `DAG`, `ADMG`
-
-        Notes
-        -----
-
-
-        Examples
-        --------
-
-        References
-        ----------
-
-        """
-        ...
-
     def has_inducing_path(self, u, v, W):
         """
         Need to modify
