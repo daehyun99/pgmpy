@@ -166,9 +166,6 @@ class TestADMGEdgeOperations:
 
         assert set(admg.get_edges(data=True)) == set(edges)
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"
-    )
     def test_cycle_detection(self):
         """Test that cycles are prevented in directed edges."""
         admg = ADMG()
@@ -178,6 +175,13 @@ class TestADMGEdgeOperations:
         # This should raise an error as it creates a cycle
         with pytest.raises(ValueError):
             admg.add_edge("C", "A", "->")
+
+    def test_cycle_several_edges(self):
+        """Test that cycles are prevented in directed edges."""
+        admg = ADMG()
+        admg.add_edge("A", "B", "->")
+        admg.add_edge("B", "C", "<>")
+        admg.add_edge("C", "A", "->")
 
     def test_none_node_rejection(self):
         """Test that None nodes are rejected."""
