@@ -370,13 +370,13 @@ class TestGraphAlgorithmMixin:
 
     def has_directed_cycle(self):
         """
-        Testing `_has_cycle` method of Graph class(_CoreGraph, DAG, ADMG)
+        Testing `has_directed_cycle` method of Graph class(_CoreGraph, DAG, ADMG)
         """
         # TODO(@daehyun99): [#2385] Consider implement `has_directed_cycle` method.
 
     def has_almost_directed_cycle(self):
         """
-        Testing `_has_cycle` method of Graph class(_CoreGraph, DAG, ADMG)
+        Testing `has_almost_directed_cycle` method of Graph class(_CoreGraph, DAG, ADMG)
         """
         # TODO(@daehyun99): [#2385] Consider implement `has_almost_directed_cycle` method.
 

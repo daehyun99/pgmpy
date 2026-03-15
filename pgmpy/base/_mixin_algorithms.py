@@ -40,13 +40,13 @@ class _GraphAlgorithmMixin:
         """
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        if not all([node in self.nodes for node in (u, v, w)]):
+        if not {u, v, w}.issubset(self.nodes):
             raise ValueError(f"{u}, {v}, {w} must be present in the graph.")
 
         parents = self.get_parents(w)
         spouses = self.get_spouses(w)
 
-        incoming_to_w = set(parents).union(spouses)
+        incoming_to_w = parents.union(spouses)
 
         return (u in incoming_to_w) and (v in incoming_to_w)
 
