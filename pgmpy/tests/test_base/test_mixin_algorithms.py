@@ -6,9 +6,6 @@ from pgmpy.base._base import _CoreGraph
 
 
 class TestGraphAlgorithmMixin:
-    @pytest.mark.skip(
-        reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
-    )
     def test_is_collider(self):
         """
         References
@@ -68,6 +65,10 @@ class TestGraphAlgorithmMixin:
         assert graph.is_collider("T", "I", "M") == False
         assert graph.is_collider("T", "B", "M") == False
         assert graph.is_collider("T", "U", "M") == False
+
+        graph = _CoreGraph()
+        with pytest.raises(ValueError):
+            graph.is_collider("T", "O", "M")
 
     @pytest.mark.skip(
         reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
@@ -367,11 +368,17 @@ class TestGraphAlgorithmMixin:
         # TODO(@daehyun99): [#2384] Implement code logic and test code
         ...
 
-    def test_has_cycle(self):
+    def has_directed_cycle(self):
         """
         Testing `_has_cycle` method of Graph class(_CoreGraph, DAG, ADMG)
         """
-        # TODO(@daehyun99): [#2385] Consider implement `_has_cycle` method.
+        # TODO(@daehyun99): [#2385] Consider implement `has_directed_cycle` method.
+
+    def has_almost_directed_cycle(self):
+        """
+        Testing `_has_cycle` method of Graph class(_CoreGraph, DAG, ADMG)
+        """
+        # TODO(@daehyun99): [#2385] Consider implement `has_almost_directed_cycle` method.
 
     def test_get_ancestral_graph(self):
         """

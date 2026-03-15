@@ -18,7 +18,7 @@ class _GraphAlgorithmMixin:
 
         Parameters
         ----------
-        u, v, w : node
+        u, v, w : src, dst, mid
 
         Returns
         -------
@@ -38,10 +38,17 @@ class _GraphAlgorithmMixin:
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # TODO(@daehyun99): [#2385] Implement code logic and test code
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        ...
+        if not all([node in self.nodes for node in (u, v, w)]):
+            raise ValueError(f"{u}, {v}, {w} must be present in the graph.")
+
+        parents = self.get_parents(w)
+        spouses = self.get_spouses(w)
+
+        incoming_to_w = set(parents).union(spouses)
+
+        return (u in incoming_to_w) and (v in incoming_to_w)
 
     def is_m_separator(self, x: Set, y: Set, z: Set):
         """
@@ -514,11 +521,7 @@ class _GraphAlgorithmMixin:
                 return True
         return False
 
-    # ----------------------------------------------------------------------
-    # Internal Methods (or Private Methods)
-    # ----------------------------------------------------------------------
-
-    def _has_cycle(self):
+    def has_directed_cycle(self):
         """
 
 
@@ -542,11 +545,50 @@ class _GraphAlgorithmMixin:
 
         References
         ----------
-
+        [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
+        Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # TODO(@daehyun99): [#2385] Consider implement `_has_cycle` method.
+        # TODO(@daehyun99): [#2385] Consider implement `has_directed_cycle` method.
         # Cycles can be easily identified using the has_direct_path method (refer to ADMG.add_edge()).
         # We will reassess the necessity of developing this method at a later date.
         # # TODO(@daehyun99): [#2385] Implement code logic and test code
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+
+    def has_almost_directed_cycle(self):
+        """
+
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        bool
+
+        See Also
+        --------
+        `MAG`, `ADMG`
+
+        Notes
+        -----
+
+
+        Examples
+        --------
+
+        References
+        ----------
+        [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
+        Journal of Machine Learning Research 9 (2008): 1437-1474.
+        """
+        # TODO(@daehyun99): [#2385] Consider implement `has_almost_directed_cycle` method.
+        # Cycles can be easily identified using the has_direct_path method (refer to ADMG.add_edge()).
+        # We will reassess the necessity of developing this method at a later date.
+        # # TODO(@daehyun99): [#2385] Implement code logic and test code
+        # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+
+    # ----------------------------------------------------------------------
+    # Internal Methods (or Private Methods)
+    # ----------------------------------------------------------------------
