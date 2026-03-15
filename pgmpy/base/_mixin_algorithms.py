@@ -38,6 +38,9 @@ class _GraphAlgorithmMixin:
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
+        # TODO(@daehyun99): [#2385] Implement code logic and test code
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         ...
 
     def is_m_separator(self, x: Set, y: Set, z: Set):
@@ -86,6 +89,9 @@ class _GraphAlgorithmMixin:
         "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
         Artificial Intelligence 270 (2019): 1-40.
         """
+        # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         ...
 
     def is_m_connected(self, x: Set, y: Set, z: Set):
@@ -115,6 +121,8 @@ class _GraphAlgorithmMixin:
         "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
         Artificial Intelligence 270 (2019): 1-40.
         """
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         return not self.is_m_separator(x, y, z)
 
     def is_minimal_m_separator(self, x: Set, y: Set, z: Set):
@@ -158,6 +166,9 @@ class _GraphAlgorithmMixin:
         "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
         Artificial Intelligence 270 (2019): 1-40.
         """
+        # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         ...
 
     def get_m_separator(self, x: Set, y: Set, i: Set, r: Set):
@@ -192,6 +203,9 @@ class _GraphAlgorithmMixin:
         "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
         Artificial Intelligence 270 (2019): 1-40.
         """
+        # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         ...
 
     def get_minimal_m_separator(self, x: Set, y: Set, i: Set, r: Set):
@@ -235,6 +249,9 @@ class _GraphAlgorithmMixin:
         "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
         Artificial Intelligence 270 (2019): 1-40.
         """
+        # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         ...
 
     def get_m_separators(self, x: Set, y: Set, i: Set, r: Set):
@@ -276,6 +293,9 @@ class _GraphAlgorithmMixin:
         "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
         Artificial Intelligence 270 (2019): 1-40.
         """
+        # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         ...
 
     def get_minimal_m_separators(self, x: Set, y: Set, i: Set, r: Set):
@@ -320,6 +340,9 @@ class _GraphAlgorithmMixin:
         "Space-optimal, backtracking algorithms to list the minimal vertex separators of a graph."
         Discrete Applied Mathematics 158 (2010): 1660-1667.
         """
+        # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         ...
 
     def get_ancestral_graph(self, nodes):
@@ -340,6 +363,8 @@ class _GraphAlgorithmMixin:
         ------
 
         """
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
         ancestors = set(nodes_set)
@@ -383,6 +408,9 @@ class _GraphAlgorithmMixin:
         ----------
 
         """
+        # TODO(@daehyun99): [#2385] Implement code logic and test code
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         ...
 
     def has_inducing_path(self, u, v, W):
@@ -424,6 +452,9 @@ class _GraphAlgorithmMixin:
         >>> mag.has_inducing_path("X", "Y", mag.latents)
         True
         """
+        # TODO(@daehyun99): [#2385] Implement code logic and test code
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
 
         is_inducing = True
         import networkx as nx
@@ -470,6 +501,9 @@ class _GraphAlgorithmMixin:
         ----------
 
         """
+        # TODO(@daehyun99): [#2385] Implement code logic and test code
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         for path in nx.all_simple_edge_paths(self, u, v):
             is_directed_path = True
             for edge in path:
@@ -511,4 +545,9 @@ class _GraphAlgorithmMixin:
         ----------
 
         """
-        ...
+        # TODO(@daehyun99): [#2385] Consider implement `_has_cycle` method.
+        # Cycles can be easily identified using the has_direct_path method (refer to ADMG.add_edge()).
+        # We will reassess the necessity of developing this method at a later date.
+        # # TODO(@daehyun99): [#2385] Implement code logic and test code
+        # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
