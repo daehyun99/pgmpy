@@ -435,3 +435,11 @@ class TestADMGSeparation:
         connected = self.admg.is_mconnected("A", "B")
         separated = self.admg.is_mseparated("A", "B")
         assert connected != separated
+
+    @pytest.mark.skip(
+        reason="Refactoring: Skip for now as development is scheduled DAG refactoring. (Related: #2384, #2385)"
+    )
+    def test_to_dag(self):
+        """Test `to_dag` method."""
+        # TODO(@daehyun99): [#2385] Implement `ADMG.to_dag` method.
+        ...

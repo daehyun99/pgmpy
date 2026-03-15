@@ -48,6 +48,7 @@ class ADMG(_CoreGraph):
         )
 
     def add_edge(self, u, v, edge_type="->", key=None, **kwargs):
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         # No additional comments are needed, as the comments in _CoreGraph are utilized.
 
         if edge_type == "->":
@@ -83,6 +84,7 @@ class ADMG(_CoreGraph):
         set
             Nodes in the same bidirected-connected component.
         """
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
         components = set()
 
@@ -91,3 +93,32 @@ class ADMG(_CoreGraph):
             components.update(component)
 
         return components
+
+    def to_dag(self):
+        """
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        Graphs
+
+        See Also
+        --------
+        `DAG`, `ADMG`
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        References
+        ----------
+
+        """
+        # TODO(@daehyun99): [#2385] Implement method when Refactor DAG
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+        ...
