@@ -501,7 +501,6 @@ class _GraphAlgorithmMixin:
         ----------
 
         """
-        # TODO(@daehyun99): [#2385] Implement code logic and test code
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         for path in nx.all_simple_edge_paths(self, u, v):
