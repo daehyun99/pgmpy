@@ -389,7 +389,7 @@ class _GraphAlgorithmMixin:
 
         return new_graph
 
-    def get_markov_blanket(self):
+    def get_markov_blanket(self, nodes):
         """
 
 
@@ -406,19 +406,38 @@ class _GraphAlgorithmMixin:
 
         Notes
         -----
-
+        Currently, this is only applicable to ADMGs and DAGs.
 
         Examples
         --------
 
         References
         ----------
-
+        [1] Richardson, Thomas. "Markov Properties for Acyclic Directed Mixed Graphs."
+            Scandinavian Journal of Statistics 30.1 (2003): 145-157.
+            https://doi.org/10.1111/1467-9469.00323
         """
-        # TODO(@daehyun99): [#2385] Implement code logic and test code
+        # NOTE: For simplicity of definition, current support is limited to DAGs and ADMGs.
+        #       This can be extended to MAGs and PAGs in the future.
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        ...
+        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
+        if not nodes_set.issubset(self.nodes):
+            raise ValueError("Input nodes must be subset of graph's nodes.")
+        markov_blanket = set()
+        for node in nodes_set:
+            # Get parents
+            parents = self.get_parents(node)
+            district_parents = self.get_spouses(node)
+            markov_blanket.update(parents)
+            markov_blanket.update(district_parents)
+            # Get children
+            children = self.get_children(node)
+            markov_blanket.update(children)
+            # Get spouses
+            spouses = self.get_spouses(node)
+            markov_blanket.update(spouses)
+        return markov_blanket
 
     def has_inducing_path(self, u, v, W):
         """

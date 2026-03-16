@@ -433,14 +433,35 @@ class TestGraphAlgorithmMixin:
         ...
 
     def test_get_markov_blanket(self):
-        """"""
-        # TODO(@daehyun99): [#2385] Implement code logic and test code
-        ...
+        """Test getting Markov blanket."""
+        edges = [
+            ("A", "B", "->"),
+            ("B", "C", "->"),
+            ("D", "E", "->"),
+            ("A", "D", "<>"),
+            ("B", "E", "<>"),
+        ]
+        self.admg = ADMG()
+
+        self.admg.add_edges_from(edges)
+        self.admg.add_node("F", latent=True)
+        self.admg.with_role(role="exposures", variables={"A"}, inplace=True)
+        self.admg.with_role(role="outcomes", variables={"C"}, inplace=True)
+
+        mb_b = self.admg.get_markov_blanket("B")
+
+        # B's Markov blanket should include its parents, children, and spouses
+        assert "A" in mb_b  # parent
+        assert "C" in mb_b  # child
+        assert "E" in mb_b  # spouse
+
+        # TODO: Implement test code for DAG
+
+        # TODO: Implement failing code for other graphs
 
     def test_has_inducing_path(self):
         """"""
         # TODO(@daehyun99): [#2385] Implement code logic and test code
-        ...
 
     def test_has_direct_path_basic(self):
         """Test code for `direct_path` method"""
