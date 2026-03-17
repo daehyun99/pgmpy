@@ -450,10 +450,7 @@ class TestGraphAlgorithmMixin:
 
         mb_b = self.admg.get_markov_blanket("B")
 
-        # B's Markov blanket should include its parents, children, and spouses
-        assert "A" in mb_b  # parent
-        assert "C" in mb_b  # child
-        assert "E" in mb_b  # spouse
+        assert mb_b == {"A", "C", "E"}
 
         # TODO: Implement test code for DAG
 
