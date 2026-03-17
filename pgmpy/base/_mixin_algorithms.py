@@ -422,21 +422,18 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
+
         if not nodes_set.issubset(self.nodes):
             raise ValueError("Input nodes must be subset of graph's nodes.")
+
         markov_blanket = set()
         for node in nodes_set:
-            # Get parents
-            parents = self.get_parents(node)
-            district_parents = self.get_spouses(node)
-            markov_blanket.update(parents)
-            markov_blanket.update(district_parents)
-            # Get children
-            children = self.get_children(node)
-            markov_blanket.update(children)
-            # Get spouses
-            spouses = self.get_spouses(node)
-            markov_blanket.update(spouses)
+            markov_blanket.update(
+                self.get_parents(node), self.get_children(node), self.get_spouses(node)
+            )
+
+        markov_blanket -= nodes_set
+
         return markov_blanket
 
     def has_inducing_path(self, u, v, W):
