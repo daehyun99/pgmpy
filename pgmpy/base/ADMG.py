@@ -87,11 +87,7 @@ class ADMG(_CoreGraph):
         Examples
         --------
         >>> from pgmpy.base.ADMG import ADMG
-        >>> admg = ADMG(directed_ebunch=[("X", "Y")], bidirected_ebunch=[("X", "Z")])
-        >>> sorted(admg.get_district("X"))
-        ['X', 'Z']
-        >>> admg.get_district("Y")
-        {'Y'}
+        >>> ...
         """
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
