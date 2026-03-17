@@ -424,7 +424,6 @@ class TestADMGSeparation:
         # Test with conditional set
         assert self.admg.is_mseparated("A", "D", conditional_set={"C"}) is True
         assert self.admg.is_mseparated("A", "D", conditional_set=set()) is False
-        # This depends on the specific graph structure and d-separation rules
 
     @pytest.mark.skip(
         reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"
