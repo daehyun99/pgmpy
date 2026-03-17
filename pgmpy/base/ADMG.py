@@ -49,7 +49,7 @@ class ADMG(_CoreGraph):
 
     def add_edge(self, u, v, edge_type="->", key=None, **kwargs):
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        # No additional comments are needed, as the comments in _CoreGraph are utilized.
+        # NOTE: No additional comments are needed, as the comments in _CoreGraph are utilized.
 
         if edge_type == "->":
             if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
@@ -60,7 +60,7 @@ class ADMG(_CoreGraph):
         super().add_edge(u, v, edge_type, key, **kwargs)
 
     def add_edges_from(self, ebunch, **kwargs):
-        # No additional comments are needed, as the comments in _CoreGraph are utilized.
+        # NOTE: No additional comments are needed, as the comments in _CoreGraph are utilized.
         self._validate_edges(ebunch=ebunch)
         for edge in ebunch:
             if len(edge) == 3:
@@ -118,6 +118,7 @@ class ADMG(_CoreGraph):
         ----------
 
         """
+        raise NotImplementedError("`to_dag` is not supported now")
         # TODO(@daehyun99): [#2385] Implement method when Refactor DAG
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
