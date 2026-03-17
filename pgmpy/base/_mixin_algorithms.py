@@ -479,26 +479,32 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
 
-        is_inducing = True
-        import networkx as nx
+        has_inducing = False
+
+        ancestors = self.get_ancestors(u)
+        ancestors.update(self.get_ancestors(v))
 
         for path in nx.all_simple_paths(self, source=u, target=v):
+
             if len(path) <= 2:
                 continue
 
-            for i in range(1, len(path) - 1):
-                prev_node, curr_node, next_node = path[i - 1], path[i], path[i + 1]
+            for i in range(len(path) - 3):
+                src, mid, dst = path[i : i + 3]
 
-                if not self.is_collider(prev_node, curr_node, next_node):
-                    is_inducing = False
+                if self.is_collider(src, mid, dst) and mid in W:
+                    has_inducing = True
                     break
 
-                ancestors_uv_vu = self.get_ancestors(u).union(self.get_ancestors(v))
-                if curr_node not in W and curr_node not in ancestors_uv_vu:
-                    is_inducing = False
+                elif not self.is_collider(src, mid, dst) and min not in W:
+                    has_inducing = True
                     break
 
-        return is_inducing
+                if mid in ancestors:
+                    has_inducing = True
+                    break
+
+        return has_inducing
 
     def has_direct_path(self, u, v):
         """
