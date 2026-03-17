@@ -92,3 +92,32 @@ class MAG(_CoreGraph):
             latents=latents,
             roles=roles,
         )
+
+    def to_pag(self):
+        """
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        Graphs
+
+        See Also
+        --------
+        `MAG`, `PAG`
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        References
+        ----------
+
+        """
+        # TODO: Implement method when #2385 done.
+        # TODO: Fix Docs (Unify Docs Format)
+        # TODO: Apply type hint(input, output)
+        raise NotImplementedError("`to_pag` is not supported now")

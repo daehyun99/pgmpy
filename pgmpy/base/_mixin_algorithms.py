@@ -99,7 +99,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        ...
+        raise NotImplementedError("`is_m_separator` is not supported now")
 
     def is_m_connected(self, x: Set, y: Set, z: Set):
         """
@@ -176,7 +176,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        ...
+        raise NotImplementedError("`is_minimal_m_separator` is not supported now")
 
     def get_m_separator(self, x: Set, y: Set, i: Set, r: Set):
         """
@@ -213,7 +213,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        ...
+        raise NotImplementedError("`get_m_separator` is not supported now")
 
     def get_minimal_m_separator(self, x: Set, y: Set, i: Set, r: Set):
         """
@@ -259,7 +259,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        ...
+        raise NotImplementedError("`get_minimal_m_separator` is not supported now")
 
     def get_m_separators(self, x: Set, y: Set, i: Set, r: Set):
         """
@@ -303,7 +303,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        ...
+        raise NotImplementedError("`get_m_separators` is not supported now")
 
     def get_minimal_m_separators(self, x: Set, y: Set, i: Set, r: Set):
         """
@@ -350,7 +350,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385], [#2342] Implement `m-separation`
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        ...
+        raise NotImplementedError("`get_minimal_m_separators` is not supported now")
 
     def get_ancestral_graph(self, nodes):
         """
@@ -573,6 +573,7 @@ class _GraphAlgorithmMixin:
         # # TODO(@daehyun99): [#2385] Implement code logic and test code
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+        raise NotImplementedError("`has_directed_cycle` is not supported now")
 
     def has_almost_directed_cycle(self):
         """
@@ -607,6 +608,7 @@ class _GraphAlgorithmMixin:
         # # TODO(@daehyun99): [#2385] Implement code logic and test code
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+        raise NotImplementedError("`has_almost_directed_cycle` is not supported now")
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
