@@ -93,6 +93,14 @@ class MAG(_CoreGraph):
             roles=roles,
         )
 
+    def add_edge(self, u, v, edge_type="->", key=None, **kwargs):
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+        # NOTE: No additional comments are needed, as the comments in _CoreGraph are utilized.
+
+        # TODO(@daehyun99): [#2385] Implement Checking MAG's rule.
+        # self.is_mag()
+        super().add_edge(u, v, edge_type, key, **kwargs)
+
     def to_pag(self):
         """
 
@@ -121,3 +129,36 @@ class MAG(_CoreGraph):
         # TODO: Fix Docs (Unify Docs Format)
         # TODO: Apply type hint(input, output)
         raise NotImplementedError("`to_pag` is not supported now")
+
+    def is_mag(self):
+        """
+        checking is mag
+        - the graph does not contain any directed or almost directed cycles (ancestral)
+        - there is no inducing path between any two non-adjacent vertices (maximal)
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        Graphs
+
+        See Also
+        --------
+        `MAG`, `PAG`
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        References
+        ----------
+        [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
+        Journal of Machine Learning Research 9 (2008): 1437-1474.
+        """
+        # TODO(@daehyun99): [#2385] Implement method
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+        raise NotImplementedError("`is_mag` is not supported now")

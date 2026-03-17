@@ -127,8 +127,7 @@ class ADMG(_CoreGraph):
         ----------
 
         """
-        raise NotImplementedError("`to_dag` is not supported now")
         # TODO(@daehyun99): [#2385] Implement method when Refactor DAG
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        ...
+        raise NotImplementedError("`to_dag` is not supported now")
