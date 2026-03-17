@@ -5,6 +5,45 @@ from pgmpy.base import ADMG, MAG
 from pgmpy.base._base import _CoreGraph
 
 
+@pytest.fixture
+def AncestralGraph():
+    """
+    References
+    ----------
+    [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
+    Journal of Machine Learning Research 9 (2008): 1437-1474. Figure 1-(a).
+    """
+    edges1 = [  # an ancestral graph that is not maximal.
+        ("A", "B", "<>"),
+        ("A", "C", "<>"),
+        ("B", "D", "<>"),
+        ("A", "D", "->"),
+        ("B", "C", "->"),
+    ]
+    graph = _CoreGraph(ebunch=edges1)
+    return graph
+
+
+@pytest.fixture
+def MaximalAncestralGraph():
+    """
+    References
+    ----------
+    [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
+    Journal of Machine Learning Research 9 (2008): 1437-1474. Figure 1-(b).
+    """
+    edges1 = [  # an ancestral graph that is not maximal.
+        ("A", "B", "<>"),
+        ("A", "C", "<>"),
+        ("B", "D", "<>"),
+        ("A", "D", "->"),
+        ("B", "C", "->"),
+        ("C", "D", "<>"),
+    ]
+    graph = _CoreGraph(ebunch=edges1)
+    return graph
+
+
 class TestGraphAlgorithmMixin:
     def test_is_collider(self):
         """
@@ -456,9 +495,21 @@ class TestGraphAlgorithmMixin:
 
         # TODO: Implement failing code for other graphs
 
-    def test_has_inducing_path(self):
+    def test_has_inducing_path(self, AncestralGraph, MaximalAncestralGraph):
         """"""
-        # TODO(@daehyun99): [#2385] Implement code logic and test code
+        graph = AncestralGraph
+        assert graph.has_inducing_path("C", "D", set())
+
+        graph = MaximalAncestralGraph
+        assert graph.has_inducing_path("C", "D", set())
+
+        graph = AncestralGraph
+        graph.latents = "B"
+        assert graph.has_inducing_path("C", "D", graph.latents)
+
+        graph = MaximalAncestralGraph
+        graph.latents = "B"
+        assert graph.has_inducing_path("C", "D", graph.latents)
 
     def test_has_direct_path_basic(self):
         """Test code for `direct_path` method"""

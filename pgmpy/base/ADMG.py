@@ -83,6 +83,15 @@ class ADMG(_CoreGraph):
         -------
         set
             Nodes in the same bidirected-connected component.
+
+        Examples
+        --------
+        >>> from pgmpy.base.ADMG import ADMG
+        >>> admg = ADMG(directed_ebunch=[("X", "Y")], bidirected_ebunch=[("X", "Z")])
+        >>> sorted(admg.get_district("X"))
+        ['X', 'Z']
+        >>> admg.get_district("Y")
+        {'Y'}
         """
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
@@ -118,8 +127,7 @@ class ADMG(_CoreGraph):
         ----------
 
         """
-        raise NotImplementedError("`to_dag` is not supported now")
         # TODO(@daehyun99): [#2385] Implement method when Refactor DAG
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        ...
+        raise NotImplementedError("`to_dag` is not supported now")
