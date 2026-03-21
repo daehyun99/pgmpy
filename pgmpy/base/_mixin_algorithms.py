@@ -579,9 +579,6 @@ class _GraphAlgorithmMixin:
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # TODO(@daehyun99): [#2385] Consider implement `has_directed_cycle` method.
-        # Cycles can be easily identified using the has_direct_path method (refer to ADMG.add_edge()).
-        # We will reassess the necessity of developing this method at a later date.
         # # TODO(@daehyun99): [#2385] Implement code logic and test code
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
@@ -614,9 +611,6 @@ class _GraphAlgorithmMixin:
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # TODO(@daehyun99): [#2385] Consider implement `has_almost_directed_cycle` method.
-        # Cycles can be easily identified using the has_direct_path method (refer to ADMG.add_edge()).
-        # We will reassess the necessity of developing this method at a later date.
         # # TODO(@daehyun99): [#2385] Implement code logic and test code
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)

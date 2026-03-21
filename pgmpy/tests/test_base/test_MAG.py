@@ -133,8 +133,8 @@ class TestMAG:
         assert set(model_from_str.nodes()) == expected_nodes
         assert model_from_str.get_role_dict() == expected_roles
 
-    def test_is_mag(self):
-        """Test code for `is_mag` method"""
+    def test_is_valid_mag(self):
+        """Test code for `is_valid_mag` method"""
         # TODO(@daehyun99): [#2384] Implement code logic and test code
         ...
 

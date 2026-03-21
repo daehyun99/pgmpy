@@ -136,7 +136,7 @@ class MAG(_CoreGraph):
         # TODO: Apply type hint(input, output)
         raise NotImplementedError("`to_pag` is not supported now")
 
-    def is_mag(self):
+    def is_valid_mag(self):
         """
         checking is mag
         - the graph does not contain any directed or almost directed cycles (ancestral)
@@ -167,4 +167,10 @@ class MAG(_CoreGraph):
         # TODO(@daehyun99): [#2385] Implement method
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        raise NotImplementedError("`is_mag` is not supported now")
+
+        if self.has_directed_cycle() or self.has_almost_directed_cycle():
+            return False
+
+        # TODO(@daehyun99): [#2385] Checking inducing path between any two non-adjacent vertices
+        #                   has_inducing_path
+        return True

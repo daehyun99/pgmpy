@@ -141,17 +141,18 @@ class ADMG(_CoreGraph):
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`to_dag` is not supported now")
 
-    def is_admg(self):
+    def is_valid_admg(self):
         """
         checking is admg
         - the graph does not contain any directed cycles
 
         Parameters
         ----------
+        None
 
         Returns
         -------
-        Graphs
+        bool
 
         See Also
         --------
@@ -171,4 +172,9 @@ class ADMG(_CoreGraph):
         # TODO(@daehyun99): [#2385] Implement method
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        raise NotImplementedError("`is_admg` is not supported now")
+        if self.has_directed_cycle():
+            return False
+
+        # TODO(@daehyun99): [#2385] Checking edge type(direct, bidirect)
+
+        return True
