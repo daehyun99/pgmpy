@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-from typing import Hashable, Iterable, Self, Set, Union
+from typing import Hashable, Iterable, Set, Union
 
 import networkx as nx
+
+from pgmpy.utils.types import Self
 
 
 class _GraphAlgorithmMixin:
