@@ -14,34 +14,46 @@ class _GraphAlgorithmMixin:
     # Public API (or Public Methods)
     # ----------------------------------------------------------------------
 
-    def is_collider(self, u: Hashable, v: Hashable, w: Hashable):
+    def is_collider(self, u: Hashable, v: Hashable, w: Hashable) -> bool:
         """
-
+        Check whether `w` is a collider between `u` and `v`.
 
         Parameters
         ----------
-        u, v, w : src, dst, mid
+        u : Hashable
+            The first endpoint node.
+        v : Hashable
+            The second endpoint node.
+        w : Hashable
+            The middle node to test as a collider.
 
         Returns
         -------
         bool
 
-        See Also
-        --------
-
-        Notes
-        -----
-
         Examples
         --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph()
+        >>> graph.add_edge("T", "M", "->")
+        >>> graph.add_edge("M", "O", "->")
+        >>> graph.add_edge("M", "I", "<-")
+        >>> graph.add_edge("M", "B", "<>")
+        >>> graph.add_edge("M", "U", "--")
+        >>> graph.is_collider("T", "O", "M")
+        False
+        >>> graph.is_collider("T", "I", "M")
+        True
+        >>> graph.is_collider("T", "B", "M")
+        True
+        >>> graph.is_collider("T", "U", "M")
+        False
 
         References
         ----------
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         if not {u, v, w}.issubset(self.nodes):
             raise ValueError(f"{u}, {v}, {w} must be present in the graph.")
 
