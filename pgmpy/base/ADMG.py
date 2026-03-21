@@ -94,15 +94,28 @@ class ADMG(_CoreGraph):
 
         Returns
         -------
-        set
+        components: set
             Nodes in the same bidirected-connected component.
 
         Examples
         --------
         >>> from pgmpy.base.ADMG import ADMG
-        >>> ...
+        >>> admg = ADMG()
+        >>> admg.add_edges_from(
+        ...     [
+        ...         ("A", "B", "->"),
+        ...         ("B", "C", "->"),
+        ...         ("D", "B", "->"),
+        ...         ("A", "D", "<>"),
+        ...         ("B", "E", "<>"),
+        ...     ]
+        ... )
+        >>> admg.get_district("A")
+        {'A', 'D'}
+        >>> admg.get_district("B")
+        {'B', 'E'}
+
         """
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
         components = set()
 
