@@ -416,13 +416,19 @@ class _GraphAlgorithmMixin:
         self, nodes: Union[str, Iterable[str]]
     ) -> Union[str, Iterable[str]]:
         """
-
+        Return the Markov blanket of the given node or nodes.
 
         Parameters
         ----------
+        nodes : str or iterable of str
+            A node name or an iterable of node names whose Markov blanket is to be
+            computed.
 
         Returns
         -------
+        markov_blanket: set
+            A set containing the nodes in the Markov blanket of the input node or
+            nodes.
 
         See Also
         --------
@@ -430,10 +436,25 @@ class _GraphAlgorithmMixin:
 
         Notes
         -----
-        Currently, this is only applicable to ADMGs and DAGs.
+        Currently, this method is only applicable to ADMGs and DAGs.
 
         Examples
         --------
+        >>> edges = [
+        ...     ("A", "B", "->"),
+        ...     ("B", "C", "->"),
+        ...     ("D", "E", "->"),
+        ...     ("A", "D", "<>"),
+        ...     ("B", "E", "<>"),
+        ... ]
+        >>> admg = ADMG()
+        >>> admg.add_edges_from(edges)
+        >>> admg.add_node("F", latent=True)
+        >>> admg.with_role(role="exposures", variables={"A"}, inplace=True)
+        >>> admg.with_role(role="outcomes", variables={"C"}, inplace=True)
+
+        >>> admg.get_markov_blanket("B")
+        {'A', 'C', 'E'}
 
         References
         ----------
@@ -443,7 +464,6 @@ class _GraphAlgorithmMixin:
         """
         # NOTE: For simplicity of definition, current support is limited to DAGs and ADMGs.
         #       This can be extended to MAGs and PAGs in the future.
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
         if not nodes_set.issubset(self.nodes):
