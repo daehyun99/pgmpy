@@ -518,9 +518,6 @@ class _GraphAlgorithmMixin:
         >>> mag.has_inducing_path("X", "Y", mag.latents)
         True
         """
-        # TODO(@daehyun99): [#2385] Implement code logic and test code
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-
         has_inducing = False
 
         ancestors = self.get_ancestors(u)
@@ -538,7 +535,7 @@ class _GraphAlgorithmMixin:
                     has_inducing = True
                     break
 
-                elif not self.is_collider(src, mid, dst) and min not in W:
+                elif not self.is_collider(src, mid, dst) and mid not in W:
                     has_inducing = True
                     break
 
@@ -600,7 +597,10 @@ class _GraphAlgorithmMixin:
 
         See Also
         --------
-        `DAG`, `ADMG`
+        `DAG`
+        `ADMG`
+        `PDAG`
+        `MAG`
 
         Notes
         -----
@@ -614,9 +614,16 @@ class _GraphAlgorithmMixin:
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # # TODO(@daehyun99): [#2385] Implement code logic and test code
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+        # # TODO(@daehyun99): [#2385] Implement code logic and test code When Refactor DAG
+        # networkx_ebunch = super().edges(keys=True, data=True)
+        # from pgmpy.base import DAG
+        # dag = DAG()
+        # for edge in networkx_ebunch:
+        # if edge[-1] == {edge[0]: "-", edge[1]: ">"}:
+        # dag.add_edge(edge[0], edge[1], "->")
+
         raise NotImplementedError("`has_directed_cycle` is not supported now")
 
     def has_almost_directed_cycle(self):
@@ -632,7 +639,7 @@ class _GraphAlgorithmMixin:
 
         See Also
         --------
-        `MAG`, `ADMG`
+        `MAG`
 
         Notes
         -----
@@ -646,7 +653,7 @@ class _GraphAlgorithmMixin:
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # # TODO(@daehyun99): [#2385] Implement code logic and test code
+        # # TODO(@daehyun99): [#2385] Implement code logic and test code When Refactor DAG
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`has_almost_directed_cycle` is not supported now")

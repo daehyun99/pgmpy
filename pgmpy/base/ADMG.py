@@ -94,15 +94,28 @@ class ADMG(_CoreGraph):
 
         Returns
         -------
-        set
+        components: set
             Nodes in the same bidirected-connected component.
 
         Examples
         --------
         >>> from pgmpy.base.ADMG import ADMG
-        >>> ...
+        >>> admg = ADMG()
+        >>> admg.add_edges_from(
+        ...     [
+        ...         ("A", "B", "->"),
+        ...         ("B", "C", "->"),
+        ...         ("D", "B", "->"),
+        ...         ("A", "D", "<>"),
+        ...         ("B", "E", "<>"),
+        ...     ]
+        ... )
+        >>> sorted(admg.get_district("A"))
+        ['A', 'D']
+        >>> sorted(admg.get_district("B"))
+        ['B', 'E']
+
         """
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
         components = set()
 
@@ -169,12 +182,11 @@ class ADMG(_CoreGraph):
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # TODO(@daehyun99): [#2385] Implement method
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        if self.has_directed_cycle():
-            return False
-
+        # # TODO(@daehyun99): [#2385] Implement code logic and test code When Refactor DAG
+        # if self.has_directed_cycle():
+        # return False
         # TODO(@daehyun99): [#2385] Checking edge type(direct, bidirect)
-
-        return True
+        # return True
+        raise NotImplementedError("`is_valid_admg` is not supported now")
