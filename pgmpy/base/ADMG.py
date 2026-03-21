@@ -1,4 +1,4 @@
-from typing import Hashable, Iterable, Optional
+from typing import Any, Hashable, Iterable, Optional
 
 from pgmpy.base._base import _CoreGraph
 
@@ -47,8 +47,14 @@ class ADMG(_CoreGraph):
             roles=roles,
         )
 
-    def add_edge(self, u, v, edge_type="->", key=None, **kwargs):
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+    def add_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        edge_type: str = "->",
+        key: Any = None,
+        **kwargs,
+    ) -> None:
         # NOTE: No additional comments are needed, as the comments in _CoreGraph are utilized.
 
         if edge_type == "->":
@@ -59,7 +65,14 @@ class ADMG(_CoreGraph):
                 raise ValueError("Cycles are not allowed in a ADMG.")
         super().add_edge(u, v, edge_type, key, **kwargs)
 
-    def add_edges_from(self, ebunch, **kwargs):
+    def add_edges_from(
+        self,
+        ebunch: Iterable[
+            tuple[Hashable, Hashable, Hashable]
+            | tuple[Hashable, Hashable, Hashable, Hashable]
+        ],
+        **kwargs,
+    ) -> None:
         # NOTE: No additional comments are needed, as the comments in _CoreGraph are utilized.
         self._validate_edges(ebunch=ebunch)
         for edge in ebunch:
@@ -70,7 +83,7 @@ class ADMG(_CoreGraph):
                 u, v, key, edge_type = edge
                 self.add_edge(u, v, edge_type=edge_type, key=key, **kwargs)
 
-    def get_district(self, nodes):
+    def get_district(self, nodes: Hashable) -> set:
         """
         Return district of a node: maximal set connected via bidirected edges.
 
@@ -127,3 +140,41 @@ class ADMG(_CoreGraph):
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`to_dag` is not supported now")
+
+    def is_valid_admg(self):
+        """
+        checking is admg
+        - the graph does not contain any directed cycles
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+
+        See Also
+        --------
+        `MAG`, `PAG`
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        References
+        ----------
+        [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
+        Journal of Machine Learning Research 9 (2008): 1437-1474.
+        """
+        # TODO(@daehyun99): [#2385] Implement method
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+        if self.has_directed_cycle():
+            return False
+
+        # TODO(@daehyun99): [#2385] Checking edge type(direct, bidirect)
+
+        return True

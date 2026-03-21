@@ -442,3 +442,8 @@ class TestADMGSeparation:
         """Test `to_dag` method."""
         # TODO(@daehyun99): [#2385] Implement `ADMG.to_dag` method.
         ...
+
+    def is_valid_admg(self):
+        """Test `is_valid_admg` method."""
+        # TODO(@daehyun99): [#2385] Implement `is_valid_admg` method.
+        ...

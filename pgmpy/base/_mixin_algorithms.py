@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-from typing import Hashable, Set
+from typing import Hashable, Iterable, Set, Union
 
 import networkx as nx
+
+from pgmpy.utils.types import Self
 
 
 class _GraphAlgorithmMixin:
@@ -12,34 +14,46 @@ class _GraphAlgorithmMixin:
     # Public API (or Public Methods)
     # ----------------------------------------------------------------------
 
-    def is_collider(self, u: Hashable, v: Hashable, w: Hashable):
+    def is_collider(self, u: Hashable, v: Hashable, w: Hashable) -> bool:
         """
-
+        Check whether `w` is a collider between `u` and `v`.
 
         Parameters
         ----------
-        u, v, w : src, dst, mid
+        u : Hashable
+            The first endpoint node.
+        v : Hashable
+            The second endpoint node.
+        w : Hashable
+            The middle node to test as a collider.
 
         Returns
         -------
         bool
 
-        See Also
-        --------
-
-        Notes
-        -----
-
         Examples
         --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph()
+        >>> graph.add_edge("T", "M", "->")
+        >>> graph.add_edge("M", "O", "->")
+        >>> graph.add_edge("M", "I", "<-")
+        >>> graph.add_edge("M", "B", "<>")
+        >>> graph.add_edge("M", "U", "--")
+        >>> graph.is_collider("T", "O", "M")
+        False
+        >>> graph.is_collider("T", "I", "M")
+        True
+        >>> graph.is_collider("T", "B", "M")
+        True
+        >>> graph.is_collider("T", "U", "M")
+        False
 
         References
         ----------
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         if not {u, v, w}.issubset(self.nodes):
             raise ValueError(f"{u}, {v}, {w} must be present in the graph.")
 
@@ -352,7 +366,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`get_minimal_m_separators` is not supported now")
 
-    def get_ancestral_graph(self, nodes):
+    def get_ancestral_graph(self, nodes: Union[str, Iterable[str]]) -> Self:
         """
         Return the ancestral graph induced by the input nodes.
 
@@ -363,15 +377,24 @@ class _GraphAlgorithmMixin:
 
         Returns
         -------
-        Graph
-            Subgraph induced by ancestors of the given nodes.
-
-        Raises
-        ------
+        ancestral_graph: Self
+            ancestral graph object
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> edges = [
+        ...     ("A", "B", "->"),
+        ...     ("B", "C", "->"),
+        ...     ("C", "D", "<>"),
+        ...     ("C", "E", "--"),
+        ... ]
+        >>> graph = _CoreGraph()
+        >>> graph.add_edges_from(edges)
+        >>> ancestral_graph = graph.get_ancestral_graph("C")
+        >>> ancestral_graph.get_edges(keys=True, data=True)
+        [("A", "B", 0, "->"), ("B", "C", 0, "->")]
 
         """
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
         ancestors = set(nodes_set)
@@ -379,26 +402,33 @@ class _GraphAlgorithmMixin:
             ancestor = self.get_ancestors(node)
             ancestors.update(ancestor)
 
-        new_graph = type(self)()
+        ancestral_graph = type(self)()
 
         for u, v, key, data in self.get_edges(keys=True, data=True):
             if (u in ancestors) and (v in ancestors):
-                new_graph.add_edge(u, v, edge_type=data, key=key)
+                ancestral_graph.add_edge(u, v, edge_type=data, key=key)
 
-        new_graph.add_nodes_from(ancestors)
+        ancestral_graph.add_nodes_from(ancestors)
 
-        return new_graph
+        return ancestral_graph
 
-    def get_markov_blanket(self, nodes):
+    def get_markov_blanket(
+        self, nodes: Union[str, Iterable[str]]
+    ) -> Union[str, Iterable[str]]:
         """
-
+        Return the Markov blanket of the given node or nodes.
 
         Parameters
         ----------
+        nodes : str or iterable of str
+            A node name or an iterable of node names whose Markov blanket is to be
+            computed.
 
         Returns
         -------
-        bool
+        markov_blanket: set
+            A set containing the nodes in the Markov blanket of the input node or
+            nodes.
 
         See Also
         --------
@@ -406,10 +436,25 @@ class _GraphAlgorithmMixin:
 
         Notes
         -----
-        Currently, this is only applicable to ADMGs and DAGs.
+        Currently, this method is only applicable to ADMGs and DAGs.
 
         Examples
         --------
+        >>> edges = [
+        ...     ("A", "B", "->"),
+        ...     ("B", "C", "->"),
+        ...     ("D", "E", "->"),
+        ...     ("A", "D", "<>"),
+        ...     ("B", "E", "<>"),
+        ... ]
+        >>> admg = ADMG()
+        >>> admg.add_edges_from(edges)
+        >>> admg.add_node("F", latent=True)
+        >>> admg.with_role(role="exposures", variables={"A"}, inplace=True)
+        >>> admg.with_role(role="outcomes", variables={"C"}, inplace=True)
+
+        >>> admg.get_markov_blanket("B")
+        {'A', 'C', 'E'}
 
         References
         ----------
@@ -419,8 +464,6 @@ class _GraphAlgorithmMixin:
         """
         # NOTE: For simplicity of definition, current support is limited to DAGs and ADMGs.
         #       This can be extended to MAGs and PAGs in the future.
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
         if not nodes_set.issubset(self.nodes):
@@ -436,7 +479,7 @@ class _GraphAlgorithmMixin:
 
         return markov_blanket
 
-    def has_inducing_path(self, u, v, W):
+    def has_inducing_path(self, u: Hashable, v: Hashable, W: set) -> bool:
         """
         Need to modify
 
@@ -477,7 +520,6 @@ class _GraphAlgorithmMixin:
         """
         # TODO(@daehyun99): [#2385] Implement code logic and test code
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
 
         has_inducing = False
 
@@ -506,11 +548,16 @@ class _GraphAlgorithmMixin:
 
         return has_inducing
 
-    def has_direct_path(self, u, v):
+    def has_direct_path(self, u: Hashable, v: Hashable) -> bool:
         """
+        Check whether there exists a fully directed path from `u` to `v`.
 
         Parameters
         ----------
+        u : Hashable
+            The source node.
+        v : Hashable
+            The destination node.
 
         Returns
         -------
@@ -520,18 +567,15 @@ class _GraphAlgorithmMixin:
         --------
         `nx.has_path`
 
-        Notes
-        -----
-
         Examples
         --------
-
-        References
-        ----------
+        >>> graph = _CoreGraph()
+        >>> graph.add_edge("A", "B", "->")
+        >>> graph.add_edge("B", "C", "->")
+        >>> graph.has_direct_path("A", "C")
+        True
 
         """
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         for path in nx.all_simple_edge_paths(self, u, v):
             is_directed_path = True
             for edge in path:
@@ -570,9 +614,6 @@ class _GraphAlgorithmMixin:
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # TODO(@daehyun99): [#2385] Consider implement `has_directed_cycle` method.
-        # Cycles can be easily identified using the has_direct_path method (refer to ADMG.add_edge()).
-        # We will reassess the necessity of developing this method at a later date.
         # # TODO(@daehyun99): [#2385] Implement code logic and test code
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
@@ -605,9 +646,6 @@ class _GraphAlgorithmMixin:
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # TODO(@daehyun99): [#2385] Consider implement `has_almost_directed_cycle` method.
-        # Cycles can be easily identified using the has_direct_path method (refer to ADMG.add_edge()).
-        # We will reassess the necessity of developing this method at a later date.
         # # TODO(@daehyun99): [#2385] Implement code logic and test code
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
