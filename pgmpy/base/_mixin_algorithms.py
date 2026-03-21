@@ -550,9 +550,14 @@ class _GraphAlgorithmMixin:
 
     def has_direct_path(self, u: Hashable, v: Hashable) -> bool:
         """
+        Check whether there exists a fully directed path from `u` to `v`.
 
         Parameters
         ----------
+        u : Hashable
+            The source node.
+        v : Hashable
+            The destination node.
 
         Returns
         -------
@@ -562,17 +567,15 @@ class _GraphAlgorithmMixin:
         --------
         `nx.has_path`
 
-        Notes
-        -----
-
         Examples
         --------
-
-        References
-        ----------
+        >>> graph = _CoreGraph()
+        >>> graph.add_edge("A", "B", "->")
+        >>> graph.add_edge("B", "C", "->")
+        >>> graph.has_direct_path("A", "C")
+        True
 
         """
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         for path in nx.all_simple_edge_paths(self, u, v):
             is_directed_path = True
             for edge in path:
