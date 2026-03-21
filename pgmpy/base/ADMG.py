@@ -110,10 +110,10 @@ class ADMG(_CoreGraph):
         ...         ("B", "E", "<>"),
         ...     ]
         ... )
-        >>> admg.get_district("A")
-        {'A', 'D'}
-        >>> admg.get_district("B")
-        {'B', 'E'}
+        >>> sorted(admg.get_district("A"))
+        ['A', 'D']
+        >>> sorted(admg.get_district("B"))
+        ['B', 'E']
 
         """
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
