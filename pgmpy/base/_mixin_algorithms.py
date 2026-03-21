@@ -365,14 +365,24 @@ class _GraphAlgorithmMixin:
 
         Returns
         -------
-        Graph
-            Subgraph induced by ancestors of the given nodes.
-
-        Raises
-        ------
+        ancestral_graph: Self
+            ancestral graph object
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> edges = [
+        ...     ("A", "B", "->"),
+        ...     ("B", "C", "->"),
+        ...     ("C", "D", "<>"),
+        ...     ("C", "E", "--"),
+        ... ]
+        >>> graph = _CoreGraph()
+        >>> graph.add_edges_from(edges)
+        >>> ancestral_graph = graph.get_ancestral_graph("C")
+        >>> ancestral_graph.get_edges(keys=True, data=True)
+        [("A", "B", 0, "->"), ("B", "C", 0, "->")]
 
         """
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
         ancestors = set(nodes_set)
@@ -380,15 +390,15 @@ class _GraphAlgorithmMixin:
             ancestor = self.get_ancestors(node)
             ancestors.update(ancestor)
 
-        new_graph = type(self)()
+        ancestral_graph = type(self)()
 
         for u, v, key, data in self.get_edges(keys=True, data=True):
             if (u in ancestors) and (v in ancestors):
-                new_graph.add_edge(u, v, edge_type=data, key=key)
+                ancestral_graph.add_edge(u, v, edge_type=data, key=key)
 
-        new_graph.add_nodes_from(ancestors)
+        ancestral_graph.add_nodes_from(ancestors)
 
-        return new_graph
+        return ancestral_graph
 
     def get_markov_blanket(
         self, nodes: Union[str, Iterable[str]]
