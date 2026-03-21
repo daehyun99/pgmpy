@@ -518,9 +518,6 @@ class _GraphAlgorithmMixin:
         >>> mag.has_inducing_path("X", "Y", mag.latents)
         True
         """
-        # TODO(@daehyun99): [#2385] Implement code logic and test code
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-
         has_inducing = False
 
         ancestors = self.get_ancestors(u)
@@ -538,7 +535,7 @@ class _GraphAlgorithmMixin:
                     has_inducing = True
                     break
 
-                elif not self.is_collider(src, mid, dst) and min not in W:
+                elif not self.is_collider(src, mid, dst) and mid not in W:
                     has_inducing = True
                     break
 
