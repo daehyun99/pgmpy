@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Hashable, Set
+from typing import Hashable, Iterable, Self, Set, Union
 
 import networkx as nx
 
@@ -352,7 +352,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`get_minimal_m_separators` is not supported now")
 
-    def get_ancestral_graph(self, nodes):
+    def get_ancestral_graph(self, nodes: Union[str, Iterable[str]]) -> Self:
         """
         Return the ancestral graph induced by the input nodes.
 
@@ -371,7 +371,6 @@ class _GraphAlgorithmMixin:
 
         """
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
         ancestors = set(nodes_set)
@@ -389,7 +388,9 @@ class _GraphAlgorithmMixin:
 
         return new_graph
 
-    def get_markov_blanket(self, nodes):
+    def get_markov_blanket(
+        self, nodes: Union[str, Iterable[str]]
+    ) -> Union[str, Iterable[str]]:
         """
 
 
@@ -398,7 +399,6 @@ class _GraphAlgorithmMixin:
 
         Returns
         -------
-        bool
 
         See Also
         --------
@@ -420,7 +420,6 @@ class _GraphAlgorithmMixin:
         # NOTE: For simplicity of definition, current support is limited to DAGs and ADMGs.
         #       This can be extended to MAGs and PAGs in the future.
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
         if not nodes_set.issubset(self.nodes):
@@ -436,7 +435,7 @@ class _GraphAlgorithmMixin:
 
         return markov_blanket
 
-    def has_inducing_path(self, u, v, W):
+    def has_inducing_path(self, u: Hashable, v: Hashable, W: set) -> bool:
         """
         Need to modify
 
@@ -477,7 +476,6 @@ class _GraphAlgorithmMixin:
         """
         # TODO(@daehyun99): [#2385] Implement code logic and test code
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
 
         has_inducing = False
 
@@ -506,7 +504,7 @@ class _GraphAlgorithmMixin:
 
         return has_inducing
 
-    def has_direct_path(self, u, v):
+    def has_direct_path(self, u: Hashable, v: Hashable) -> bool:
         """
 
         Parameters
@@ -531,7 +529,6 @@ class _GraphAlgorithmMixin:
 
         """
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         for path in nx.all_simple_edge_paths(self, u, v):
             is_directed_path = True
             for edge in path:

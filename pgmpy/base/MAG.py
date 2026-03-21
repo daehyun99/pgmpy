@@ -1,4 +1,4 @@
-from typing import Hashable, Iterable, Optional
+from typing import Any, Hashable, Iterable, Optional
 
 from pgmpy.base._base import _CoreGraph
 
@@ -93,8 +93,14 @@ class MAG(_CoreGraph):
             roles=roles,
         )
 
-    def add_edge(self, u, v, edge_type="->", key=None, **kwargs):
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+    def add_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        edge_type: str = "->",
+        key: Any = None,
+        **kwargs,
+    ) -> None:
         # NOTE: No additional comments are needed, as the comments in _CoreGraph are utilized.
 
         # TODO(@daehyun99): [#2385] Implement Checking MAG's rule.
@@ -125,7 +131,7 @@ class MAG(_CoreGraph):
         ----------
 
         """
-        # TODO: Implement method when #2385 done.
+        # TODO: Implement method when Refactor PAG
         # TODO: Fix Docs (Unify Docs Format)
         # TODO: Apply type hint(input, output)
         raise NotImplementedError("`to_pag` is not supported now")
