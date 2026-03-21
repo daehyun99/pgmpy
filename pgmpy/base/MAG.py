@@ -168,9 +168,11 @@ class MAG(_CoreGraph):
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
 
-        if self.has_directed_cycle() or self.has_almost_directed_cycle():
-            return False
+        # # TODO(@daehyun99): [#2385] Implement code logic and test code When Refactor DAG
+        # if self.has_directed_cycle() or self.has_almost_directed_cycle():
+        # return False
 
         # TODO(@daehyun99): [#2385] Checking inducing path between any two non-adjacent vertices
         #                   has_inducing_path
-        return True
+        # return True
+        raise NotImplementedError("`is_valid_mag` is not supported now")
