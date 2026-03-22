@@ -464,8 +464,8 @@ class _GraphAlgorithmMixin:
         #       This can be extended to MAGs and PAGs in the future.
         from pgmpy.base import ADMG, DAG
 
-        if type(self) not in (DAG, ADMG):
-            raise TypeError("current support is limited to DAGs and ADMGs.")
+        if not (isinstance(self, DAG) or isinstance(self, ADMG)):
+            raise TypeError("get_markov_blanket is currently only supported for ADMGs and DAGs.")
 
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
