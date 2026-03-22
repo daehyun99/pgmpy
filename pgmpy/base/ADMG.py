@@ -1,4 +1,4 @@
-from typing import Hashable, Iterable, Optional
+from collections.abc import Hashable, Iterable
 
 from pgmpy.base._base import _CoreGraph
 
@@ -34,9 +34,9 @@ class ADMG(_CoreGraph):
     def __init__(
         self,
         ebunch: Iterable[tuple[Hashable, Hashable, Hashable]] = None,
-        exposures: Optional[set[Hashable]] = None,
-        outcomes: Optional[set[Hashable]] = None,
-        latents: Optional[set[Hashable]] = None,
+        exposures: set[Hashable] | None = None,
+        outcomes: set[Hashable] | None = None,
+        latents: set[Hashable] | None = None,
         roles=None,
     ):
         super().__init__(
@@ -158,8 +158,7 @@ class ADMG(_CoreGraph):
     def _validate_graph_specific_edges(
         self,
         ebunch: (
-            Iterable[tuple[Hashable, Hashable, Hashable]]
-            | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
+            Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
         ),
     ):
         for edge in ebunch:

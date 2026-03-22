@@ -80,9 +80,9 @@ class MAG(_CoreGraph):
     def __init__(
         self,
         ebunch: Iterable[tuple[Hashable, Hashable, Hashable]] = None,
-        exposures: Optional[set[Hashable]] = None,
-        outcomes: Optional[set[Hashable]] = None,
-        latents: Optional[set[Hashable]] = None,
+        exposures: set[Hashable] | None = None,
+        outcomes: set[Hashable] | None = None,
+        latents: set[Hashable] | None = None,
         roles=None,
     ):
         super().__init__(
@@ -165,8 +165,7 @@ class MAG(_CoreGraph):
     def _validate_graph_specific_edges(
         self,
         ebunch: (
-            Iterable[tuple[Hashable, Hashable, Hashable]]
-            | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
+            Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
         ),
     ):
         # TODO(@daehyun99): [#2385] Implement Checking MAG's rule.
