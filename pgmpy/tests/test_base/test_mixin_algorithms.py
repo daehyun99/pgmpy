@@ -469,6 +469,21 @@ class TestGraphAlgorithmMixin:
 
         # TODO: Implement failing code for other graphs
 
+    def test_get_markov_blanket_fails(self):
+        """Test getting Markov blanket."""
+        graph = _CoreGraph()
+        with pytest.raises(TypeError):
+            graph.get_markov_blanket("B")
+
+        graph = MAG()
+        with pytest.raises(TypeError):
+            graph.get_markov_blanket("B")
+
+        # # TODO(@daehyun99): Activate test code when refactor PDAG
+        # graph = PDAG()
+        # with pytest.raises(TypeError):
+        #     graph.get_markov_blanket("B")
+
     def test_has_inducing_path(self, AncestralGraph, MaximalAncestralGraph):
         """"""
         graph = AncestralGraph

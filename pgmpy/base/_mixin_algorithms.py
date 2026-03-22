@@ -462,6 +462,11 @@ class _GraphAlgorithmMixin:
         """
         # NOTE: For simplicity of definition, current support is limited to DAGs and ADMGs.
         #       This can be extended to MAGs and PAGs in the future.
+        from pgmpy.base import ADMG, DAG
+
+        if type(self) not in (DAG, ADMG):
+            raise TypeError("current support is limited to DAGs and ADMGs.")
+
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
         if not nodes_set.issubset(self.nodes):
