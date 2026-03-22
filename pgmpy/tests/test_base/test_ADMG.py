@@ -443,6 +443,9 @@ class TestADMGSeparation:
         # TODO(@daehyun99): [#2385] Implement `ADMG.to_dag` method.
         ...
 
+    @pytest.mark.skip(
+        reason="Refactoring: Skip for now as development is scheduled DAG refactoring. (Related: #2384, #2385)"
+    )
     def is_valid_admg(self):
         """Test `is_valid_admg` method."""
         # TODO(@daehyun99): [#2385] Implement `is_valid_admg` method.
