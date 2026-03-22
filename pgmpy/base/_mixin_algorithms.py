@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Hashable, Iterable, Set, Union
+from collections.abc import Hashable, Iterable
 
 import networkx as nx
 
@@ -64,7 +64,7 @@ class _GraphAlgorithmMixin:
 
         return (u in incoming_to_w) and (v in incoming_to_w)
 
-    def is_m_separator(self, x: Set, y: Set, z: Set):
+    def is_m_separator(self, x: set, y: set, z: set):
         """
 
 
@@ -115,7 +115,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`is_m_separator` is not supported now")
 
-    def is_m_connected(self, x: Set, y: Set, z: Set):
+    def is_m_connected(self, x: set, y: set, z: set):
         """
 
 
@@ -146,7 +146,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         return not self.is_m_separator(x, y, z)
 
-    def is_minimal_m_separator(self, x: Set, y: Set, z: Set):
+    def is_minimal_m_separator(self, x: set, y: set, z: set):
         """
 
 
@@ -192,7 +192,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`is_minimal_m_separator` is not supported now")
 
-    def get_m_separator(self, x: Set, y: Set, i: Set, r: Set):
+    def get_m_separator(self, x: set, y: set, i: set, r: set):
         """
 
 
@@ -229,7 +229,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`get_m_separator` is not supported now")
 
-    def get_minimal_m_separator(self, x: Set, y: Set, i: Set, r: Set):
+    def get_minimal_m_separator(self, x: set, y: set, i: set, r: set):
         """
 
 
@@ -275,7 +275,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`get_minimal_m_separator` is not supported now")
 
-    def get_m_separators(self, x: Set, y: Set, i: Set, r: Set):
+    def get_m_separators(self, x: set, y: set, i: set, r: set):
         """
 
 
@@ -319,7 +319,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`get_m_separators` is not supported now")
 
-    def get_minimal_m_separators(self, x: Set, y: Set, i: Set, r: Set):
+    def get_minimal_m_separators(self, x: set, y: set, i: set, r: set):
         """
 
 
@@ -366,7 +366,7 @@ class _GraphAlgorithmMixin:
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`get_minimal_m_separators` is not supported now")
 
-    def get_ancestral_graph(self, nodes: Union[str, Iterable[str]]) -> Self:
+    def get_ancestral_graph(self, nodes: str | Iterable[str]) -> Self:
         """
         Return the ancestral graph induced by the input nodes.
 
@@ -412,9 +412,7 @@ class _GraphAlgorithmMixin:
 
         return ancestral_graph
 
-    def get_markov_blanket(
-        self, nodes: Union[str, Iterable[str]]
-    ) -> Union[str, Iterable[str]]:
+    def get_markov_blanket(self, nodes: str | Iterable[str]) -> str | Iterable[str]:
         """
         Return the Markov blanket of the given node or nodes.
 
@@ -471,9 +469,7 @@ class _GraphAlgorithmMixin:
 
         markov_blanket = set()
         for node in nodes_set:
-            markov_blanket.update(
-                self.get_parents(node), self.get_children(node), self.get_spouses(node)
-            )
+            markov_blanket.update(self.get_parents(node), self.get_children(node), self.get_spouses(node))
 
         markov_blanket -= nodes_set
 
@@ -527,7 +523,6 @@ class _GraphAlgorithmMixin:
         ancestors.update(self.get_ancestors(v))
 
         for path in nx.all_simple_paths(self, source=u, target=v):
-
             if len(path) <= 2:
                 continue
 

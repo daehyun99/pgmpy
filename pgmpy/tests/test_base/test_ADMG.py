@@ -407,9 +407,7 @@ class TestADMGSeparation:
     def setup_method(self):
         """Set up a test graph for separation tests."""
         self.admg = ADMG()
-        self.admg.add_edges_from(
-            [("A", "C", "->"), ("B", "C", "->"), ("C", "D", "->"), ("A", "B", "<>")]
-        )
+        self.admg.add_edges_from([("A", "C", "->"), ("B", "C", "->"), ("C", "D", "->"), ("A", "B", "<>")])
 
     @pytest.mark.skip(
         reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"

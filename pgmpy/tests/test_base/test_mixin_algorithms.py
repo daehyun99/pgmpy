@@ -109,9 +109,7 @@ class TestGraphAlgorithmMixin:
         with pytest.raises(ValueError):
             graph.is_collider("T", "O", "M")
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
-    )
+    @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     def test_is_m_separator(self):
         """
         References
@@ -172,9 +170,7 @@ class TestGraphAlgorithmMixin:
         assert graph.is_m_separator("T", "B", "M") == True
         assert graph.is_m_separator("T", "U", "M") == True
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
-    )
+    @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     def test_is_m_separator_with_latent(self):
         """
         References
@@ -239,9 +235,7 @@ class TestGraphAlgorithmMixin:
         assert graph.is_m_separator("T", "B", "M") == False
         assert graph.is_m_separator("T", "U", "M") == False
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
-    )
+    @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     def test_is_m_connected(self):
         """
         References
@@ -302,9 +296,7 @@ class TestGraphAlgorithmMixin:
         assert graph.is_m_connected("T", "B", "M") == False
         assert graph.is_m_connected("T", "U", "M") == False
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
-    )
+    @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     def test_is_minimal_m_separator(self):
         """
         References
@@ -316,9 +308,7 @@ class TestGraphAlgorithmMixin:
         # TODO(@daehyun99): [#2384] Implement code logic and test code
         ...
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
-    )
+    @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     def test_get_m_separator(self):
         """
         References
@@ -330,9 +320,7 @@ class TestGraphAlgorithmMixin:
         # TODO(@daehyun99): [#2384] Implement code logic and test code
         ...
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
-    )
+    @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     def test_get_m_separator_with_latent(self):
         """
         References
@@ -344,9 +332,7 @@ class TestGraphAlgorithmMixin:
         # TODO(@daehyun99): [#2384] Implement code logic and test code
         ...
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
-    )
+    @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     def test_get_minimal_m_separator(self):
         """
         References
@@ -358,9 +344,7 @@ class TestGraphAlgorithmMixin:
         # TODO(@daehyun99): [#2384] Implement code logic and test code
         ...
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
-    )
+    @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     def test_get_m_separators(self):
         """
         References
@@ -372,9 +356,7 @@ class TestGraphAlgorithmMixin:
         # TODO(@daehyun99): [#2384] Implement code logic and test code
         ...
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
-    )
+    @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     def test_get_m_separators_with_latent(self):
         """
         References
@@ -386,9 +368,7 @@ class TestGraphAlgorithmMixin:
         # TODO(@daehyun99): [#2384] Implement code logic and test code
         ...
 
-    @pytest.mark.skip(
-        reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class."
-    )
+    @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     def test_get_minimal_m_separators(self):
         """
         References
@@ -431,10 +411,8 @@ class TestGraphAlgorithmMixin:
         new_graph1 = graph1.get_ancestral_graph("C")
 
         assert isinstance(new_graph1, _CoreGraph)
-        assert set(new_graph1.nodes()) == set(["A", "B", "C"])
-        assert set(new_graph1.get_edges(keys=True, data=True)) == set(
-            [("A", "B", 0, "->"), ("B", "C", 0, "->")]
-        )
+        assert set(new_graph1.nodes()) == set("A", "B", "C")
+        assert set(new_graph1.get_edges(keys=True, data=True)) == set(("A", "B", 0, "->"), ("B", "C", 0, "->"))
 
         # ADMG
         graph2 = ADMG()
@@ -444,10 +422,8 @@ class TestGraphAlgorithmMixin:
         new_graph2 = graph2.get_ancestral_graph("C")
 
         assert isinstance(new_graph2, ADMG)
-        assert set(new_graph2.nodes()) == set(["A", "B", "C"])
-        assert set(new_graph2.get_edges(keys=True, data=True)) == set(
-            [("A", "B", 0, "->"), ("B", "C", 0, "->")]
-        )
+        assert set(new_graph2.nodes()) == set("A", "B", "C")
+        assert set(new_graph2.get_edges(keys=True, data=True)) == set(("A", "B", 0, "->"), ("B", "C", 0, "->"))
 
         # MAG
         graph3 = MAG()
@@ -457,10 +433,8 @@ class TestGraphAlgorithmMixin:
         new_graph3 = graph3.get_ancestral_graph("C")
 
         assert isinstance(new_graph3, MAG)
-        assert set(new_graph3.nodes()) == set(["A", "B", "C"])
-        assert set(new_graph3.get_edges(keys=True, data=True)) == set(
-            [("A", "B", 0, "->"), ("B", "C", 0, "->")]
-        )
+        assert set(new_graph3.nodes()) == set("A", "B", "C")
+        assert set(new_graph3.get_edges(keys=True, data=True)) == set(("A", "B", 0, "->"), ("B", "C", 0, "->"))
 
         # TODO(@daehyun99): [#2384] Expand DAG
         ...
