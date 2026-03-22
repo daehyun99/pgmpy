@@ -1,4 +1,4 @@
-from typing import Any, Hashable, Iterable, Optional
+from typing import Hashable, Iterable, Optional
 
 from pgmpy.base._base import _CoreGraph
 
@@ -93,40 +93,6 @@ class MAG(_CoreGraph):
             roles=roles,
         )
 
-    def add_edge(
-        self,
-        u: Hashable,
-        v: Hashable,
-        edge_type: str = "->",
-        key: Any = None,
-        **kwargs,
-    ) -> None:
-        # NOTE: No additional comments are needed, as the comments in _CoreGraph are utilized.
-
-        # TODO(@daehyun99): [#2385] Implement Checking MAG's rule.
-        # self.is_mag()
-        super().add_edge(u, v, edge_type, key, **kwargs)
-
-    def add_edges_from(
-        self,
-        ebunch: Iterable[
-            tuple[Hashable, Hashable, Hashable]
-            | tuple[Hashable, Hashable, Hashable, Hashable]
-        ],
-        **kwargs,
-    ) -> None:
-        # NOTE: No additional comments are needed, as the comments in _CoreGraph are utilized.
-        self._validate_edges(ebunch=ebunch)
-        # TODO: Ensure consistency by failing if any edge violates the ADMG condition.
-        #       Reference pgmpy.base._base._CoreGraph._validate_edges
-        for edge in ebunch:
-            if len(edge) == 3:
-                u, v, edge_type = edge
-                self.add_edge(u, v, edge_type=edge_type, **kwargs)
-            elif len(edge) == 4:
-                u, v, key, edge_type = edge
-                self.add_edge(u, v, edge_type=edge_type, key=key, **kwargs)
-
     def to_pag(self):
         """
 
@@ -195,3 +161,14 @@ class MAG(_CoreGraph):
         #                   has_inducing_path
         # return True
         raise NotImplementedError("`is_valid_mag` is not supported now")
+
+    def _validate_graph_specific_edges(
+        self,
+        ebunch: (
+            Iterable[tuple[Hashable, Hashable, Hashable]]
+            | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
+        ),
+    ):
+        # TODO(@daehyun99): [#2385] Implement Checking MAG's rule.
+        # self.is_mag()
+        pass

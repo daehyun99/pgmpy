@@ -216,8 +216,9 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         """
         if isinstance(edge_type, str):
             self._validate_edges(ebunch=[(u, v, edge_type)])
+            self._validate_graph_specific_edges(ebunch=[(u, v, edge_type)])
             _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
-        else:
+        elif isinstance(edge_type, dict):
             _markers_dict = edge_type
 
         _key = super().add_edge(u, v, key=key, **kwargs)
@@ -267,6 +268,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         """
         self._validate_edges(ebunch=ebunch)
+        self._validate_graph_specific_edges(ebunch=ebunch)
         for edge in ebunch:
             if len(edge) == 3:
                 u, v, edge_type = edge
@@ -923,6 +925,30 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
             if edge_type is None or edge_type not in supported_types:
                 raise ValueError(f"Types must be one of {supported_types}.")
+
+    def _validate_graph_specific_edges(
+        self,
+        ebunch: (
+            Iterable[tuple[Hashable, Hashable, Hashable]]
+            | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
+        ),
+    ):
+        """
+        Validates graph-specific constraints on the given edges.
+
+        Parameters
+        ----------
+        ebunch : list of tuples
+            [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...]
+
+        Notes
+        -----
+        Helper method that validates constraints specific to a graph subclass,
+        beyond the common checks performed in `_validate_edges()`.
+
+        Intended to be implemented by subclasses.
+        """
+        pass
 
     def _from_api_edge_type(
         self,
