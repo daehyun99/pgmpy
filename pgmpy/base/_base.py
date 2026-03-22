@@ -219,6 +219,8 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
             _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
         elif isinstance(edge_type, dict):
             _markers_dict = edge_type
+        else:
+            raise ValueError("edge_type must be a string.")
 
         _key = super().add_edge(u, v, key=key, **kwargs)
         self.edges[u, v, _key].update({u: _markers_dict[u], v: _markers_dict[v]})

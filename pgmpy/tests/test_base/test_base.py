@@ -338,6 +338,12 @@ class TestCoreGraph:
         with pytest.raises(ValueError):
             graph.add_edge("A", "B", "Invalid_value")
 
+        with pytest.raises(ValueError):
+            graph.add_edge("A", "B", 1)
+
+        with pytest.raises(ValueError):
+            graph.add_edge("A", "B", set())
+
         assert not graph.has_edge("A", "B")
 
         assert sorted(graph.edges(keys=True, data=True)) == []
