@@ -52,9 +52,9 @@ class TestADMGInitialization:
         roles = {"exposures": ("A", "B"), "outcomes": ["C"]}
         admg = ADMG(ebunch=directed_edges, roles=roles)
 
-        assert set(admg.get_role("exposures")) == set(["A", "B"])
+        assert set(admg.get_role("exposures")) == {"A", "B"}
         assert admg.get_role("outcomes") == ["C"]
-        assert set(admg.get_roles()) == set(["exposures", "outcomes"])
+        assert set(admg.get_roles()) == {"exposures", "outcomes"}
         assert admg.get_role_dict() == {"exposures": ["A", "B"], "outcomes": ["C"]}
 
     def test_latents_with_role(self):
@@ -96,9 +96,7 @@ class TestADMGInitialization:
         )
 
         admg.without_role(role="latents", variables="A", inplace=True)
-        admg.without_role(
-            role="latents", variables=["B", "C", "D", "E", "F"], inplace=True
-        )
+        admg.without_role(role="latents", variables=["B", "C", "D", "E", "F"], inplace=True)
 
         assert admg.latents == set()
         assert set(admg.get_role("latents")) == set()
@@ -119,7 +117,7 @@ class TestADMGNodeOperations:
         """Test adding multiple nodes at once."""
         admg = ADMG()
         admg.add_nodes_from(["A", "B"])
-        admg.add_nodes_from(set(["C", "D"]))
+        admg.add_nodes_from({"C", "D"})
 
         assert set(admg.nodes()) == {"A", "B", "C", "D"}
 

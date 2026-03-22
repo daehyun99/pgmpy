@@ -1,4 +1,4 @@
-from typing import Hashable, Iterable, Optional
+from collections.abc import Hashable, Iterable
 
 from pgmpy.base._base import _CoreGraph
 
@@ -66,9 +66,9 @@ class MAG(_CoreGraph):
     Vertices of a specific role can be retrieved using ``get_role`` method.
 
     >>> mag.get_role("exposures")
-    ["A"]
+    ['A']
     >>> mag.get_role("adjustment")
-    ["L", "C"]
+    ['L', 'C']
 
     References
     ----------
