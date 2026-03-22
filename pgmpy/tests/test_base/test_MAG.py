@@ -133,13 +133,69 @@ class TestMAG:
         assert set(model_from_str.nodes()) == expected_nodes
         assert model_from_str.get_role_dict() == expected_roles
 
+    @pytest.mark.skip(
+        reason="Refactoring: Skip now. I implement this When Refactoring DAG(Related: #2384, #2385)"
+    )
     def test_is_valid_mag(self):
         """Test code for `is_valid_mag` method"""
         # TODO(@daehyun99): [#2384] Implement code logic and test code
         ...
 
-    def test_add_edge(self):
-        """Test code for `add_edge` method"""
-        # TODO(@daehyun99): [#2384] Implement code logic and test code
-        # need check logic of MAG rule exception.
-        ...
+    def test_add_directed_edge(self):
+        """Test adding directed edges."""
+        mag = MAG()
+        mag.add_edge("A", "B", "->")
+        mag.add_edge("B", "C", "->")
+
+        assert mag.has_edge("A", "B")
+        assert set(mag.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "->")}
+
+    def test_add_undirected_edge(self):
+        """Test adding undirected edges."""
+        mag = MAG()
+        mag.add_edge("A", "B", "--")
+        mag.add_edge("B", "C", "--")
+
+        assert mag.has_edge("A", "B")
+        assert set(mag.get_edges(data=True)) == {("A", "B", "--"), ("B", "C", "--")}
+
+    def test_add_bidirected_edge(self):
+        """Test adding bidirected edges."""
+        mag = MAG()
+        mag.add_edge("X", "Y", "<>")
+
+        assert mag.has_edge("X", "Y")
+        assert set(mag.get_edges(data=True)) == {("X", "Y", "<>")}
+
+    def test_add_directed_edges(self):
+        """Test adding multiple directed edges at once."""
+        mag = MAG()
+        edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "->")]
+        mag.add_edges_from(edges)
+
+        for u, v, _ in edges:
+            assert mag.has_edge(u, v)
+
+        assert set(mag.get_edges(data=True)) == set(edges)
+
+    def test_add_undirected_edges(self):
+        """Test adding multiple undirected edges at once."""
+        mag = MAG()
+        edges = [("A", "B", "--"), ("B", "C", "--"), ("C", "D", "--")]
+        mag.add_edges_from(edges)
+
+        for u, v, _ in edges:
+            assert mag.has_edge(u, v)
+
+        assert set(mag.get_edges(data=True)) == set(edges)
+
+    def test_add_bidirected_edges(self):
+        """Test adding multiple bidirected edges at once."""
+        mag = MAG()
+        edges = [("X", "Y", "<>"), ("Y", "Z", "<>")]
+        mag.add_edges_from(edges)
+
+        for u, v, _ in edges:
+            assert mag.has_edge(u, v)
+
+        assert set(mag.get_edges(data=True)) == set(edges)

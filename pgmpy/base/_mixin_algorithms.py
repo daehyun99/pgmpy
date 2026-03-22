@@ -479,10 +479,8 @@ class _GraphAlgorithmMixin:
 
         return markov_blanket
 
-    def has_inducing_path(self, u: Hashable, v: Hashable, W: set) -> bool:
+    def has_inducing_path(self, u: Hashable, v: Hashable, w: set) -> bool:
         """
-        Need to modify
-
         Check if there exists an inducing path between two nodes relative to W.
 
         An inducing path between u and v is a path such that:
@@ -500,7 +498,7 @@ class _GraphAlgorithmMixin:
         v : Hashable
             Target node.
 
-        W : set
+        w : set
             Subset of nodes to check inducing paths through (often latents).
 
         Returns
@@ -510,13 +508,18 @@ class _GraphAlgorithmMixin:
 
         Examples
         --------
-        >>> from pgmpy.base import MAG
-        >>> mag = MAG()
-        >>> mag.add_edge("X", "L", "-", ">")
-        >>> mag.add_edge("Y", "L", "-", ">")
-        >>> mag.latents = {"L"}
-        >>> mag.has_inducing_path("X", "Y", mag.latents)
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> edges = [
+        ...     ("A", "B", "<>"),
+        ...     ("A", "C", "<>"),
+        ...     ("B", "D", "<>"),
+        ...     ("A", "D", "->"),
+        ...     ("B", "C", "->"),
+        ... ]
+        >>> graph = _CoreGraph(ebunch=edges)
+        >>> graph.has_inducing_path("C", "D", set())
         True
+
         """
         has_inducing = False
 
@@ -531,11 +534,11 @@ class _GraphAlgorithmMixin:
             for i in range(len(path) - 3):
                 src, mid, dst = path[i : i + 3]
 
-                if self.is_collider(src, mid, dst) and mid in W:
+                if self.is_collider(src, mid, dst) and mid in w:
                     has_inducing = True
                     break
 
-                elif not self.is_collider(src, mid, dst) and mid not in W:
+                elif not self.is_collider(src, mid, dst) and mid not in w:
                     has_inducing = True
                     break
 
@@ -553,6 +556,7 @@ class _GraphAlgorithmMixin:
         ----------
         u : Hashable
             The source node.
+
         v : Hashable
             The destination node.
 

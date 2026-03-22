@@ -1,4 +1,4 @@
-from typing import Any, Hashable, Iterable, Optional
+from typing import Hashable, Iterable, Optional
 
 from pgmpy.base._base import _CoreGraph
 
@@ -93,20 +93,6 @@ class MAG(_CoreGraph):
             roles=roles,
         )
 
-    def add_edge(
-        self,
-        u: Hashable,
-        v: Hashable,
-        edge_type: str = "->",
-        key: Any = None,
-        **kwargs,
-    ) -> None:
-        # NOTE: No additional comments are needed, as the comments in _CoreGraph are utilized.
-
-        # TODO(@daehyun99): [#2385] Implement Checking MAG's rule.
-        # self.is_mag()
-        super().add_edge(u, v, edge_type, key, **kwargs)
-
     def to_pag(self):
         """
 
@@ -164,7 +150,6 @@ class MAG(_CoreGraph):
         [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
         Journal of Machine Learning Research 9 (2008): 1437-1474.
         """
-        # TODO(@daehyun99): [#2385] Implement method
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
 
@@ -176,3 +161,14 @@ class MAG(_CoreGraph):
         #                   has_inducing_path
         # return True
         raise NotImplementedError("`is_valid_mag` is not supported now")
+
+    def _validate_graph_specific_edges(
+        self,
+        ebunch: (
+            Iterable[tuple[Hashable, Hashable, Hashable]]
+            | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
+        ),
+    ):
+        # TODO(@daehyun99): [#2385] Implement Checking MAG's rule.
+        # self.is_mag()
+        pass
