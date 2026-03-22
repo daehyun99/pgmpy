@@ -144,8 +144,8 @@ class TestMAG:
     def test_add_directed_edge(self):
         """Test adding directed edges."""
         mag = MAG()
-        egdes = [("A", "B", "->"), ("B", "C", "->")]
-        mag.add_edges_from(egdes)
+        mag.add_edge("A", "B", "->")
+        mag.add_edge("B", "C", "->")
 
         assert mag.has_edge("A", "B")
         assert set(mag.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "->")}
@@ -153,8 +153,8 @@ class TestMAG:
     def test_add_undirected_edge(self):
         """Test adding undirected edges."""
         mag = MAG()
-        egdes = [("A", "B", "--"), ("B", "C", "--")]
-        mag.add_edges_from(egdes)
+        mag.add_edge("A", "B", "--")
+        mag.add_edge("B", "C", "--")
 
         assert mag.has_edge("A", "B")
         assert set(mag.get_edges(data=True)) == {("A", "B", "--"), ("B", "C", "--")}
