@@ -75,6 +75,8 @@ class ADMG(_CoreGraph):
     ) -> None:
         # NOTE: No additional comments are needed, as the comments in _CoreGraph are utilized.
         self._validate_edges(ebunch=ebunch)
+        # TODO: Ensure consistency by failing if any edge violates the ADMG condition.
+        #       Reference pgmpy.base._base._CoreGraph._validate_edges
         for edge in ebunch:
             if len(edge) == 3:
                 u, v, edge_type = edge
