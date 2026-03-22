@@ -411,8 +411,8 @@ class TestGraphAlgorithmMixin:
         new_graph1 = graph1.get_ancestral_graph("C")
 
         assert isinstance(new_graph1, _CoreGraph)
-        assert set(new_graph1.nodes()) == set("A", "B", "C")
-        assert set(new_graph1.get_edges(keys=True, data=True)) == set(("A", "B", 0, "->"), ("B", "C", 0, "->"))
+        assert set(new_graph1.nodes()) == {"A", "B", "C"}
+        assert set(new_graph1.get_edges(keys=True, data=True)) == {("A", "B", 0, "->"), ("B", "C", 0, "->")}
 
         # ADMG
         graph2 = ADMG()
@@ -422,8 +422,8 @@ class TestGraphAlgorithmMixin:
         new_graph2 = graph2.get_ancestral_graph("C")
 
         assert isinstance(new_graph2, ADMG)
-        assert set(new_graph2.nodes()) == set("A", "B", "C")
-        assert set(new_graph2.get_edges(keys=True, data=True)) == set(("A", "B", 0, "->"), ("B", "C", 0, "->"))
+        assert set(new_graph2.nodes()) == {"A", "B", "C"}
+        assert set(new_graph2.get_edges(keys=True, data=True)) == {("A", "B", 0, "->"), ("B", "C", 0, "->")}
 
         # MAG
         graph3 = MAG()
@@ -433,8 +433,8 @@ class TestGraphAlgorithmMixin:
         new_graph3 = graph3.get_ancestral_graph("C")
 
         assert isinstance(new_graph3, MAG)
-        assert set(new_graph3.nodes()) == set("A", "B", "C")
-        assert set(new_graph3.get_edges(keys=True, data=True)) == set(("A", "B", 0, "->"), ("B", "C", 0, "->"))
+        assert set(new_graph3.nodes()) == {"A", "B", "C"}
+        assert set(new_graph3.get_edges(keys=True, data=True)) == {("A", "B", 0, "->"), ("B", "C", 0, "->")}
 
         # TODO(@daehyun99): [#2384] Expand DAG
         ...
