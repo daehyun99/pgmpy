@@ -44,7 +44,7 @@ class MAG(_CoreGraph):
     Examples
     --------
     >>> from pgmpy.base import MAG
-    >>> mag = MAG(ebunch=[("L", "A", "-", ">"), ("B", "C", "-", ">")], latents={"L"})
+    >>> mag = MAG(ebunch=[("L", "A", "->"), ("B", "C", "->")], latents={"L"})
     >>> sorted(mag.nodes())
     ['A', 'B', 'C', 'L']
 
@@ -53,7 +53,7 @@ class MAG(_CoreGraph):
     At construction:
 
     >>> mag = MAG(
-    ...     ebunch=[("L", "A", "-", ">"), ("B", "C", "-", ">")],
+    ...     ebunch=[("L", "A", "->"), ("B", "C", "->")],
     ...     latents={"L"},
     ...     exposures={"A"},
     ...     outcomes={"B"},
