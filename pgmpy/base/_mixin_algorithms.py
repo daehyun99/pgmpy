@@ -407,15 +407,7 @@ class _GraphAlgorithmMixin:
             ancestor = self.get_ancestors(node)
             ancestors.update(ancestor)
 
-        ancestral_graph = type(self)()
-
-        for u, v, key, data in self.get_edges(keys=True, data=True):
-            if (u in ancestors) and (v in ancestors):
-                ancestral_graph.add_edge(u, v, edge_type=data, key=key)
-
-        ancestral_graph.add_nodes_from(ancestors)
-
-        return ancestral_graph
+        return self.subgraph(ancestors).copy()
 
     def get_markov_blanket(self, nodes: str | Iterable[str]) -> str | Iterable[str]:
         """
