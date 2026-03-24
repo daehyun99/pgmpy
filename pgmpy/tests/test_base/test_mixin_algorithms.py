@@ -109,6 +109,39 @@ class TestGraphAlgorithmMixin:
         with pytest.raises(ValueError):
             graph.is_collider("T", "O", "M")
 
+    def test_is_collider_neighbors(self):
+        graph = _CoreGraph()
+        graph.add_edge("T", "M", "->")
+
+        graph.add_edge("M", "O", "->")
+        graph.add_edge("M", "I", "<-")
+        graph.add_edge("M", "B", "<>")
+        graph.add_edge("M", "U", "--")
+
+        graph.add_edge("T", "I", "->")
+        graph.add_edge("T", "B", "<>")
+
+        assert graph.is_collider("T", "O", "M") == False
+        assert graph.is_collider("T", "I", "M") == False
+        assert graph.is_collider("T", "B", "M") == False
+        assert graph.is_collider("T", "U", "M") == False
+
+        graph = _CoreGraph()
+        graph.add_edge("T", "M", "<>")
+
+        graph.add_edge("M", "O", "->")
+        graph.add_edge("M", "I", "<-")
+        graph.add_edge("M", "B", "<>")
+        graph.add_edge("M", "U", "--")
+
+        graph.add_edge("T", "I", "--")
+        graph.add_edge("T", "B", "<-")
+
+        assert graph.is_collider("T", "O", "M") == False
+        assert graph.is_collider("T", "I", "M") == False
+        assert graph.is_collider("T", "B", "M") == False
+        assert graph.is_collider("T", "U", "M") == False
+
     @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     def test_is_m_separator(self):
         """

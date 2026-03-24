@@ -344,6 +344,9 @@ class TestCoreGraph:
         with pytest.raises(ValueError):
             graph.add_edge("A", "B", set())
 
+        with pytest.raises(ValueError):
+            graph.add_edge("A", "B", dict())
+
         assert not graph.has_edge("A", "B")
 
         assert sorted(graph.edges(keys=True, data=True)) == []
@@ -1970,6 +1973,25 @@ class TestCoreGraph:
             ]
         )
 
+    def test_get_supported_edge_types(self):
+        graph = _CoreGraph()
+        assert {"--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"} == graph.get_supported_edge_types()
+
     def test_get_edge_type(self):
         graph = _CoreGraph()
-        assert {"--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"} == graph.get_edge_type()
+
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("A", "B", "--")
+        graph.add_edge("A", "B", "<>")
+        graph.add_edge("A", "B", "-o")
+        graph.add_edge("A", "B", "<-")
+        graph.add_edge("A", "B", "oo")
+        graph.add_edge("A", "B", "o-")
+
+        assert graph.get_edge_type("A", "B", 0) == "->"
+        assert graph.get_edge_type("A", "B", 1) == "--"
+        assert graph.get_edge_type("A", "B", 2) == "<>"
+        assert graph.get_edge_type("A", "B", 3) == "-o"
+        assert graph.get_edge_type("A", "B", 4) == "<-"
+        assert graph.get_edge_type("A", "B", 5) == "oo"
+        assert graph.get_edge_type("A", "B", 6) == "o-"

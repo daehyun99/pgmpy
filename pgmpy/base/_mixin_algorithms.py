@@ -57,8 +57,12 @@ class _GraphAlgorithmMixin:
         if not {u, v, w}.issubset(self.nodes):
             raise ValueError(f"{u}, {v}, {w} must be present in the graph.")
 
-        parents = self.get_parents(w)
-        spouses = self.get_spouses(w)
+        neighbors = self.neighbors(u)
+        if v in neighbors:
+            return False
+
+        parents = self.get_neighbors(w, edge_type="<-")
+        spouses = self.get_neighbors(w, edge_type="<>")
 
         incoming_to_w = parents.union(spouses)
 
@@ -379,6 +383,7 @@ class _GraphAlgorithmMixin:
         -------
         ancestral_graph: Self
             ancestral graph object
+
         Examples
         --------
         >>> from pgmpy.base._base import _CoreGraph
@@ -581,7 +586,8 @@ class _GraphAlgorithmMixin:
             is_directed_path = True
             for edge in path:
                 src, dst, key = edge
-                if self[src][dst][key] != {src: "-", dst: ">"}:
+                edge_type = self.get_edge_type(src, dst, key)
+                if edge_type != "->":
                     is_directed_path = False
                     break
             if is_directed_path:
