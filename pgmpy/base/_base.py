@@ -109,7 +109,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
     >>> G.latents
     {'D'}
 
-    In addition to 'exposure', 'outcomes', and 'latents', you can add  custom roles.
+    In addition to 'exposure', 'outcomes', and 'latents', you can add custom roles.
 
     >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("D", "C", "-o")]
     >>> G = _CoreGraph(ebunch=edges)
@@ -213,14 +213,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         [('A', 'B', 0, '->')]
 
         """
-        if isinstance(edge_type, str):
-            self._validate_edges(ebunch=[(u, v, edge_type)])
-            self._validate_graph_specific_edges(ebunch=[(u, v, edge_type)])
-            _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
-        elif isinstance(edge_type, dict):
-            _markers_dict = edge_type
-        else:
-            raise ValueError("edge_type must be a string.")
+        self._validate_edges(ebunch=[(u, v, edge_type)])
+        self._validate_graph_specific_edges(ebunch=[(u, v, edge_type)])
+
+        _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
 
         _key = super().add_edge(u, v, key=key, **kwargs)
         self.edges[u, v, _key].update({u: _markers_dict[u], v: _markers_dict[v]})
@@ -406,11 +402,12 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         <class 'pgmpy.base._base._CoreGraph'>
 
         """
-        ebunch = [(u, v, key, edge_type) for u, v, key, edge_type in self.edges(keys=True, data=True)]
+        ebunch = [(u, v, key, markers) for u, v, key, markers in self.edges(keys=True, data=True)]
 
         graph_copy = self.__class__()
         graph_copy.add_nodes_from(self.nodes(data=True))
-        for u, v, key, edge_type in ebunch:
+        for u, v, key, markers in ebunch:
+            edge_type = self._to_api_edge_type(u, v, markers=markers)
             graph_copy.add_edge(u, v, edge_type=edge_type, key=key)
         for role, vars in self.get_role_dict().items():
             graph_copy.with_role(role=role, variables=vars, inplace=True)
@@ -814,7 +811,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         # (u, v, edge_type) or (u, v, key, edge_type)
         return [(*edge[:-1], self._to_api_edge_type(edge[0], edge[1], edge[-1])) for edge in networkx_ebunch]
 
-    def get_edge_type(self) -> set:
+    def get_supported_edge_types(self) -> set:
         """
         Retrieves the list of supported edge types for the instance.
 
@@ -824,6 +821,44 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         """
         return self.SUPPORTED_EDGE_TYPES
+
+    def get_edge_type(self, u: Hashable, v: Hashable, key: Any = None) -> str:
+        """
+        Retrieves the edge type for the edge between two nodes.
+
+        Parameters
+        ----------
+        u : Hashable
+            The source node of the edge.
+        v : Hashable
+            The target node of the edge.
+        key : Any, optional
+            The key identifying a specific edge between ``u`` and ``v`` in a
+            multigraph. Default is ``None``.
+
+        Returns
+        -------
+        edge_type : str
+            The edge type corresponding to the edge between ``u`` and ``v``.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph()
+        >>> graph.add_edge("A", "B", "->")
+        >>> graph.add_edge("A", "B", "--")
+        >>> graph.add_edge("A", "B", "<>")
+        >>> graph.get_edge_type("A", "B", 0)
+        '->'
+        >>> graph.get_edge_type("A", "B", 1)
+        '--'
+        >>> graph.get_edge_type("A", "B", 2)
+        '<>'
+
+        """
+        markers = self[u][v][key]
+        edge_type = self._to_api_edge_type(u, v, markers)
+        return edge_type
 
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
@@ -863,9 +898,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
     def _validate_edges(
         self,
-        ebunch: (
-            Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
-        ),
+        ebunch,
     ):
         """
         Validates the value input by the user, then either raises an error.
@@ -899,15 +932,14 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
                 raise ValueError("Nodes cannot be None.")
             if u == v:
                 raise ValueError("Nodes cannot be the same for an edge.")
-
+            if not isinstance(edge_type, str):
+                raise ValueError("edge_type must be a string.")
             if edge_type is None or edge_type not in supported_types:
                 raise ValueError(f"Types must be one of {supported_types}.")
 
     def _validate_graph_specific_edges(
         self,
-        ebunch: (
-            Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
-        ),
+        ebunch,
     ):
         """
         Validates graph-specific constraints on the given edges.
