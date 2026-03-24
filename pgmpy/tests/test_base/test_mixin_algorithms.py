@@ -478,6 +478,23 @@ class TestGraphAlgorithmMixin:
         # TODO(@daehyun99): [#2384] Expand UndirectedGraph
         ...
 
+        # _CoreGraph with rols
+        graph = _CoreGraph()
+        edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "<>"), ("C", "E", "--")]
+        graph.add_edges_from(edges)
+        graph.exposures = "A"
+        graph.outcomes = {"C", "D"}
+        graph.latents = {"D", "E"}
+
+        new_graph = graph.get_ancestral_graph("C")
+
+        assert isinstance(new_graph, _CoreGraph)
+        assert set(new_graph.nodes()) == {"A", "B", "C"}
+        assert new_graph.exposures == {"A"}
+        assert new_graph.outcomes == {"C"}
+        assert new_graph.latents == set()
+        assert set(new_graph.get_edges(keys=True, data=True)) == {("A", "B", 0, "->"), ("B", "C", 0, "->")}
+
     def test_get_markov_blanket(self):
         """Test getting Markov blanket."""
         edges = [
