@@ -109,7 +109,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
     >>> G.latents
     {'D'}
 
-    In addition to 'exposure', 'outcomes', and 'latents', you can add custom roles.
+    In addition to 'exposures', 'outcomes', and 'latents', you can add custom roles.
 
     >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("D", "C", "-o")]
     >>> G = _CoreGraph(ebunch=edges)
