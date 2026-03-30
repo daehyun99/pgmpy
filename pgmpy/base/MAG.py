@@ -93,81 +93,81 @@ class MAG(_CoreGraph):
             roles=roles,
         )
 
-    def to_pag(self):
-        """
+    # def to_pag(self):
+    #     """
 
-        Parameters
-        ----------
+    #     Parameters
+    #     ----------
 
-        Returns
-        -------
-        Graphs
+    #     Returns
+    #     -------
+    #     Graphs
 
-        See Also
-        --------
-        `MAG`, `PAG`
+    #     See Also
+    #     --------
+    #     `MAG`, `PAG`
 
-        Notes
-        -----
+    #     Notes
+    #     -----
 
-        Examples
-        --------
+    #     Examples
+    #     --------
 
-        References
-        ----------
+    #     References
+    #     ----------
 
-        """
-        # TODO: Implement method when Refactor PAG
-        # TODO: Fix Docs (Unify Docs Format)
-        # TODO: Apply type hint(input, output)
-        raise NotImplementedError("`to_pag` is not supported now")
+    #     """
+    #     # TODO: Implement method when Refactor PAG
+    #     # TODO: Fix Docs (Unify Docs Format)
+    #     # TODO: Apply type hint(input, output)
+    #     raise NotImplementedError("`to_pag` is not supported now")
 
-    def is_valid_mag(self):
-        """
-        checking is mag
-        - the graph does not contain any directed or almost directed cycles (ancestral)
-        - there is no inducing path between any two non-adjacent vertices (maximal)
+    # def is_valid_mag(self):
+    #     """
+    #     checking is mag
+    #     - the graph does not contain any directed or almost directed cycles (ancestral)
+    #     - there is no inducing path between any two non-adjacent vertices (maximal)
 
-        Parameters
-        ----------
+    #     Parameters
+    #     ----------
 
-        Returns
-        -------
-        Graphs
+    #     Returns
+    #     -------
+    #     Graphs
 
-        See Also
-        --------
-        `MAG`, `PAG`
+    #     See Also
+    #     --------
+    #     `MAG`, `PAG`
 
-        Notes
-        -----
+    #     Notes
+    #     -----
 
-        Examples
-        --------
+    #     Examples
+    #     --------
 
-        References
-        ----------
-        [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
-        Journal of Machine Learning Research 9 (2008): 1437-1474.
-        """
-        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+    #     References
+    #     ----------
+    #     [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
+    #     Journal of Machine Learning Research 9 (2008): 1437-1474.
+    #     """
+    #     # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+    #     # TODO(@daehyun99): [#2385] Apply type hint(input, output)
 
-        # # TODO(@daehyun99): [#2385] Implement code logic and test code When Refactor DAG
-        # if self.has_directed_cycle() or self.has_almost_directed_cycle():
-        # return False
+    #     # # TODO(@daehyun99): [#2385] Implement code logic and test code When Refactor DAG
+    #     # if self.has_directed_cycle() or self.has_almost_directed_cycle():
+    #     # return False
 
-        # TODO(@daehyun99): [#2385] Checking inducing path between any two non-adjacent vertices
-        #                   has_inducing_path
-        # return True
-        raise NotImplementedError("`is_valid_mag` is not supported now")
+    #     # TODO(@daehyun99): [#2385] Checking inducing path between any two non-adjacent vertices
+    #     #                   has_inducing_path
+    #     # return True
+    #     raise NotImplementedError("`is_valid_mag` is not supported now")
 
-    def _validate_graph_specific_edges(
-        self,
-        ebunch: (
-            Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
-        ),
-    ):
-        # TODO(@daehyun99): [#2385] Implement Checking MAG's rule.
-        # self.is_mag()
-        pass
+    # def _validate_graph_specific_edges(
+    #     self,
+    #     ebunch: (
+    #         Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
+    #     ),
+    # ):
+    #     # TODO(@daehyun99): [#2385] Implement Checking MAG's rule.
+    #     # self.is_mag()
+    #     pass
