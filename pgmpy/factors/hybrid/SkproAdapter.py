@@ -1,3 +1,7 @@
+import numpy as np
+import pandas as pd
+
+
 class SkproAdapter:
     """
     Minimal adapter that wraps external skpro-like estimators.
@@ -9,7 +13,10 @@ class SkproAdapter:
         self.parents = parents if parents is not None else []
 
     def fit(self, data):
-        X = data[self.parents] if self.parents else data.iloc[:, 0:0]
+        if not self.parents:
+            X = pd.DataFrame(np.ones(len(data)), columns=["_const_"])
+        else:
+            X = data[self.parents]
         y = data[self.variable]
         self.model.fit(X, y)
         return self
