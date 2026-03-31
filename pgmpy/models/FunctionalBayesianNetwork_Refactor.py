@@ -28,7 +28,10 @@ class FunctionalBayesianNetwork(DiscreteBayesianNetwork):
         sort_nodes = list(nx.topological_sort(self))
 
         for node in sort_nodes:
-            cpd = self.cpds[node]
+            cpd = next((c for c in self.cpds if c.variable == node), None)
+
+            if cpd is None:
+                continue
 
             parents = list(self.predecessors(node))
             required_columns = parents + [node]
