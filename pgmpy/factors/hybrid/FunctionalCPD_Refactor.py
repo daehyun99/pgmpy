@@ -4,10 +4,11 @@ from pgmpy.estimators import MaximumLikelihoodEstimator as MLE
 from pgmpy.factors.base import BaseFactor
 from pgmpy.factors.continuous import LinearGaussianCPD
 from pgmpy.factors.discrete import TabularCPD
+from pgmpy.factors.hybrid.SkproAdapter import SkproAdapter
 
 
 class FunctionalCPD(BaseFactor):
-    def __init__(self, variable, tag, estimator):
+    def __init__(self, variable, tag, estimator=None):
         self.variable = variable
         self.tag = tag
         self.estimator = estimator
@@ -25,7 +26,7 @@ class FunctionalCPD(BaseFactor):
             self._fit_linear()
         elif self.tag_name_ == "functional":
             self._fit_functional()
-        elif self.tag_name_ == "skpro":
+        elif self.tag_name_ == "skpro" or self.tag_name_.startswith("skpro."):
             self._fit_external_ml()
 
         self.is_fitted_ = True
@@ -85,6 +86,14 @@ class FunctionalCPD(BaseFactor):
             std = np.sqrt(variance)
 
         self.fitted_cpd_ = LinearGaussianCPD(variable=self.variable, beta=beta, std=std, evidence=self.parents_)
+
+    def _fit_external_ml(self):
+        if self.estimator is None:
+            raise ValueError("For skpro tag, `estimator` must be provided.")
+
+        self.fitted_cpd_ = SkproAdapter(variable=self.variable, model=self.estimator, parents=self.parents_).fit(
+            self.data_
+        )
 
     def __repr__(self):
         if not getattr(self, "is_fitted_", False):

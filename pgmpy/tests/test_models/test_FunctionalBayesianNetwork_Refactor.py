@@ -3,6 +3,7 @@ import pandas as pd
 
 from pgmpy.estimators import MaximumLikelihoodEstimator as MLE
 from pgmpy.factors.hybrid.FunctionalCPD_Refactor import FunctionalCPD
+from pgmpy.factors.hybrid.SkproAdapter import SkproAdapter
 from pgmpy.models.FunctionalBayesianNetwork_Refactor import FunctionalBayesianNetwork as FunctionalBN
 
 
@@ -41,3 +42,41 @@ def test_fit_learns_mixed_tabular_and_linear_cpds():
     np.testing.assert_allclose(fitted_d.beta[0], 0.0, atol=0.25)
     np.testing.assert_allclose(fitted_d.beta[1:], [2.5, -1.5, 3.0], atol=0.2)
     np.testing.assert_allclose(fitted_d.std, 1.0, atol=0.15)
+
+
+class DummySkproRegressor:
+    def fit(self, X, y):
+        self.was_fit = True
+        self.X_shape = X.shape
+        self.y_shape = y.shape
+        self.y_mean = float(np.mean(y))
+        return self
+
+
+def test_fit_uses_skpro_adapter_for_external_model():
+    n_samples = 20
+    rng = np.random.default_rng(11)
+    data = pd.DataFrame(
+        {
+            "A": rng.normal(size=n_samples),
+            "B": rng.normal(size=n_samples),
+            "grade": rng.normal(loc=5.0, scale=1.0, size=n_samples),
+        }
+    )
+
+    model = FunctionalBN([("A", "grade"), ("B", "grade")])
+    cpd_a = FunctionalCPD(variable="A", tag="linear", estimator="MLE")
+    cpd_b = FunctionalCPD(variable="B", tag="linear", estimator="MLE")
+    cpd_grade = FunctionalCPD(
+        variable="grade",
+        tag=["skpro.BayesianLinearRegressor"],
+        estimator=DummySkproRegressor(),
+    )
+    model.add_cpds(cpd_a, cpd_b, cpd_grade)
+    model.fit(data)
+
+    fitted_grade = model.get_cpds("grade")
+    assert isinstance(fitted_grade.fitted_cpd_, SkproAdapter)
+    assert fitted_grade.fitted_cpd_.model.was_fit is True
+    assert fitted_grade.fitted_cpd_.model.X_shape == (n_samples, 2)
+    assert fitted_grade.fitted_cpd_.model.y_shape == (n_samples,)
