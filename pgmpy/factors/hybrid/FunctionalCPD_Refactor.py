@@ -1,5 +1,8 @@
+import numpy as np
+
 from pgmpy.estimators import MaximumLikelihoodEstimator as MLE
 from pgmpy.factors.base import BaseFactor
+from pgmpy.factors.continuous import LinearGaussianCPD
 from pgmpy.factors.discrete import TabularCPD
 
 
@@ -19,11 +22,11 @@ class FunctionalCPD(BaseFactor):
         if self.tag_name_ == "tabular":
             self._fit_tabular()
         elif self.tag_name_ == "linear":
-            self._fit_linear(data)
+            self._fit_linear()
         elif self.tag_name_ == "functional":
-            self._fit_functional(data)
+            self._fit_functional()
         elif self.tag_name_ == "skpro":
-            self._fit_external_ml(data)
+            self._fit_external_ml()
 
         self.is_fitted_ = True
 
@@ -58,6 +61,31 @@ class FunctionalCPD(BaseFactor):
             evidence_card=[len(states) for states in parent_states],
         )
 
+    def _fit_linear(self):
+        if self.estimator not in ("MLE", "OLS", None):
+            raise ValueError(f"For linear tag, MLE/OLS is supported. Got {self.estimator}")
+
+        target_data = self.data_[self.variable].values
+
+        if not self.parents_:
+            mean = np.mean(target_data)
+            std = np.std(target_data)
+            beta = [mean]
+        else:
+            evidence_data = self.data_[self.parents_].values
+
+            X = np.c_[np.ones(evidence_data.shape[0]), evidence_data]
+
+            beta, residuals, rank, s = np.linalg.lstsq(X, target_data, rcond=None)
+            if len(residuals) > 0:
+                variance = residuals[0] / len(target_data)
+            else:
+                predictions = X @ beta
+                variance = np.mean((target_data - predictions) ** 2)
+            std = np.sqrt(variance)
+
+        self.fitted_cpd_ = LinearGaussianCPD(variable=self.variable, beta=beta, std=std, evidence=self.parents_)
+
     def __repr__(self):
         if not getattr(self, "is_fitted_", False):
             tag_display = self.tag[0] if isinstance(self.tag, list) else self.tag
@@ -79,6 +107,17 @@ class FunctionalCPD(BaseFactor):
                 evidence_str = ""
 
             return var_str + evidence_str + f") at {hex(id(self))}>"
+
+        elif self.tag_name_ == "linear" and hasattr(self, "fitted_cpd_"):
+            cpd = self.fitted_cpd_
+            beta_str = f"{cpd.beta[0]:.3f}"  # 절편 (Intercept)
+            for i, parent in enumerate(cpd.evidence):
+                beta_str += f" + {cpd.beta[i + 1]:.3f}*{parent}"
+
+            return (
+                f"<FunctionalCPD(linear) representing P({cpd.variable} | {', '.join(cpd.evidence)}) "
+                f"~ N({beta_str}, std={cpd.std:.3f}) at {hex(id(self))}>"
+            )
 
         return (
             f"<FunctionalCPD(variable='{self.variable}', tag='{self.tag_name_}', status='fitted') at {hex(id(self))}>"
