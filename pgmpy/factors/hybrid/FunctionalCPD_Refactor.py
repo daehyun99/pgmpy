@@ -57,3 +57,29 @@ class FunctionalCPD(BaseFactor):
             evidence=self.parents_,
             evidence_card=[len(states) for states in parent_states],
         )
+
+    def __repr__(self):
+        if not getattr(self, "is_fitted_", False):
+            tag_display = self.tag[0] if isinstance(self.tag, list) else self.tag
+            return (
+                f"<FunctionalCPD(variable='{self.variable}', "
+                f"tag='{tag_display}', status='unfitted') at {hex(id(self))}>"
+            )
+
+        if self.tag_name_ == "tabular" and hasattr(self, "fitted_cpd_"):
+            cpd = self.fitted_cpd_
+            var_str = f"<FunctionalCPD(tabular) representing P({cpd.variable}:{cpd.variable_card}"
+
+            evidence = cpd.variables[1:]
+            evidence_card = cpd.cardinality[1:]
+
+            if evidence:
+                evidence_str = " | " + ", ".join([f"{var}:{card}" for var, card in zip(evidence, evidence_card)])
+            else:
+                evidence_str = ""
+
+            return var_str + evidence_str + f") at {hex(id(self))}>"
+
+        return (
+            f"<FunctionalCPD(variable='{self.variable}', tag='{self.tag_name_}', status='fitted') at {hex(id(self))}>"
+        )
