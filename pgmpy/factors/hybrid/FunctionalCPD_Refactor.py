@@ -119,7 +119,7 @@ class FunctionalCPD(BaseFactor):
 
         elif self.tag_name_ == "linear" and hasattr(self, "fitted_cpd_"):
             cpd = self.fitted_cpd_
-            beta_str = f"{cpd.beta[0]:.3f}"  # 절편 (Intercept)
+            beta_str = f"{cpd.beta[0]:.3f}"  # Intercept
             for i, parent in enumerate(cpd.evidence):
                 beta_str += f" + {cpd.beta[i + 1]:.3f}*{parent}"
 
