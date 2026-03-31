@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 from pgmpy.estimators import MaximumLikelihoodEstimator as MLE
 from pgmpy.factors.hybrid.FunctionalCPD_Refactor import FunctionalCPD
@@ -80,3 +81,48 @@ def test_fit_uses_skpro_adapter_for_external_model():
     assert fitted_grade.fitted_cpd_.model.was_fit is True
     assert fitted_grade.fitted_cpd_.model.X_shape == (n_samples, 2)
     assert fitted_grade.fitted_cpd_.model.y_shape == (n_samples,)
+
+
+def test_fit_with_bayesian_linear_regressor_uses_fast_mocked_fit(monkeypatch):
+    pytest.importorskip("skpro")
+    pytest.importorskip("pymc_marketing")
+
+    from skpro.regression.bayesian import BayesianLinearRegressor
+
+    BayesianLinearRegressor._tags["python_dependencies"] = [
+        "pymc",
+        "pymc-marketing",
+        "arviz>=0.18.0",
+    ]
+
+    recorded = {}
+
+    def _mock_fit(self, X, y):
+        recorded["x_shape"] = X.shape
+        recorded["y_shape"] = y.shape
+        recorded["columns"] = list(X.columns)
+        return self
+
+    monkeypatch.setattr(BayesianLinearRegressor, "fit", _mock_fit, raising=True)
+
+    rng = np.random.default_rng(42)
+    n_samples = 80
+    a_data = rng.integers(0, 2, size=n_samples)
+    b_data = rng.integers(0, 2, size=n_samples)
+    c_data = rng.normal(loc=5.0, scale=2.0, size=n_samples)
+    d_data = 2.5 * a_data - 1.5 * b_data + 3.0 * c_data + rng.normal(loc=0.0, scale=1.0, size=n_samples)
+
+    data = pd.DataFrame({"A": a_data, "B": b_data, "C": c_data, "D": d_data})
+
+    model = FunctionalBN([("A", "D"), ("B", "D"), ("C", "D")])
+    cpd_a = FunctionalCPD(variable="A", tag="tabular", estimator=MLE)
+    cpd_b = FunctionalCPD(variable="B", tag="tabular", estimator=MLE)
+    cpd_c = FunctionalCPD(variable="C", tag="skpro", estimator=BayesianLinearRegressor())
+    cpd_d = FunctionalCPD(variable="D", tag="linear", estimator="MLE")
+
+    model.add_cpds(cpd_a, cpd_b, cpd_c, cpd_d)
+    model.fit(data)
+
+    assert recorded["x_shape"] == (n_samples, 1)
+    assert recorded["y_shape"] == (n_samples,)
+    assert recorded["columns"] == ["_const_"]
