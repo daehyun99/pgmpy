@@ -3,8 +3,10 @@ import pandas as pd
 import pytest
 
 from pgmpy.estimators import MaximumLikelihoodEstimator as MLE
+from pgmpy.factors.hybrid.LinearGaussianAdapter import LinearGaussianAdapter
 from pgmpy.factors.hybrid.FunctionalCPD_Refactor import FunctionalCPD
 from pgmpy.factors.hybrid.SkproAdapter import SkproAdapter
+from pgmpy.factors.hybrid.TabularAdapter import TabularAdapter
 from pgmpy.models.FunctionalBayesianNetwork_Refactor import FunctionalBayesianNetwork as FunctionalBN
 
 
@@ -34,15 +36,20 @@ def test_fit_learns_mixed_tabular_and_linear_cpds():
     fitted_c = model.get_cpds("C").fitted_cpd_
     fitted_d = model.get_cpds("D").fitted_cpd_
 
-    np.testing.assert_allclose(fitted_a.get_values().reshape(-1), [0.5, 0.5], atol=0.08)
-    np.testing.assert_allclose(fitted_b.get_values().reshape(-1), [0.5, 0.5], atol=0.08)
+    assert isinstance(fitted_a, TabularAdapter)
+    assert isinstance(fitted_b, TabularAdapter)
+    assert isinstance(fitted_c, LinearGaussianAdapter)
+    assert isinstance(fitted_d, LinearGaussianAdapter)
 
-    np.testing.assert_allclose(fitted_c.beta, [5.0], atol=0.2)
-    np.testing.assert_allclose(fitted_c.std, 2.0, atol=0.2)
+    np.testing.assert_allclose(fitted_a.fitted_cpd_.get_values().reshape(-1), [0.5, 0.5], atol=0.08)
+    np.testing.assert_allclose(fitted_b.fitted_cpd_.get_values().reshape(-1), [0.5, 0.5], atol=0.08)
 
-    np.testing.assert_allclose(fitted_d.beta[0], 0.0, atol=0.25)
-    np.testing.assert_allclose(fitted_d.beta[1:], [2.5, -1.5, 3.0], atol=0.2)
-    np.testing.assert_allclose(fitted_d.std, 1.0, atol=0.15)
+    np.testing.assert_allclose(fitted_c.fitted_cpd_.beta, [5.0], atol=0.2)
+    np.testing.assert_allclose(fitted_c.fitted_cpd_.std, 2.0, atol=0.2)
+
+    np.testing.assert_allclose(fitted_d.fitted_cpd_.beta[0], 0.0, atol=0.25)
+    np.testing.assert_allclose(fitted_d.fitted_cpd_.beta[1:], [2.5, -1.5, 3.0], atol=0.2)
+    np.testing.assert_allclose(fitted_d.fitted_cpd_.std, 1.0, atol=0.15)
 
 
 class DummySkproRegressor:
