@@ -3,7 +3,7 @@ from collections.abc import Hashable, Iterable
 import networkx as nx
 import pandas as pd
 
-from pgmpy.factors.hybrid import FunctionalCPD
+from pgmpy.factors.hybrid.FunctionalCPD_Refactor import FunctionalCPD
 from pgmpy.models import DiscreteBayesianNetwork
 
 
