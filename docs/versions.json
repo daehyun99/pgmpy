@@ -1,5 +1,5 @@
 {
-  "stable": "v1.1.0",
-  "releases": ["v1.1.0"],
+  "stable": "v1.1",
+  "releases": ["v1.1"],
   "development": ["dev"]
 }
