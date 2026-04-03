@@ -69,3 +69,4 @@ pgmpy/structure_score/log_likelihood_gauss.py
 pgmpy/utils/mathext.py
 pgmpy/utils/state_name.py
 pgmpy/readwrite/UAI.py
+pgmpy/readwrite/XMLBIF.py
