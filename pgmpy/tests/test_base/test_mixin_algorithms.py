@@ -589,3 +589,5 @@ class TestGraphAlgorithmMixin:
 
         assert nx.has_path(graph, "A", "D") is True
         assert graph.has_direct_path("A", "D") is True
+
+    def test_check_new_unshielded_collider(self): ...
