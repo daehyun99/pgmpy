@@ -94,22 +94,14 @@ class TestPDAG(unittest.TestCase):
 
         mod_pdag = pdag.orient_undirected_edge("B", "A", inplace=False)
         self.assertEqual(
-            set(mod_pdag.edges()),
-            {("A", "C"), ("D", "C"), ("B", "A"), ("B", "D"), ("D", "B")},
-        )
-        self.assertEqual(
             sorted(mod_pdag.get_edges(keys=False, data=True)),
-            sorted([("A", "C", "->"), ("B", "A", "->"), ("B", "D", "--"), ("D", "C", "->")]),
+            [("A", "B", "<-"), ("A", "C", "->"), ("C", "D", "<-"), ("D", "B", "--")],
         )
 
         pdag.orient_undirected_edge("B", "A", inplace=True)
         self.assertEqual(
-            set(pdag.edges()),
-            {("A", "C"), ("D", "C"), ("B", "A"), ("B", "D"), ("D", "B")},
-        )
-        self.assertEqual(
             sorted(pdag.get_edges(keys=False, data=True)),
-            sorted([("A", "C", "->"), ("B", "A", "->"), ("B", "D", "--"), ("D", "C", "->")]),
+            [("A", "B", "<-"), ("A", "C", "->"), ("C", "D", "<-"), ("D", "B", "--")],
         )
 
         self.assertRaises(ValueError, pdag.orient_undirected_edge, "B", "A", inplace=True)

@@ -880,25 +880,20 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         """
         # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        # # TODO(@daehyun99): [#2385] Refactoring code logic and test code
         if inplace:
             pdag = self
         else:
             pdag = self.copy()
 
         # Remove the edge for undirected_edges.
-        if (u, v) in pdag.undirected_edges:
-            pdag.undirected_edges.discard((u, v))
-        elif (v, u) in pdag.undirected_edges:
-            pdag.undirected_edges.discard((v, u))
-        else:
+        if not (v in self.get_neighbors(u, "--") or u in self.get_neighbors(v, "--")):
             raise ValueError(f"Undirected Edge {u} - {v} not present in the PDAG.")
 
         # Remove the inverse edge from the graph
-        pdag.remove_edge(v, u)
+        pdag.remove_edge(u, v, "--")
 
         # Add the edge to directed_edges.
-        pdag.directed_edges.add((u, v))
+        pdag.add_edge(u, v, "->")
 
         if not inplace:
             return pdag

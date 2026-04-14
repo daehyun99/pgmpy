@@ -84,7 +84,15 @@ class PDAG(_CoreGraph):
         """
         Returns a subgraph containing only directed edges.
         """
-        dag = nx.DiGraph(self.directed_edges)
+        ebunch = self.get_edges(data=True)
+        directed_edges = []
+        for u, v, edge_type in ebunch:
+            if edge_type == "->":
+                directed_edges.append((u, v))
+            elif edge_type == "<-":
+                directed_edges.append((v, u))
+
+        dag = nx.DiGraph(directed_edges)
         dag.add_nodes_from(self.nodes())
         return dag
 
@@ -136,7 +144,7 @@ class PDAG(_CoreGraph):
             for y in pdag.nodes():
                 # Select x's such that there are directed edges x -> y.
                 for x in pdag.get_parents(y):
-                    for z in pdag.undirected_neighbors(y):
+                    for z in pdag.get_neighbors(y, "--"):
                         if (
                             (not pdag.has_edge(x, z))
                             and (not pdag._check_new_unshielded_collider(y, z))
@@ -154,7 +162,7 @@ class PDAG(_CoreGraph):
 
                 for x in xs:
                     for y in ys:
-                        if pdag.get_edge_type(x, y) == "--":
+                        if pdag.has_edge(x, y) and pdag.get_edge_type(x, y, 0) == "--":
                             pdag.orient_undirected_edge(x, y, inplace=True)
                             changed = True
                             if debug:
@@ -162,13 +170,13 @@ class PDAG(_CoreGraph):
 
             # Rule 3: If X - {Y, Z, W} and {Z, Y} -> W => X -> W
             for x in pdag.nodes():
-                undirected_nbs = pdag.undirected_neighbors(x)
+                undirected_nbs = pdag.get_neighbors(x, "--")
 
                 if len(undirected_nbs) < 3:
                     continue
 
                 for y, z, w in itertools.permutations(undirected_nbs, 3):
-                    if pdag.get_edge_type(y, w) == "->" and pdag.get_edge_type(z, w) == "->":
+                    if pdag.get_edge_type(y, w, 0) == "->" and pdag.get_edge_type(z, w, 0) == "->":
                         pdag.orient_undirected_edge(x, w, inplace=True)
                         changed = True
                         if debug:
@@ -185,9 +193,9 @@ class PDAG(_CoreGraph):
 
                             # find nodes a that are undirected neighbor to b, d,
                             #  and directed or undirected neighbor to c
-                            cand = set(pdag.undirected_neighbors(b)).intersection(
+                            cand = set(pdag.get_neighbors(b, "--")).intersection(
                                 pdag.get_neighbors(c),
-                                pdag.undirected_neighbors(d),
+                                pdag.get_neighbors(d, "--"),
                             )
                             for a in cand:
                                 pdag.orient_undirected_edge(a, b, inplace=True)
@@ -227,7 +235,14 @@ class PDAG(_CoreGraph):
         dag = DAG()
         # Add all the nodes and the directed edges
         dag.add_nodes_from(self.nodes())
-        dag.add_edges_from(self.directed_edges)
+        ebunch = self.get_edges(data=True)
+        directed_edges = []
+        for u, v, edge_type in ebunch:
+            if edge_type == "->":
+                directed_edges.append((u, v))
+            elif edge_type == "<-":
+                directed_edges.append((v, u))
+        dag.add_edges_from(directed_edges)
         dag.latents = self.latents
 
         pdag = self.copy()
@@ -237,7 +252,7 @@ class PDAG(_CoreGraph):
             #                    undirected neighbors + parents of X are adjacent
             found = False
             for X in sorted(pdag.nodes()):
-                undirected_neighbors = pdag.undirected_neighbors(X)
+                undirected_neighbors = pdag.get_neighbors(X, "--")
                 neighbors_are_adjacent = all(
                     pdag.has_edge(Y, Z) or pdag.has_edge(Z, Y)
                     for Z in pdag.get_neighbors(X)
@@ -248,7 +263,7 @@ class PDAG(_CoreGraph):
                 if not pdag.get_children(X) and (not undirected_neighbors or neighbors_are_adjacent):
                     found = True
                     # add all edges of X as outgoing edges to dag
-                    for Y in pdag.undirected_neighbors(X):
+                    for Y in pdag.get_neighbors(X, "--"):
                         dag.add_edge(Y, X)
                     pdag.remove_node(X)
                     break
