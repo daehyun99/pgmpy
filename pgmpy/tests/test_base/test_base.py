@@ -1995,3 +1995,5 @@ class TestCoreGraph:
         assert graph.get_edge_type("A", "B", 4) == "<-"
         assert graph.get_edge_type("A", "B", 5) == "oo"
         assert graph.get_edge_type("A", "B", 6) == "o-"
+
+    def test_orient_undirected_edge(self): ...

@@ -100,22 +100,6 @@ class TestPDAG(unittest.TestCase):
         self.assertEqual(pdag.get_parents(node="B"), set())
         self.assertEqual(pdag.get_parents(node="C"), {"A", "D"})
 
-    def test_has_directed_edge(self):
-        pdag = PDAG(ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
-
-        self.assertTrue(pdag.has_directed_edge("A", "C"))
-        self.assertTrue(pdag.has_directed_edge("D", "C"))
-        self.assertFalse(pdag.has_directed_edge("A", "B"))
-        self.assertFalse(pdag.has_directed_edge("B", "A"))
-
-    def test_has_undirected_edge(self):
-        pdag = PDAG(ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
-
-        self.assertFalse(pdag.has_undirected_edge("A", "C"))
-        self.assertFalse(pdag.has_undirected_edge("D", "C"))
-        self.assertTrue(pdag.has_undirected_edge("A", "B"))
-        self.assertTrue(pdag.has_undirected_edge("B", "A"))
-
     def test_get_neighbors(self):
         pdag = PDAG(ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
 

@@ -651,6 +651,25 @@ class _GraphAlgorithmMixin:
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`has_almost_directed_cycle` is not supported now")
 
+    def _check_new_unshielded_collider(self, u, v):
+        """
+        Tests if orienting an undirected edge u - v as u -> v creates new unshielded V-structures in the PDAG.
+
+        Checks whether v has any directed parents other than u that are not adjacent to u.
+
+        Returns
+        -------
+        True, if the orientation u -> v would lead to creation of a new V-structure.
+        False, if no new V-structures are formed.
+        """
+        # # TODO(@daehyun99): [#2385] Implement code logic and test code
+        # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+        for node in self.get_parents(v):
+            if (node != u) and (not self.has_edge(u, node)):
+                return True
+        return False
+
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
     # ----------------------------------------------------------------------

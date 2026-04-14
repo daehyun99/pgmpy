@@ -860,6 +860,49 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         edge_type = self._to_api_edge_type(u, v, markers)
         return edge_type
 
+    def orient_undirected_edge(self, u, v, inplace=False):
+        """
+        Orients an undirected edge u - v as u -> v.
+
+        Parameters
+        ----------
+        u, v: Any hashable python objects
+            The node names.
+
+        inplace: boolean (default=False)
+            If True, the PDAG object is modified inplace, otherwise a new modified copy is returned.
+
+        Returns
+        -------
+        None or pgmpy.base.PDAG: The modified PDAG object.
+            If inplace=True, returns None and the object itself is modified.
+            If inplace=False, returns a PDAG object.
+        """
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+        # # TODO(@daehyun99): [#2385] Refactoring code logic and test code
+        if inplace:
+            pdag = self
+        else:
+            pdag = self.copy()
+
+        # Remove the edge for undirected_edges.
+        if (u, v) in pdag.undirected_edges:
+            pdag.undirected_edges.discard((u, v))
+        elif (v, u) in pdag.undirected_edges:
+            pdag.undirected_edges.discard((v, u))
+        else:
+            raise ValueError(f"Undirected Edge {u} - {v} not present in the PDAG.")
+
+        # Remove the inverse edge from the graph
+        pdag.remove_edge(v, u)
+
+        # Add the edge to directed_edges.
+        pdag.directed_edges.add((u, v))
+
+        if not inplace:
+            return pdag
+
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
     # ----------------------------------------------------------------------
