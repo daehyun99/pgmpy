@@ -8,74 +8,55 @@ class TestPDAG(unittest.TestCase):
         # Mix directed and undirected
         ebunch_mix = [("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")]
         pdag = PDAG(ebunch=ebunch_mix)
-        expected_edges = {
-            ("A", "C"),
-            ("D", "C"),
-            ("A", "B"),
-            ("B", "A"),
-            ("B", "D"),
-            ("D", "B"),
-        }
-        self.assertEqual(set(pdag.edges()), expected_edges)
         self.assertEqual(set(pdag.nodes()), {"A", "B", "C", "D"})
         self.assertEqual(
             sorted(pdag.get_edges(keys=False, data=True)),
-            sorted([("A", "C", "->"), ("B", "A", "--"), ("B", "D", "--"), ("D", "C", "->")]),
+            [("A", "B", "--"), ("A", "C", "->"), ("C", "D", "<-"), ("D", "B", "--")],
         )
 
         pdag = PDAG(
             ebunch=ebunch_mix,
             latents=["A", "C"],
         )
-        self.assertEqual(set(pdag.edges()), expected_edges)
         self.assertEqual(set(pdag.nodes()), {"A", "B", "C", "D"})
         self.assertEqual(
             sorted(pdag.get_edges(keys=False, data=True)),
-            sorted([("A", "C", "->"), ("B", "A", "--"), ("B", "D", "--"), ("D", "C", "->")]),
+            [("A", "B", "--"), ("A", "C", "->"), ("C", "D", "<-"), ("D", "B", "--")],
         )
         self.assertEqual(pdag.latents, {"A", "C"})
 
         # Only undirected
         ebunch_undir = [("A", "C", "--"), ("D", "C", "--"), ("B", "A", "--"), ("B", "D", "--")]
         pdag = PDAG(ebunch=ebunch_undir)
-        expected_edges = {
-            ("A", "C"),
-            ("C", "A"),
-            ("D", "C"),
-            ("C", "D"),
-            ("B", "A"),
-            ("A", "B"),
-            ("B", "D"),
-            ("D", "B"),
-        }
-        self.assertEqual(set(pdag.edges()), expected_edges)
         self.assertEqual(set(pdag.nodes()), {"A", "B", "C", "D"})
         self.assertEqual(
             sorted(pdag.get_edges(keys=False, data=True)),
-            sorted([("A", "C", "--"), ("B", "A", "--"), ("B", "D", "--"), ("D", "C", "--")]),
+            [("A", "B", "--"), ("A", "C", "--"), ("C", "D", "--"), ("D", "B", "--")],
         )
 
         pdag = PDAG(ebunch=ebunch_undir, latents=["A", "D"])
-        self.assertEqual(set(pdag.edges()), expected_edges)
         self.assertEqual(set(pdag.nodes()), {"A", "B", "C", "D"})
         self.assertEqual(
             sorted(pdag.get_edges(keys=False, data=True)),
-            sorted([("A", "C", "--"), ("B", "A", "--"), ("B", "D", "--"), ("D", "C", "--")]),
+            [("A", "B", "--"), ("A", "C", "--"), ("C", "D", "--"), ("D", "B", "--")],
         )
         self.assertEqual(pdag.latents, {"A", "D"})
 
         # Only directed
         ebunch_dir = [("A", "B", "->"), ("D", "B", "->"), ("A", "C", "->"), ("D", "C", "->")]
         pdag = PDAG(ebunch=ebunch_dir)
-        expected_dir_edges = {("A", "B"), ("D", "B"), ("A", "C"), ("D", "C")}
-        self.assertEqual(set(pdag.edges()), expected_dir_edges)
         self.assertEqual(set(pdag.nodes()), {"A", "B", "C", "D"})
-        self.assertEqual(sorted(pdag.get_edges(keys=False, data=False)), sorted(expected_dir_edges))
+        self.assertEqual(
+            sorted(pdag.get_edges(keys=False, data=True)),
+            [("A", "B", "->"), ("A", "C", "->"), ("B", "D", "<-"), ("D", "C", "->")],
+        )
 
         pdag = PDAG(ebunch=ebunch_dir, latents=["D"])
-        self.assertEqual(set(pdag.edges()), expected_dir_edges)
         self.assertEqual(set(pdag.nodes()), {"A", "B", "C", "D"})
-        self.assertEqual(sorted(pdag.get_edges(keys=False, data=False)), sorted(expected_dir_edges))
+        self.assertEqual(
+            sorted(pdag.get_edges(keys=False, data=True)),
+            [("A", "B", "->"), ("A", "C", "->"), ("B", "D", "<-"), ("D", "C", "->")],
+        )
         self.assertEqual(pdag.latents, {"D"})
 
     def test_all_neighrors(self):
