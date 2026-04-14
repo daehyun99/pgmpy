@@ -4,27 +4,6 @@ from pgmpy.base import DAG, PDAG
 
 
 class TestPDAG(unittest.TestCase):
-    def setUp(self):
-        self.pdag_mix = PDAG(ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
-        self.pdag_dir = PDAG(ebunch=[("A", "B", "->"), ("D", "B", "->"), ("A", "C", "->"), ("D", "C", "->")])
-        self.pdag_undir = PDAG(ebunch=[("A", "C", "--"), ("D", "C", "--"), ("B", "A", "--"), ("B", "D", "--")])
-        self.pdag_latent = PDAG(
-            ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
-            latents=["A", "D"],
-        )
-        self.pdag_role = PDAG(
-            ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
-            roles={"exposures": "A", "adjustment": "D", "outcomes": "C"},
-        )
-        self.pdag_role_set = PDAG(
-            ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
-            roles={"exposures": ("A", "D"), "outcomes": ("C")},
-        )
-        self.pdag_role_list = PDAG(
-            ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
-            roles={"exposures": ["A", "D"], "outcomes": ["C"]},
-        )
-
     def test_init_normal(self):
         # Mix directed and undirected
         ebunch_mix = [("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")]
@@ -171,33 +150,40 @@ class TestPDAG(unittest.TestCase):
         self.assertRaises(ValueError, pdag.orient_undirected_edge, "B", "A", inplace=True)
 
     def test_copy(self):
-        pdag_copy = self.pdag_mix.copy()
-        expected_edges = {
-            ("A", "C"),
-            ("D", "C"),
-            ("A", "B"),
-            ("B", "A"),
-            ("B", "D"),
-            ("D", "B"),
-        }
-        self.assertEqual(set(pdag_copy.edges()), expected_edges)
+        ebunch = [("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")]
+        pdag_mix = PDAG(ebunch)
+        pdag_copy = pdag_mix.copy()
         self.assertEqual(set(pdag_copy.nodes()), {"A", "B", "C", "D"})
-        self.assertEqual(pdag_copy.directed_edges, {("A", "C"), ("D", "C")})
-        self.assertEqual(pdag_copy.undirected_edges, {("B", "A"), ("B", "D")})
+        self.assertEqual(
+            sorted(pdag_copy.get_edges(keys=False, data=True)),
+            [("A", "B", "--"), ("A", "C", "->"), ("C", "D", "<-"), ("D", "B", "--")],
+        )
         self.assertEqual(pdag_copy.latents, set())
 
-        pdag_copy = self.pdag_latent.copy()
-        self.assertEqual(set(pdag_copy.edges()), expected_edges)
+        ebunch = [("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")]
+        pdag_latent = PDAG(
+            ebunch,
+            latents=["A", "D"],
+        )
+        pdag_copy = pdag_latent.copy()
         self.assertEqual(set(pdag_copy.nodes()), {"A", "B", "C", "D"})
-        self.assertEqual(pdag_copy.directed_edges, {("A", "C"), ("D", "C")})
-        self.assertEqual(pdag_copy.undirected_edges, {("B", "A"), ("B", "D")})
+        self.assertEqual(
+            sorted(pdag_copy.get_edges(keys=False, data=True)),
+            [("A", "B", "--"), ("A", "C", "->"), ("C", "D", "<-"), ("D", "B", "--")],
+        )
         self.assertEqual(pdag_copy.latents, {"A", "D"})
 
-        pdag_copy = self.pdag_role.copy()
-        self.assertEqual(set(pdag_copy.edges()), expected_edges)
+        ebunch = [("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")]
+        pdag_role = PDAG(
+            ebunch,
+            roles={"exposures": "A", "adjustment": "D", "outcomes": "C"},
+        )
+        pdag_copy = pdag_role.copy()
         self.assertEqual(set(pdag_copy.nodes()), {"A", "B", "C", "D"})
-        self.assertEqual(pdag_copy.directed_edges, {("A", "C"), ("D", "C")})
-        self.assertEqual(pdag_copy.undirected_edges, {("B", "A"), ("B", "D")})
+        self.assertEqual(
+            sorted(pdag_copy.get_edges(keys=False, data=True)),
+            [("A", "B", "--"), ("A", "C", "->"), ("C", "D", "<-"), ("D", "B", "--")],
+        )
         self.assertEqual(pdag_copy.latents, set())
         self.assertEqual(pdag_copy.get_role("exposures"), ["A"])
         self.assertEqual(pdag_copy.get_role("adjustment"), ["D"])
@@ -207,21 +193,33 @@ class TestPDAG(unittest.TestCase):
             sorted(["adjustment", "exposures", "outcomes"]),
         )
 
-        pdag_copy = self.pdag_role_set.copy()
-        self.assertEqual(set(pdag_copy.edges()), expected_edges)
+        ebunch = [("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")]
+        pdag_role_set = PDAG(
+            ebunch,
+            roles={"exposures": ("A", "D"), "outcomes": ("C")},
+        )
+        pdag_copy = pdag_role_set.copy()
         self.assertEqual(set(pdag_copy.nodes()), {"A", "B", "C", "D"})
-        self.assertEqual(pdag_copy.directed_edges, {("A", "C"), ("D", "C")})
-        self.assertEqual(pdag_copy.undirected_edges, {("B", "A"), ("B", "D")})
+        self.assertEqual(
+            sorted(pdag_copy.get_edges(keys=False, data=True)),
+            [("A", "B", "--"), ("A", "C", "->"), ("C", "D", "<-"), ("D", "B", "--")],
+        )
         self.assertEqual(pdag_copy.latents, set())
         self.assertEqual(sorted(pdag_copy.get_role("exposures")), sorted(["A", "D"]))
         self.assertEqual(pdag_copy.get_role("outcomes"), ["C"])
         self.assertEqual(sorted(pdag_copy.get_roles()), sorted(["exposures", "outcomes"]))
 
-        pdag_copy = self.pdag_role_list.copy()
-        self.assertEqual(set(pdag_copy.edges()), expected_edges)
+        ebunch = [("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")]
+        pdag_role_list = PDAG(
+            ebunch,
+            roles={"exposures": ["A", "D"], "outcomes": ["C"]},
+        )
+        pdag_copy = pdag_role_list.copy()
         self.assertEqual(set(pdag_copy.nodes()), {"A", "B", "C", "D"})
-        self.assertEqual(pdag_copy.directed_edges, {("A", "C"), ("D", "C")})
-        self.assertEqual(pdag_copy.undirected_edges, {("B", "A"), ("B", "D")})
+        self.assertEqual(
+            sorted(pdag_copy.get_edges(keys=False, data=True)),
+            [("A", "B", "--"), ("A", "C", "->"), ("C", "D", "<-"), ("D", "B", "--")],
+        )
         self.assertEqual(pdag_copy.latents, set())
         self.assertEqual(sorted(pdag_copy.get_role("exposures")), sorted(["A", "D"]))
         self.assertEqual(pdag_copy.get_role("outcomes"), ["C"])
