@@ -71,7 +71,7 @@ class TestPDAG:
         ]
         assert pdag.latents == {"D"}
 
-    def test_all_neighrors(self):
+    def test_all_neighbors(self):
         pdag = PDAG(ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
 
         assert pdag.get_neighbors(node="A") == {"B", "C"}
@@ -519,7 +519,7 @@ class TestPDAG:
         with pytest.raises(ValueError, match="Variable 'G' not found in the graph."):
             pdag1.with_role(role="latents", variables="G", inplace=True)
 
-    def test_latnets_without_role(self):
+    def test_latents_without_role(self):
         pdag1 = PDAG(
             ebunch=[
                 ("X", "Y", "->"),
@@ -540,3 +540,6 @@ class TestPDAG:
 
         assert pdag1.latents == set()
         assert set(pdag1.get_role("latents")) == set()
+
+    def test_is_clique(self):
+        """Test code for `is_clique()` method"""
