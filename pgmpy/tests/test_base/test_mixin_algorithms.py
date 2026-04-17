@@ -590,4 +590,15 @@ class TestGraphAlgorithmMixin:
         assert nx.has_path(graph, "A", "D") is True
         assert graph.has_direct_path("A", "D") is True
 
-    def test_check_new_unshielded_collider(self): ...
+    def test_check_new_unshielded_collider(self):
+        graph = _CoreGraph()
+
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("B", "C", "--")
+
+        assert graph._check_new_unshielded_collider(u="C", v="B") is True
+        assert graph._check_new_unshielded_collider(u="B", v="C") is False
+
+        graph.add_edge("A", "C", "--")
+
+        assert graph._check_new_unshielded_collider(u="C", v="B") is False
