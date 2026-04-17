@@ -938,11 +938,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         if v not in self.get_neighbors(u, "--"):
             raise ValueError(f"Undirected Edge {u} - {v} not present in the PDAG.")
 
-        # Remove the inverse edge from the graph
-        pdag.remove_edge(u, v, "--")
-
-        # Add the edge to directed_edges.
-        pdag.add_edge(u, v, "->")
+        pdag.replace_edge(u, v, "--", "->")
 
         if not inplace:
             return pdag

@@ -227,7 +227,7 @@ class PDAG(_CoreGraph):
                         if (
                             (not pdag.has_edge(x, z))
                             and (not pdag._check_new_unshielded_collider(y, z))
-                            and (not nx.has_path(pdag._directed_graph(), z, y))
+                            and (not pdag.has_direct_path(z, y))
                         ):
                             pdag.orient_undirected_edge(y, z, inplace=True)
                             changed = True
