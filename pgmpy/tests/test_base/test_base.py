@@ -1997,3 +1997,42 @@ class TestCoreGraph:
         assert graph.get_edge_type("A", "B", 6) == "o-"
 
     def test_orient_undirected_edge(self): ...
+
+    def test_replace_edge(self):
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "--")
+
+        graph.replace_edge("A", "B", old_type="--", new_type="->")
+        assert graph.get_edges(keys=False, data=True) == (
+            [
+                ("A", "B", "->"),
+            ]
+        )
+
+        graph.replace_edge("A", "B", old_type="->", new_type="<>")
+        assert graph.get_edges(keys=False, data=True) == (
+            [
+                ("A", "B", "<>"),
+            ]
+        )
+
+        graph.replace_edge("A", "B", old_type="<>", new_type="oo")
+        assert graph.get_edges(keys=False, data=True) == (
+            [
+                ("A", "B", "oo"),
+            ]
+        )
+
+    def test_replace_edge_fails(self):
+        graph = _CoreGraph()
+        graph.add_node("C")
+        graph.add_edge("A", "B", "--")
+
+        with pytest.raises(ValueError):
+            graph.replace_edge("A", "B", old_type="!!", new_type="->")
+
+        with pytest.raises(ValueError):
+            graph.replace_edge("A", "B", old_type="--", new_type="~~")
+
+        with pytest.raises(ValueError):
+            graph.replace_edge("B", "C", old_type="--", new_type="->")
