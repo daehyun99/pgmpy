@@ -565,23 +565,17 @@ class _GraphAlgorithmMixin:
         True
 
         """
-        # NOTE(@daehyun99): This method will be Refactored when Refactor DAG
-        # dag = self.get_directed_subgraph()
-        # dag = nx.DiGraph(self.get_edges())
-        # # NOTE: To use `nx.has_path`, the graph must be an `nx.DiGraph`.
-        # return nx.has_path(dag, u, v)
+        dag = self.get_directed_subgraph()
+        directed_ebunch = []
+        for src, dst, edge_type in dag.get_edges(data=True):
+            if edge_type == "->":
+                directed_ebunch.append((src, dst))
+            elif edge_type == "<-":
+                directed_ebunch.append((dst, src))
 
-        for path in nx.all_simple_edge_paths(self, u, v):
-            is_directed_path = True
-            for edge in path:
-                src, dst, key = edge
-                edge_type = self.get_edge_type(src, dst, key)
-                if edge_type != "->":
-                    is_directed_path = False
-                    break
-            if is_directed_path:
-                return True
-        return False
+        dag = nx.DiGraph(directed_ebunch)
+        dag.add_nodes_from(self.nodes())
+        return nx.has_path(dag, u, v)
 
     def has_directed_cycle(self):
         """
