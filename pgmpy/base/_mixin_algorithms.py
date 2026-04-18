@@ -567,6 +567,8 @@ class _GraphAlgorithmMixin:
         """
         # NOTE(@daehyun99): This method will be Refactored when Refactor DAG
         # dag = self.get_directed_subgraph()
+        # dag = nx.DiGraph(self.get_edges())
+        # # NOTE: To use `nx.has_path`, the graph must be an `nx.DiGraph`.
         # return nx.has_path(dag, u, v)
 
         for path in nx.all_simple_edge_paths(self, u, v):
@@ -663,16 +665,16 @@ class _GraphAlgorithmMixin:
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         ebunch = self.get_edges(data=True)
-        directed_edges = []
+        directed_ebunch = []
         for u, v, edge_type in ebunch:
             if edge_type in {"->", "<-"}:
-                directed_edges.append((u, v, edge_type))
+                directed_ebunch.append((u, v, edge_type))
 
         # from pgmpy.base import DAG
         # TODO(@daehyun99): [#2385] Refactoring _CoreGraph -> DAG when Refactor DAG
         from pgmpy.base._base import _CoreGraph
 
-        dag = _CoreGraph(directed_edges)
+        dag = _CoreGraph(directed_ebunch)
         dag.add_nodes_from(self.nodes())
         for role, vars in self.get_role_dict().items():
             dag.with_role(role=role, variables=vars, inplace=True)

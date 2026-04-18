@@ -906,7 +906,9 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         if not self.has_edge(u, v):
             raise ValueError(f"Edge ({u}, {v}) not in graph.")
 
-        # TODO(@daehyun99): Add logic of maintain edge's attr data
+        # TODO: Add logic of maintain edge's attr data
+        #       Currently, we treat `edge_type` as an attribute,
+        #       so additional logic will need to be developed to handle this in the future.
         self.remove_edge(u, v, old_type)
         self.add_edge(u, v, new_type)
 
