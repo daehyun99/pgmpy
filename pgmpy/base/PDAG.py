@@ -91,14 +91,14 @@ class PDAG(_CoreGraph):
         while to_visit:
             current = to_visit.pop()
             visited.add(current)
-            to_visit |= self.undirected_neighbors(current) - visited
+            to_visit |= self.get_reachable_nodes(current, "--") - visited
 
         return visited
 
     def has_semidirected_path(
         self,
-        source: Hashable,
-        target: Hashable,
+        u: Hashable,
+        v: Hashable,
         blocked_nodes: Iterable[Hashable] | None = None,
         ignore_direct_edge: bool = False,
     ) -> bool:
@@ -122,17 +122,32 @@ class PDAG(_CoreGraph):
         """
         blocked_nodes = set() if blocked_nodes is None else set(blocked_nodes)
 
-        if (source in blocked_nodes) or (target in blocked_nodes):
+        if (u in blocked_nodes) or (v in blocked_nodes):
             return False
 
-        graph = nx.DiGraph(self.subgraph(set(self.nodes()) - blocked_nodes))
-        if ignore_direct_edge and graph.has_edge(source, target):
-            graph.remove_edge(source, target)
+        allowed_nodes = set(self.nodes()) - blocked_nodes
+        graph = nx.DiGraph()
+        graph.add_nodes_from(allowed_nodes)
 
-        if not graph.has_node(source) or not graph.has_node(target):
+        for x, y, edge_type in self.get_edges(data=True):
+            if x not in allowed_nodes or y not in allowed_nodes:
+                continue
+
+            if edge_type == "->":
+                graph.add_edge(x, y)
+            elif edge_type == "<-":
+                graph.add_edge(y, x)
+            elif edge_type == "--":
+                graph.add_edge(x, y)
+                graph.add_edge(y, x)
+
+        if ignore_direct_edge and graph.has_edge(u, v):
+            graph.remove_edge(u, v)
+
+        if not graph.has_node(u) or not graph.has_node(v):
             return False
 
-        return nx.has_path(graph, source, target)
+        return nx.has_path(graph, u, v)
 
     def has_acyclic_extension(self) -> bool:
         """
