@@ -153,8 +153,8 @@ class PDAG(_CoreGraph):
         """
         Returns True if the PDAG admits an acyclic DAG extension.
         """
-        if not self.undirected_edges:
-            return nx.is_directed_acyclic_graph(nx.DiGraph(self.edges()))
+        # if not self.undirected_edges:
+        #     return nx.is_directed_acyclic_graph(nx.DiGraph(self.edges()))
 
         dag = self.to_dag()
         return nx.is_directed_acyclic_graph(dag)
@@ -304,15 +304,15 @@ class PDAG(_CoreGraph):
         """
         Returns the CPDAG corresponding to one DAG extension of the PDAG.
         """
-        from pgmpy.base import DAG
 
-        if self.undirected_edges:
-            dag = self.to_dag()
-        else:
-            dag = DAG()
-            dag.add_nodes_from(self.nodes())
-            dag.add_edges_from(self.edges())
-            dag.latents = self.latents
+        # if self.undirected_edges:
+        #     dag = self.to_dag()
+        # else:
+        #     dag = DAG()
+        #     dag.add_nodes_from(self.nodes())
+        #     dag.add_edges_from(self.edges())
+        #     dag.latents = self.latents
+        dag = self.to_dag()
 
         cpdag = dag.to_pdag()
         for role, vars in self.get_role_dict().items():
