@@ -151,10 +151,10 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
             raise ValueError(f"Nodes u={u} and v={v} are already connected.")
 
         if T:
-            if not T.issubset(current_model.undirected_neighbors(v)):
+            if not T.issubset(current_model.get_neighbors(v, "--")):
                 raise ValueError(f"Not all nodes in T={T} are undirected neighbors of v={v}.")
 
-            if current_model.all_neighbors(u) & T:
+            if current_model.get_neighbors(u) & T:
                 raise ValueError(f"Some nodes in T={T} are adjacent to u={u}.")
 
         new_model = current_model.copy()
@@ -164,7 +164,7 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
         remove_edges = [(v, t) for t in T]
         new_model.remove_edges_from(remove_edges)
 
-        new_model.calibrate_directed_undirected_edges()
+        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def delete(
@@ -177,7 +177,7 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
         """
         Perform delete(u - v) or delete(u -> v) with conditioning set H.
         """
-        na_vu = current_model.undirected_neighbors(v) & current_model.all_neighbors(u)
+        na_vu = current_model.get_neighbors(v, "--") & current_model.get_neighbors(u)
 
         if not H.issubset(na_vu):
             raise ValueError(f"H={H} is not a subset of NA_vu={na_vu}.")
@@ -189,11 +189,11 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
             if new_model.has_undirected_edge(v, h):
                 new_model.remove_edge(h, v)
 
-        u_neighbors = set(new_model.undirected_neighbors(u))
+        u_neighbors = set(new_model.get_neighbors(u, "--"))
         for h in H & u_neighbors:
             new_model.remove_edge(h, u)
 
-        new_model.calibrate_directed_undirected_edges()
+        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def turn(
@@ -224,7 +224,7 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
                 new_model.remove_edge(v, c)
             new_model.add_edge(c, v)
 
-        new_model.calibrate_directed_undirected_edges()
+        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def _fit(self, X: pd.DataFrame):
@@ -268,7 +268,7 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
             insertion_ops: list[tuple[float, Any, Any, set[Any]] | None] = []
 
             for index, (u, v) in enumerate(potential_edges):
-                T0 = current_model.undirected_neighbors(v) - current_model.all_neighbors(u)
+                T0 = current_model.get_neighbors(v, "--") - current_model.get_neighbors(u)
                 subsets = [[*T, False] for T in powerset(list(T0))]
                 valid_insert_ops = []
 
@@ -276,7 +276,7 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
                     entry = subsets.pop(0)
                     T, passed_cond_2 = set(entry[:-1]), entry[-1]
 
-                    na_vu = current_model.undirected_neighbors(v) & current_model.all_neighbors(u)
+                    na_vu = current_model.get_neighbors(v, "--") & current_model.get_neighbors(u)
                     na_vuT = na_vu.union(T)
 
                     cond_1 = current_model.is_clique(na_vuT)
@@ -295,7 +295,7 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
                                     s[-1] = True
 
                     if cond_1 and cond_2:
-                        parents_v = current_model.directed_parents(v)
+                        parents_v = current_model.get_parents(v)
                         new_parents = ordered_tuple(na_vuT | parents_v | {u}, current_model)
                         old_parents = ordered_tuple(na_vuT | parents_v, current_model)
                         score_delta = score_fn(v, new_parents) - score_fn(v, old_parents)
@@ -332,7 +332,7 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
                 if not current_model.has_edge(u, v):
                     raise ValueError(f"No edge exists between nodes {(u, v)} to delete.")
 
-                na_vu = current_model.undirected_neighbors(v) & current_model.all_neighbors(u)
+                na_vu = current_model.get_neighbors(v, "--") & current_model.get_neighbors(u)
                 subsets = [[*H, False] for H in powerset(list(na_vu))]
                 valid_delete_ops = []
 
@@ -347,7 +347,7 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
                                 s[-1] = True
 
                     if cond_1:
-                        aux = (na_vu - H) | current_model.directed_parents(v) | {u}
+                        aux = (na_vu - H) | current_model.get_parents(v) | {u}
                         old_parents = ordered_tuple(aux, current_model)
                         new_parents = ordered_tuple(aux - {u}, current_model)
                         score_delta = score_fn(v, new_parents) - score_fn(v, old_parents)
@@ -384,10 +384,10 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
                 valid_turn_ops = []
 
                 if current_model.has_edge(u, v) and current_model.has_edge(v, u):
-                    non_adjacents = current_model.undirected_neighbors(v) - current_model.all_neighbors(u) - {u}
+                    non_adjacents = current_model.get_neighbors(v, "--") - current_model.get_neighbors(u) - {u}
 
                     if len(non_adjacents) > 0:
-                        C0 = current_model.undirected_neighbors(v) - {u}
+                        C0 = current_model.get_neighbors(v, "--") - {u}
                         subsets = [[*set(C), False] for C in powerset(list(C0)) if len(set(C) & non_adjacents) > 0]
 
                         while subsets:
@@ -400,13 +400,13 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
                                 continue
 
                             subgraph = nx.DiGraph(current_model.subgraph(current_model.chain_component(v)))
-                            na_vu = current_model.undirected_neighbors(v) & current_model.all_neighbors(u)
+                            na_vu = current_model.get_neighbors(v, "--") & current_model.get_neighbors(u)
 
                             if not self._separates({u, v}, C, na_vu - C, subgraph):
                                 continue
 
-                            parents_v = current_model.directed_parents(v)
-                            parents_u = current_model.directed_parents(u)
+                            parents_v = current_model.get_parents(v)
+                            parents_u = current_model.get_parents(u)
 
                             new_score = score_fn(v, ordered_tuple(parents_v | C | {u}, current_model)) + score_fn(
                                 u, ordered_tuple(parents_u | (C & na_vu), current_model)
@@ -420,14 +420,14 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
                             if new_model.has_acyclic_extension():
                                 valid_turn_ops.append((score_delta, u, v, C))
                 else:
-                    T0 = current_model.undirected_neighbors(v) - current_model.all_neighbors(u)
+                    T0 = current_model.get_neighbors(v, "--") - current_model.get_neighbors(u)
                     subsets = [[*T, False] for T in powerset(list(T0))]
 
                     while subsets:
                         entry = subsets.pop(0)
                         T, passed_cond_2 = set(entry[:-1]), entry[-1]
 
-                        na_vu = current_model.undirected_neighbors(v) & current_model.all_neighbors(u)
+                        na_vu = current_model.get_neighbors(v, "--") & current_model.get_neighbors(u)
                         C = na_vu.union(T)
 
                         cond_1 = current_model.is_clique(C)
@@ -441,7 +441,7 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
                             cond_2 = not current_model.has_semidirected_path(
                                 v,
                                 u,
-                                blocked_nodes=C | current_model.undirected_neighbors(u),
+                                blocked_nodes=C | current_model.get_neighbors(u, "--"),
                                 ignore_direct_edge=True,
                             )
 
@@ -451,8 +451,8 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
                                         s[-1] = True
 
                         if cond_1 and cond_2:
-                            parents_v = current_model.directed_parents(v)
-                            parents_u = current_model.directed_parents(u)
+                            parents_v = current_model.get_parents(v)
+                            parents_u = current_model.get_parents(u)
 
                             new_score = score_fn(v, ordered_tuple(C | parents_v | {u}, current_model)) + score_fn(
                                 u, ordered_tuple(parents_u - {v}, current_model)
