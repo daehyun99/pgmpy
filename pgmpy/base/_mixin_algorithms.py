@@ -564,6 +564,10 @@ class _GraphAlgorithmMixin:
         True
 
         """
+        # NOTE(@daehyun99): This method will be Refactored when Refactor DAG
+        # dag = self.get_directed_subgraph()
+        # return nx.has_path(dag, u, v)
+
         for path in nx.all_simple_edge_paths(self, u, v):
             is_directed_path = True
             for edge in path:
