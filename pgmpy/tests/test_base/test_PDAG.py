@@ -102,10 +102,7 @@ class TestPDAG:
         assert pdag.get_neighbors(node="D", edge_type="--") == {"B"}
 
     def test_chain_component(self):
-        pdag = PDAG(
-            directed_ebunch=[("E", "F")],
-            undirected_ebunch=[("A", "B"), ("B", "C"), ("D", "C")],
-        )
+        pdag = PDAG([("E", "F", "->"), ("A", "B", "--"), ("B", "C", "--"), ("D", "C", "--")])
 
         assert pdag.chain_component("A") == {"A", "B", "C", "D"}
         assert pdag.chain_component("C") == {"A", "B", "C", "D"}
@@ -113,10 +110,7 @@ class TestPDAG:
         assert pdag.chain_component("F") == {"F"}
 
     def test_has_semidirected_path(self):
-        pdag = PDAG(
-            directed_ebunch=[("A", "B"), ("C", "D")],
-            undirected_ebunch=[("B", "C")],
-        )
+        pdag = PDAG([("A", "B", "->"), ("C", "D", "->"), ("B", "C", "--")])
 
         assert pdag.has_semidirected_path("A", "D") is True
         assert pdag.has_semidirected_path("D", "A") is False
@@ -124,22 +118,14 @@ class TestPDAG:
         assert pdag.has_semidirected_path("A", "B", ignore_direct_edge=True) is False
 
     def test_has_acyclic_extension(self):
-        pdag = PDAG(
-            directed_ebunch=[("A", "B")],
-            undirected_ebunch=[("B", "C")],
-        )
-        directed_cycle = PDAG(
-            directed_ebunch=[("A", "B"), ("B", "C"), ("C", "A")],
-        )
+        pdag = PDAG([("A", "B", "->"), ("B", "C", "--")])
+        directed_cycle = PDAG([("A", "B", "->"), ("B", "C", "->"), ("C", "A", "->")])
 
         assert pdag.has_acyclic_extension() is True
         assert directed_cycle.has_acyclic_extension() is False
 
     def test_to_cpdag(self):
-        pdag = PDAG(
-            directed_ebunch=[("A", "B")],
-            undirected_ebunch=[("B", "C")],
-        )
+        pdag = PDAG([("A", "B", "->"), ("B", "C", "--")])
 
         cpdag = pdag.to_cpdag()
 
