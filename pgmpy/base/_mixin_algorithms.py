@@ -6,7 +6,6 @@ import networkx as nx
 
 from pgmpy.utils.types import Self
 
-
 class _GraphAlgorithmMixin:
     """Mixin class for causal graph's algorithms."""
 
@@ -650,6 +649,28 @@ class _GraphAlgorithmMixin:
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         raise NotImplementedError("`has_almost_directed_cycle` is not supported now")
+
+    def get_directed_subgraph(self):
+        """
+        Return a graph with the same nodes as the original graph, but containing only directed edges.
+        """
+        # # TODO(@daehyun99): [#2385] Implement code logic and test code When Refactor DAG
+        # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+        ebunch = self.get_edges(data=True)
+        directed_edges = []
+        for u, v, edge_type in ebunch:
+            if edge_type in {"->", "<-"}:
+                directed_edges.append((u, v, edge_type))
+
+        # from pgmpy.base import DAG
+        # TODO(@daehyun99): [#2385] Refactoring _CoreGraph -> DAG when Refactor DAG
+        from pgmpy.base._base import _CoreGraph
+        dag = _CoreGraph(directed_edges)
+        dag.add_nodes_from(self.nodes())
+        for role, vars in self.get_role_dict().items():
+            dag.with_role(role=role, variables=vars, inplace=True)
+        return dag
 
     def _check_new_unshielded_collider(self, u: Hashable, v: Hashable) -> bool:
         """
