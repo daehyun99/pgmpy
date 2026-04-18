@@ -792,6 +792,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
             * (u, v, key)       : keys=True, data=False
             * (u, v)            : keys=False, data=False
 
+        See Also
+        --------
+        `get_edge()`
+
         Examples
         --------
         >>> edges = [("A", "B", "->"), ("A", "B", "<>"), ("B", "C", "->")]
@@ -822,9 +826,9 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         """
         return self.SUPPORTED_EDGE_TYPES
 
-    def get_edge_type(self, u: Hashable, v: Hashable, key: Any = None) -> str:
+    def get_edge(self, u: Hashable, v: Hashable, data: bool = True, key: bool = False) -> list[tuple]:
         """
-        Retrieves the edge type for the edge between two nodes.
+        Retrieve edge with optional keys and API-formatted edge types.
 
         Parameters
         ----------
@@ -838,8 +842,16 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         Returns
         -------
-        edge_type : str
-            The edge type corresponding to the edge between ``u`` and ``v``.
+        edge : tuple
+            edge tuples.
+            * (u, v, key, type) : key=True, data=True
+            * (u, v, type)      : key=False, data=True
+            * (u, v, key)       : key=True, data=False
+            * (u, v)            : key=False, data=False
+
+        See Also
+        --------
+        `get_edges()`
 
         Examples
         --------
@@ -848,17 +860,27 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         >>> graph.add_edge("A", "B", "->")
         >>> graph.add_edge("A", "B", "--")
         >>> graph.add_edge("A", "B", "<>")
-        >>> graph.get_edge_type("A", "B", 0)
-        '->'
-        >>> graph.get_edge_type("A", "B", 1)
-        '--'
-        >>> graph.get_edge_type("A", "B", 2)
-        '<>'
+        >>> set(graph.get_edge("A", "B"))
+        {('A', 'B', '--'), ('A', 'B', '->'), ('A', 'B', '<>')}
 
         """
-        markers = self[u][v][key]
-        edge_type = self._to_api_edge_type(u, v, markers)
-        return edge_type
+        result = []
+        if not self.has_edge(u, v):
+            raise ValueError(f"Edge ({u}, {v}) not in graph.")
+
+        keys = self[u][v]
+        for key_val, marker in keys.items():
+            if data and key:
+                edge_type = self._to_api_edge_type(u, v, marker)
+                result.append((u, v, key_val, edge_type))
+            elif data:
+                edge_type = self._to_api_edge_type(u, v, marker)
+                result.append((u, v, edge_type))
+            elif key:
+                result.append((u, v, key_val))
+            else:
+                result.append((u, v))
+        return result
 
     def replace_edge(
         self,
@@ -911,6 +933,22 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         #       so additional logic will need to be developed to handle this in the future.
         self.remove_edge(u, v, old_type)
         self.add_edge(u, v, new_type)
+
+    def has_edge(self, u, v, edge_type=None):
+        if not super().has_edge(u, v):
+            return False
+
+        if edge_type is None:
+            return True
+
+        if edge_type not in self.SUPPORTED_EDGE_TYPES:
+            raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
+        ebunch = self.get_edge(u, v)
+
+        for edge in ebunch:
+            if edge[2] == edge_type:
+                return True
+        return False
 
     def orient_undirected_edge(self, u, v, inplace=False):
         """
