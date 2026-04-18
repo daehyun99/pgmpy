@@ -1977,24 +1977,43 @@ class TestCoreGraph:
         graph = _CoreGraph()
         assert {"--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"} == graph.get_supported_edge_types()
 
-    def test_get_edge_type(self):
+    def test_get_edge(self):
         graph = _CoreGraph()
 
         graph.add_edge("A", "B", "->")
         graph.add_edge("A", "B", "--")
-        graph.add_edge("A", "B", "<>")
-        graph.add_edge("A", "B", "-o")
-        graph.add_edge("A", "B", "<-")
-        graph.add_edge("A", "B", "oo")
-        graph.add_edge("A", "B", "o-")
+        graph.add_edge("B", "C", "<>")
+        graph.add_edge("C", "D", "-o")
+        graph.add_edge("D", "E", "<-")
+        graph.add_edge("E", "F", "oo")
+        graph.add_edge("F", "G", "o-")
 
-        assert graph.get_edge_type("A", "B", 0) == "->"
-        assert graph.get_edge_type("A", "B", 1) == "--"
-        assert graph.get_edge_type("A", "B", 2) == "<>"
-        assert graph.get_edge_type("A", "B", 3) == "-o"
-        assert graph.get_edge_type("A", "B", 4) == "<-"
-        assert graph.get_edge_type("A", "B", 5) == "oo"
-        assert graph.get_edge_type("A", "B", 6) == "o-"
+        assert set(graph.get_edge("A", "B", data=True, key=True)) == {
+            ("A", "B", 0, "->"),
+            ("A", "B", 1, "--"),
+        }
+        assert set(graph.get_edge("A", "B", data=True, key=False)) == {
+            ("A", "B", "->"),
+            ("A", "B", "--"),
+        }
+        assert set(graph.get_edge("B", "C", data=False, key=False)) == {
+            ("B", "C"),
+        }
+        assert set(graph.get_edge("C", "D", data=False, key=True)) == {
+            ("C", "D", 0),
+        }
+        assert set(graph.get_edge("D", "E")) == {
+            ("D", "E", "<-"),
+        }
+        assert set(graph.get_edge("E", "D")) == {
+            ("E", "D", "->"),
+        }
+        assert set(graph.get_edge("E", "F")) == {
+            ("E", "F", "oo"),
+        }
+        assert set(graph.get_edge("F", "G")) == {
+            ("F", "G", "o-"),
+        }
 
     def test_orient_undirected_edge(self): ...
 
