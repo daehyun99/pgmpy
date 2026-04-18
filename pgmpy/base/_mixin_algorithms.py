@@ -6,6 +6,7 @@ import networkx as nx
 
 from pgmpy.utils.types import Self
 
+
 class _GraphAlgorithmMixin:
     """Mixin class for causal graph's algorithms."""
 
@@ -670,6 +671,7 @@ class _GraphAlgorithmMixin:
         # from pgmpy.base import DAG
         # TODO(@daehyun99): [#2385] Refactoring _CoreGraph -> DAG when Refactor DAG
         from pgmpy.base._base import _CoreGraph
+
         dag = _CoreGraph(directed_edges)
         dag.add_nodes_from(self.nodes())
         for role, vars in self.get_role_dict().items():

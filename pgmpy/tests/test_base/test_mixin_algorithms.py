@@ -614,7 +614,9 @@ class TestGraphAlgorithmMixin:
 
         subgraph = graph.get_directed_subgraph()
 
-        assert isinstance(subgraph, _CoreGraph) # TODO(@daehyun99): [#2385] Refactoring _CoreGraph -> DAG when Refactor DAG
+        assert isinstance(
+            subgraph, _CoreGraph
+        )  # TODO(@daehyun99): [#2385] Refactoring _CoreGraph -> DAG when Refactor DAG
         assert set(subgraph.nodes()) == {"A", "B", "C", "D", "E"}
         assert set(subgraph.get_edges(keys=True, data=True)) == {("A", "B", 0, "->"), ("B", "C", 0, "->")}
         assert subgraph.latents == {"E"}
