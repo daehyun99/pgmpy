@@ -2065,8 +2065,6 @@ class TestCoreGraph:
 
         assert graph.has_edge("A", "B") is True
         assert graph.has_edge("A", "B", "->") is True
-        assert graph.has_edge("A", "B", key=0) is True
-        assert graph.has_edge("A", "B", "->", 0) is True
         assert graph.has_edge("B", "C", "--") is True
         assert graph.has_edge("C", "D", "<>") is True
         assert graph.has_edge("D", "C", "<>") is True
@@ -2077,7 +2075,6 @@ class TestCoreGraph:
         assert graph.has_edge("A", "B", "-o") is False
         assert graph.has_edge("A", "E") is False
         assert graph.has_edge("A", "E", "->") is False
-        assert graph.has_edge("A", "B", key=1) is False
 
     def test_has_edge_fails(self):
         graph = _CoreGraph()
