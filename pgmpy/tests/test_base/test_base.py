@@ -2055,3 +2055,36 @@ class TestCoreGraph:
 
         with pytest.raises(ValueError):
             graph.replace_edge("B", "C", old_type="--", new_type="->")
+
+    def test_has_edge(self):
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("B", "C", "--")
+        graph.add_edge("C", "D", "<>")
+        graph.add_node("E")
+
+        assert graph.has_edge("A", "B") is True
+        assert graph.has_edge("A", "B", "->") is True
+        assert graph.has_edge("A", "B", key=0) is True
+        assert graph.has_edge("A", "B", "->", 0) is True
+        assert graph.has_edge("B", "C", "--") is True
+        assert graph.has_edge("C", "D", "<>") is True
+        assert graph.has_edge("D", "C", "<>") is True
+        assert graph.has_edge("B", "A", "<-") is True
+        assert graph.has_edge("A", "B", "<-") is False
+        assert graph.has_edge("A", "B", "--") is False
+        assert graph.has_edge("A", "B", "<>") is False
+        assert graph.has_edge("A", "B", "-o") is False
+        assert graph.has_edge("A", "E") is False
+        assert graph.has_edge("A", "E", "->") is False
+        assert graph.has_edge("A", "B", key=1) is False
+
+    def test_has_edge_fails(self):
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("B", "C", "--")
+        graph.add_edge("C", "D", "<>")
+        graph.add_node("E")
+
+        with pytest.raises(ValueError):
+            graph.has_edge("A", "B", "invalid_edge_type")

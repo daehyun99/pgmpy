@@ -933,6 +933,22 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         self.remove_edge(u, v, old_type)
         self.add_edge(u, v, new_type)
 
+    def has_edge(self, u, v, edge_type=None, key=None):
+        if not super().has_edge(u, v, key=key):
+            return False
+
+        if edge_type is None:
+            return True
+
+        if edge_type not in self.SUPPORTED_EDGE_TYPES:
+            raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
+        ebunch = self.get_edge(u, v)
+
+        for edge in ebunch:
+            if edge[2] == edge_type:
+                return True
+        return False
+
     def orient_undirected_edge(self, u, v, inplace=False):
         """
         Orients an undirected edge u - v as u -> v.
