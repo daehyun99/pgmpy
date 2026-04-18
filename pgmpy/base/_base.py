@@ -826,7 +826,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         """
         return self.SUPPORTED_EDGE_TYPES
 
-    def get_edge(self, u: Hashable, v: Hashable, data: bool = True, key: bool = False) -> tuple:
+    def get_edge(self, u: Hashable, v: Hashable, data: bool = True, key: bool = False) -> list[tuple]:
         """
         Retrieve edge with optional keys and API-formatted edge types.
 
@@ -870,10 +870,11 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         keys = self[u][v]
         for key_val, marker in keys.items():
-            edge_type = self._to_api_edge_type(u, v, marker)
             if data and key:
+                edge_type = self._to_api_edge_type(u, v, marker)
                 result.append((u, v, key_val, edge_type))
             elif data:
+                edge_type = self._to_api_edge_type(u, v, marker)
                 result.append((u, v, edge_type))
             elif key:
                 result.append((u, v, key_val))
@@ -933,8 +934,8 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         self.remove_edge(u, v, old_type)
         self.add_edge(u, v, new_type)
 
-    def has_edge(self, u, v, edge_type=None, key=None):
-        if not super().has_edge(u, v, key=key):
+    def has_edge(self, u, v, edge_type=None):
+        if not super().has_edge(u, v):
             return False
 
         if edge_type is None:
