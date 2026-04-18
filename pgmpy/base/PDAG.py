@@ -144,22 +144,6 @@ class PDAG(_CoreGraph):
         dag = self.to_dag()
         return nx.is_directed_acyclic_graph(dag)
 
-    def _directed_graph(self):
-        """
-        Returns a subgraph containing only directed edges.
-        """
-        ebunch = self.get_edges(data=True)
-        directed_edges = []
-        for u, v, edge_type in ebunch:
-            if edge_type == "->":
-                directed_edges.append((u, v))
-            elif edge_type == "<-":
-                directed_edges.append((v, u))
-
-        dag = nx.DiGraph(directed_edges)
-        dag.add_nodes_from(self.nodes())
-        return dag
-
     def is_clique(self, nodes: Iterable) -> bool:
         """
         Checks if a set of nodes forms a clique. A clique is a subgraph
@@ -227,7 +211,7 @@ class PDAG(_CoreGraph):
                         if (
                             (not pdag.has_edge(x, z))
                             and (not pdag._check_new_unshielded_collider(y, z))
-                            and (not nx.has_path(pdag._directed_graph(), z, y))
+                            and (not pdag.has_direct_path(z, y))
                         ):
                             pdag.orient_undirected_edge(y, z, inplace=True)
                             changed = True

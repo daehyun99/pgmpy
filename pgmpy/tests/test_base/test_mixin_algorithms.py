@@ -590,4 +590,33 @@ class TestGraphAlgorithmMixin:
         assert nx.has_path(graph, "A", "D") is True
         assert graph.has_direct_path("A", "D") is True
 
-    def test_check_new_unshielded_collider(self): ...
+    def test_check_new_unshielded_collider(self):
+        graph = _CoreGraph()
+
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("B", "C", "--")
+
+        assert graph._check_new_unshielded_collider(u="C", v="B") is True
+        assert graph._check_new_unshielded_collider(u="B", v="C") is False
+
+        graph.add_edge("A", "C", "--")
+
+        assert graph._check_new_unshielded_collider(u="C", v="B") is False
+
+    def test_get_directed_subgraph(self):
+        graph = _CoreGraph()
+
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("B", "C", "->")
+        graph.add_edge("C", "D", "<>")
+        graph.add_edge("D", "E", "--")
+        graph.latents = "E"
+
+        subgraph = graph.get_directed_subgraph()
+
+        assert isinstance(
+            subgraph, _CoreGraph
+        )  # TODO(@daehyun99): [#2385] Refactoring _CoreGraph -> DAG when Refactor DAG
+        assert set(subgraph.nodes()) == {"A", "B", "C", "D", "E"}
+        assert set(subgraph.get_edges(keys=True, data=True)) == {("A", "B", 0, "->"), ("B", "C", 0, "->")}
+        assert subgraph.latents == {"E"}

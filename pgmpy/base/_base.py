@@ -860,6 +860,58 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         edge_type = self._to_api_edge_type(u, v, markers)
         return edge_type
 
+    def replace_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        old_type: str = "--",
+        new_type: str = "->",
+    ) -> None:
+        """
+        Replaces the type of an existing edge between two nodes with a new type.
+
+        Parameters
+        ----------
+        u : Hashable
+            The source node of the edge.
+        v : Hashable
+            The target node of the edge.
+        old_type : str, optional (default="--")
+            The current type of the edge that needs to be replaced.
+        new_type : str, optional (default="->")
+            The new edge type to be assigned.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph()
+        >>> graph.add_edge("A", "B", "--")
+        >>> graph.replace_edge("A", "B", old_type="--", new_type="->")
+        >>> graph.has_edge("A", "B", "->")
+        True
+        >>> graph.has_edge("A", "B", "--")
+        False
+
+        """
+        if (old_type not in self.SUPPORTED_EDGE_TYPES) or (new_type not in self.SUPPORTED_EDGE_TYPES):
+            raise ValueError(
+                f"Unsupported edge type(s) provided. "
+                f"Got old_type='{old_type}', new_type='{new_type}'. "
+                f"Supported types are: {self.SUPPORTED_EDGE_TYPES}."
+            )
+        if not self.has_edge(u, v):
+            raise ValueError(f"Edge ({u}, {v}) not in graph.")
+
+        # TODO: Add logic of maintain edge's attr data
+        #       Currently, we treat `edge_type` as an attribute,
+        #       so additional logic will need to be developed to handle this in the future.
+        self.remove_edge(u, v, old_type)
+        self.add_edge(u, v, new_type)
+
     def orient_undirected_edge(self, u, v, inplace=False):
         """
         Orients an undirected edge u - v as u -> v.
@@ -886,14 +938,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
             pdag = self.copy()
 
         # Remove the edge for undirected_edges.
-        if not (v in self.get_neighbors(u, "--") or u in self.get_neighbors(v, "--")):
+        if v not in self.get_neighbors(u, "--"):
             raise ValueError(f"Undirected Edge {u} - {v} not present in the PDAG.")
 
-        # Remove the inverse edge from the graph
-        pdag.remove_edge(u, v, "--")
-
-        # Add the edge to directed_edges.
-        pdag.add_edge(u, v, "->")
+        pdag.replace_edge(u, v, "--", "->")
 
         if not inplace:
             return pdag
