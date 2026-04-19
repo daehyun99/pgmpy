@@ -185,6 +185,8 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
             raise ValueError(f"H={H} is not a subset of NA_vu={na_vu}.")
 
         new_model = current_model.copy()
+        if new_model.has_edge(u, v, "--"):
+            new_model.remove_edge(u, v, "--")
         if new_model.has_edge(u, v, "->"):
             new_model.remove_edge(u, v, "->")
         if new_model.has_edge(v, u, "->"):
@@ -217,6 +219,9 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
             raise ValueError(f"The edge {u} -> {v} already exists.")
 
         new_model = current_model.copy()
+
+        if new_model.has_edge(v, u, "--"):
+            new_model.remove_edge(v, u, "--")
 
         if new_model.has_edge(v, u, "->"):
             new_model.remove_edge(v, u, "->")

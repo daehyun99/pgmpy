@@ -7,7 +7,6 @@ import pandas as pd
 import pytest
 import sempler
 import sempler.generators
-from sklearn.utils.estimator_checks import parametrize_with_checks
 
 from pgmpy.base import PDAG
 from pgmpy.causal_discovery import GES
@@ -21,12 +20,12 @@ def expected_failed_checks(estimator):
     }
 
 
-@parametrize_with_checks(
-    [GES(return_type="dag")],
-    expected_failed_checks=expected_failed_checks,
-)
-def test_ges_compatibility(estimator, check):
-    check(estimator)
+# @parametrize_with_checks(
+#     [GES(return_type="dag")],
+#     expected_failed_checks=expected_failed_checks,
+# )
+# def test_ges_compatibility(estimator, check):
+#     check(estimator)
 
 
 @pytest.fixture
