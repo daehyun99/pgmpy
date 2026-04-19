@@ -326,99 +326,122 @@ class TestPDAG:
     def test_pdag_to_cpdag(self):
         pdag = PDAG(ebunch=[("A", "B", "->"), ("B", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.edges()) == {("A", "B"), ("B", "C")}
+        assert set(cpdag.get_edges(keys=False, data=True)) == {
+            ("A", "B", "->"),
+            ("B", "C", "->"),
+        }
 
         pdag = PDAG(ebunch=[("A", "B", "->"), ("B", "C", "--"), ("C", "D", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.edges()) == {("A", "B"), ("B", "C"), ("C", "D")}
+        assert set(cpdag.get_edges(keys=False, data=True)) == {
+            ("A", "B", "->"),
+            ("B", "C", "->"),
+            ("C", "D", "->"),
+        }
 
         pdag = PDAG(ebunch=[("A", "B", "->"), ("D", "C", "->"), ("B", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.edges()) == {("A", "B"), ("D", "C"), ("B", "C"), ("C", "B")}
+        assert set(cpdag.get_edges(keys=False, data=True)) == {
+            ("A", "B", "->"),
+            ("B", "C", "--"),
+            ("D", "C", "->"),
+        }
 
         pdag = PDAG(ebunch=[("A", "B", "->"), ("D", "C", "->"), ("D", "B", "->"), ("B", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.edges()) == {("A", "B"), ("D", "C"), ("D", "B"), ("B", "C")}
+        assert set(cpdag.get_edges(keys=False, data=True)) == {
+            ("A", "B", "->"),
+            ("B", "C", "->"),
+            ("B", "D", "<-"),
+            ("D", "C", "->"),
+        }
 
         pdag = PDAG(ebunch=[("A", "B", "->"), ("B", "C", "->"), ("A", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.edges()) == {("A", "B"), ("B", "C"), ("A", "C")}
+        assert set(cpdag.get_edges(keys=False, data=True)) == {
+            ("A", "B", "->"),
+            ("A", "C", "->"),
+            ("B", "C", "->"),
+        }
 
         pdag = PDAG(ebunch=[("A", "B", "->"), ("B", "C", "->"), ("D", "C", "->"), ("A", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.edges()) == {("A", "B"), ("B", "C"), ("A", "C"), ("D", "C")}
+        assert set(cpdag.get_edges(keys=False, data=True)) == {
+            ("A", "B", "->"),
+            ("A", "C", "->"),
+            ("B", "C", "->"),
+            ("C", "D", "<-"),
+        }
 
         # Examples taken from Perković 2017.
         pdag = PDAG(ebunch=[("V1", "X", "->"), ("X", "V2", "--"), ("V2", "Y", "--"), ("X", "Y", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.edges()) == {("V1", "X"), ("X", "V2"), ("X", "Y"), ("V2", "Y"), ("Y", "V2")}
+        assert set(cpdag.get_edges(keys=False, data=True)) == {
+            ("V1", "X", "->"),
+            ("V2", "Y", "--"),
+            ("X", "V2", "->"),
+            ("X", "Y", "->"),
+        }
 
         pdag = PDAG(ebunch=[("Y", "X", "->"), ("V1", "X", "--"), ("X", "V2", "--"), ("V2", "Y", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.edges()) == {
-            ("X", "V1"),
-            ("Y", "X"),
-            ("X", "V2"),
-            ("V2", "X"),
-            ("V2", "Y"),
-            ("Y", "V2"),
+        assert set(cpdag.get_edges(keys=False, data=True)) == {
+            ("X", "V1", "->"),
+            ("X", "V2", "--"),
+            ("Y", "X", "->"),
+            ("Y", "V2", "--"),
         }
 
         # Examples from Bang 2024
         pdag = PDAG(ebunch=[("B", "D", "->"), ("C", "D", "->"), ("A", "D", "--"), ("A", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True, debug=True)
-        assert set(cpdag.edges()) == {("B", "D"), ("D", "A"), ("C", "A"), ("C", "D")}
+        assert set(cpdag.get_edges(keys=False, data=True)) == {
+            ("B", "D", "->"),
+            ("C", "A", "->"),
+            ("D", "C", "<-"),
+            ("D", "A", "->"),
+        }
 
         pdag = PDAG(ebunch=[("A", "B", "->"), ("C", "B", "->"), ("D", "B", "--"), ("D", "A", "--"), ("D", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.edges()) == {
-            ("A", "B"),
-            ("C", "B"),
-            ("D", "B"),
-            ("D", "A"),
-            ("A", "D"),
-            ("D", "C"),
-            ("C", "D"),
+        assert set(cpdag.get_edges(keys=False, data=True)) == {
+            ("A", "B", "->"),
+            ("A", "D", "--"),
+            ("B", "C", "<-"),
+            ("B", "D", "<-"),
+            ("C", "D", "--"),
         }
 
         ebunch = [("A", "C", "--"), ("B", "C", "--"), ("D", "C", "--"), ("B", "D", "->"), ("D", "A", "->")]
 
         pdag = PDAG(ebunch=ebunch)
         mpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(mpdag.edges()) == {
-            ("C", "A"),
-            ("C", "B"),
-            ("B", "C"),
-            ("B", "D"),
-            ("D", "A"),
-            ("D", "C"),
-            ("C", "D"),
+        assert set(mpdag.get_edges(keys=False, data=True)) == {
+            ("C", "B", "--"),
+            ("B", "D", "->"),
+            ("A", "C", "<-"),
+            ("C", "D", "--"),
+            ("A", "D", "<-"),
         }
 
         pdag = PDAG(ebunch=ebunch)
         pdag = pdag.apply_meeks_rules()
-        assert set(pdag.edges()) == {
-            ("A", "C"),
-            ("C", "A"),
-            ("C", "B"),
-            ("B", "C"),
-            ("B", "D"),
-            ("D", "A"),
-            ("D", "C"),
-            ("C", "D"),
+        assert set(pdag.get_edges(keys=False, data=True)) == {
+            ("A", "C", "--"),
+            ("C", "B", "--"),
+            ("B", "D", "->"),
+            ("C", "D", "--"),
+            ("A", "D", "<-"),
         }
 
         pdag_inp = PDAG(ebunch=ebunch)
         pdag_inp.apply_meeks_rules(inplace=True)
-        assert set(pdag_inp.edges()) == {
-            ("A", "C"),
-            ("C", "A"),
-            ("C", "B"),
-            ("B", "C"),
-            ("B", "D"),
-            ("D", "A"),
-            ("D", "C"),
-            ("C", "D"),
+        assert set(pdag_inp.get_edges(keys=False, data=True)) == {
+            ("A", "C", "--"),
+            ("C", "B", "--"),
+            ("B", "D", "->"),
+            ("C", "D", "--"),
+            ("A", "D", "<-"),
         }
 
     def test_pdag_equality(self):

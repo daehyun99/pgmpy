@@ -230,7 +230,7 @@ class PDAG(_CoreGraph):
 
                 for x in xs:
                     for y in ys:
-                        if pdag.has_edge(x, y) and pdag.get_edge_type(x, y, 0) == "--":
+                        if pdag.has_edge(x, y) and (x, y, "--") in pdag.get_edge(x, y):
                             pdag.orient_undirected_edge(x, y, inplace=True)
                             changed = True
                             if debug:
@@ -244,7 +244,7 @@ class PDAG(_CoreGraph):
                     continue
 
                 for y, z, w in itertools.permutations(undirected_nbs, 3):
-                    if pdag.get_edge_type(y, w, 0) == "->" and pdag.get_edge_type(z, w, 0) == "->":
+                    if (y, w, "->") in pdag.get_edge(y, w) and (z, w, "->") in pdag.get_edge(z, w):
                         pdag.orient_undirected_edge(x, w, inplace=True)
                         changed = True
                         if debug:
@@ -304,6 +304,9 @@ class PDAG(_CoreGraph):
         #     dag.latents = self.latents
         dag = self.to_dag()
 
+        # TODO(@daehyun99): [#2385] Implement method when Refactor DAG
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         cpdag = dag.to_pdag()
         for role, vars in self.get_role_dict().items():
             cpdag.with_role(role=role, variables=vars, inplace=True)
