@@ -607,8 +607,8 @@ class _GraphAlgorithmMixin:
         # for edge in networkx_ebunch:
         # if edge[-1] == {edge[0]: "-", edge[1]: ">"}:
         # dag.add_edge(edge[0], edge[1], "->")
-
-        raise NotImplementedError("`has_directed_cycle` is not supported now")
+        dag = self.to_dag()
+        return nx.is_directed_acyclic_graph(dag)
 
     def has_almost_directed_cycle(self):
         """

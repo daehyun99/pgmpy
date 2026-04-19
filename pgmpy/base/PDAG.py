@@ -160,7 +160,7 @@ class PDAG(_CoreGraph):
             The set of nodes to be checked for clique formation.
         """
         for node1, node2 in itertools.combinations(nodes, 2):
-            if not self.has_undirected_edge(node1, node2):
+            if not self.has_edge(node1, node2, "--"):
                 return False
         return True
 
@@ -294,14 +294,6 @@ class PDAG(_CoreGraph):
         """
         Returns the CPDAG corresponding to one DAG extension of the PDAG.
         """
-
-        # if self.undirected_edges:
-        #     dag = self.to_dag()
-        # else:
-        #     dag = DAG()
-        #     dag.add_nodes_from(self.nodes())
-        #     dag.add_edges_from(self.edges())
-        #     dag.latents = self.latents
         dag = self.to_dag()
 
         # TODO(@daehyun99): [#2385] Implement method when Refactor DAG
@@ -392,6 +384,21 @@ class PDAG(_CoreGraph):
                 break
         return dag
 
+    def has_acyclic_extension(self) -> bool:
+        """
+        Returns True if the PDAG admits an acyclic DAG extension.
+        """
+        ebunch = self.get_edges(data=True)
+        flag = False
+        for edge in ebunch:
+            if edge[2] == "--":
+                flag = True
+        if not flag:
+            return nx.is_directed_acyclic_graph(nx.DiGraph(self.edges()))
+
+        dag = self.to_dag()
+        return nx.is_directed_acyclic_graph(dag)
+
     def to_graphviz(self) -> object:
         """
         Retuns a pygraphviz object for the DAG. pygraphviz is useful for
@@ -406,17 +413,17 @@ class PDAG(_CoreGraph):
         """
         return nx.nx_agraph.to_agraph(self)
 
-    def _validate_graph_specific_edges(
-        self,
-        ebunch: (
-            Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
-        ),
-    ):
-        for edge in ebunch:
-            if len(edge) == 3:
-                u, v, edge_type = edge
-            elif len(edge) == 4:
-                u, v, _, edge_type = edge
-        if edge_type == "->":
-            if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
-                raise ValueError("Cycles are not allowed in a PDAG.")
+    # def _validate_graph_specific_edges(
+    #     self,
+    #     ebunch: (
+    #         Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
+    #     ),
+    # ):
+    #     for edge in ebunch:
+    #         if len(edge) == 3:
+    #             u, v, edge_type = edge
+    #         elif len(edge) == 4:
+    #             u, v, _, edge_type = edge
+    #         if edge_type == "->":
+    #             if self.has_node(u) and self.has_node(v) and self.has_directed_cycle():
+    #                 raise ValueError("Cycles are not allowed in a PDAG.")

@@ -150,7 +150,7 @@ class GES(StructureEstimator):
         remove_edges = [(v, t) for t in T]
         new_model.remove_edges_from(remove_edges)
 
-        new_model.calibrate_directed_undirected_edges()
+        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def delete(
@@ -183,7 +183,7 @@ class GES(StructureEstimator):
         for h in H & u_neighbors:
             new_model.remove_edge(h, u)
 
-        new_model.calibrate_directed_undirected_edges()
+        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def turn(
@@ -218,7 +218,7 @@ class GES(StructureEstimator):
                 new_model.remove_edge(v, c)
             new_model.add_edge(c, v)
 
-        new_model.calibrate_directed_undirected_edges()
+        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def _score_valid_insertions(

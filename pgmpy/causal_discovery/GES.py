@@ -158,11 +158,13 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
                 raise ValueError(f"Some nodes in T={T} are adjacent to u={u}.")
 
         new_model = current_model.copy()
-        new_model.add_edge(u, v)
+        if not new_model.has_edge(u, v, "->"):
+            new_model.add_edge(u, v, "->")
 
         # Orient v - t as t -> v for all t in T
-        remove_edges = [(v, t) for t in T]
-        new_model.remove_edges_from(remove_edges)
+        remove_edges = [(t, v) for t in T]
+        for edges in remove_edges:
+            new_model.replace_edge(edges[0], edges[1], "--", "->")
 
         # new_model.calibrate_directed_undirected_edges()
         return new_model
@@ -183,15 +185,18 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
             raise ValueError(f"H={H} is not a subset of NA_vu={na_vu}.")
 
         new_model = current_model.copy()
-        new_model.remove_edges_from([(u, v), (v, u)])
+        if new_model.has_edge(u, v, "->"):
+            new_model.remove_edge(u, v, "->")
+        if new_model.has_edge(v, u, "->"):
+            new_model.remove_edge(v, u, "->")
 
         for h in H:
-            if new_model.has_undirected_edge(v, h):
-                new_model.remove_edge(h, v)
+            if new_model.has_edge(v, h, "--"):
+                new_model.replace_edge(v, h, "--", "->")
 
         u_neighbors = set(new_model.get_neighbors(u, "--"))
         for h in H & u_neighbors:
-            new_model.remove_edge(h, u)
+            new_model.replace_edge(u, h, "--", "->")
 
         # new_model.calibrate_directed_undirected_edges()
         return new_model
@@ -208,21 +213,22 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
         """
         C = set(C)
 
-        if current_model.has_edge(u, v) and not current_model.has_edge(v, u):
+        if current_model.has_edge(u, v, "->"):
             raise ValueError(f"The edge {u} -> {v} already exists.")
 
         new_model = current_model.copy()
 
-        if new_model.has_edge(v, u):
-            new_model.remove_edge(v, u)
+        if new_model.has_edge(v, u, "->"):
+            new_model.remove_edge(v, u, "->")
 
-        if not new_model.has_edge(u, v):
-            new_model.add_edge(u, v)
+        if not new_model.has_edge(u, v, "->"):
+            new_model.add_edge(u, v, "->")
 
         for c in C:
-            if new_model.has_edge(v, c):
-                new_model.remove_edge(v, c)
-            new_model.add_edge(c, v)
+            if new_model.has_edge(c, v, "--"):
+                new_model.replace_edge(c, v, "--", "->")
+            else:
+                new_model.add_edge(c, v, "->")
 
         # new_model.calibrate_directed_undirected_edges()
         return new_model
