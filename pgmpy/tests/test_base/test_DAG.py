@@ -176,16 +176,13 @@ class TestDAGCreation(unittest.TestCase):
 
         # Expected edges in the PDAG
         expected_edges = {
-            ("Y", "U"),
-            ("U", "Y"),  # Undirected edge between Y and U
-            ("Z", "W"),
-            ("W", "Z"),  # Undirected edge between Z and W
-            ("X", "Z"),
-            ("Z", "X"),  # Undirected edge between X and Z
+            ("Y", "U", "--"),
+            ("Z", "W", "--"),
+            ("X", "Z", "--"),
         }
 
         # Check that all expected edges are present
-        self.assertEqual(set(pdag.edges()), expected_edges)
+        self.assertEqual(set(pdag.get_edges(data=True)), expected_edges)
 
         # Check that the PDAG has the correct number of nodes
         self.assertEqual(set(pdag.nodes()), {"X", "Y", "Z", "W", "U"})
@@ -198,9 +195,9 @@ class TestDAGCreation(unittest.TestCase):
         pdag = dag.to_pdag()
 
         # Expected edges in the PDAG
-        expected_edges = {("X", "Y"), ("Y", "X")}
+        expected_edges = {("X", "Y", "--")}
         # Check that all expected edges are present
-        self.assertEqual(set(pdag.edges()), expected_edges)
+        self.assertEqual(set(pdag.get_edges(data=True)), expected_edges)
         # Check that the PDAG has the correct number of nodes
         self.assertEqual(set(pdag.nodes()), {"X", "Y"})
         # Check that there are no latent variables
@@ -211,9 +208,9 @@ class TestDAGCreation(unittest.TestCase):
         pdag = dag.to_pdag()
 
         # Expected edges in the PDAG
-        expected_edges = {("X", "Y"), ("Z", "Y")}
+        expected_edges = {("X", "Y", "->"), ("Y", "Z", "<-")}
         # Check that all expected edges are present
-        self.assertEqual(set(pdag.edges()), expected_edges)
+        self.assertEqual(set(pdag.get_edges(data=True)), expected_edges)
         # Check that the PDAG has the correct number of nodes
         self.assertEqual(set(pdag.nodes()), {"X", "Y", "Z"})
         # Check that there are no latent variables
@@ -236,18 +233,18 @@ class TestDAGCreation(unittest.TestCase):
 
         # Expected edges in the PDAG
         expected_edges = {
-            ("Z1", "Z3"),
-            ("Z1", "X"),
-            ("Z3", "X"),
-            ("Z3", "Y"),
-            ("Z2", "Z3"),
-            ("Z2", "Y"),
-            ("X", "W"),
-            ("W", "Y"),
+            ("W", "Y", "->"),
+            ("X", "W", "->"),
+            ("X", "Z3", "<-"),
+            ("Y", "Z2", "<-"),
+            ("Z1", "X", "->"),
+            ("Z1", "Z3", "->"),
+            ("Z3", "Y", "->"),
+            ("Z3", "Z2", "<-"),
         }
 
         # Check that all expected edges are present
-        self.assertEqual(set(pdag.edges()), expected_edges)
+        self.assertEqual(set(pdag.get_edges(data=True)), expected_edges)
         # Check that the PDAG has the correct number of nodes
         self.assertEqual(set(pdag.nodes()), {"Z1", "Z2", "X", "Y", "Z3", "W"})
         # Check that there are no latent variables
@@ -259,15 +256,12 @@ class TestDAGCreation(unittest.TestCase):
 
         # Expected edges in the PDAG
         expected_edges = {
-            ("X", "Y"),
-            ("Y", "X"),
-            ("Z", "Y"),
-            ("Y", "Z"),
-            ("Z", "X"),
-            ("X", "Z"),
+            ("X", "Y", "--"),
+            ("Y", "Z", "--"),
+            ("X", "Z", "--"),
         }
         # Check that all expected edges are present
-        self.assertEqual(set(pdag.edges()), expected_edges)
+        self.assertEqual(set(pdag.get_edges(data=True)), expected_edges)
         # Check that the PDAG has the correct number of nodes
         self.assertEqual(set(pdag.nodes()), {"X", "Y", "Z"})
         # Check that there are no latent variables

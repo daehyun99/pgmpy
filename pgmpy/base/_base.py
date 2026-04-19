@@ -1045,7 +1045,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         supported_types = self.SUPPORTED_EDGE_TYPES
 
         for edge in ebunch:
-            if len(edge) == 3:
+            if len(edge) == 2:
+                u, v = edge
+                edge_type = "->"
+            elif len(edge) == 3:
                 u, v, edge_type = edge
             elif len(edge) == 4:
                 u, v, _, edge_type = edge
