@@ -866,7 +866,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         """
         result = []
         if not self.has_edge(u, v):
-            raise ValueError(f"Edge ({u}, {v}) not in graph.")
+            return []
 
         keys = self[u][v]
         for key_val, marker in keys.items():
