@@ -149,16 +149,6 @@ class PDAG(_CoreGraph):
 
         return nx.has_path(graph, u, v)
 
-    def has_acyclic_extension(self) -> bool:
-        """
-        Returns True if the PDAG admits an acyclic DAG extension.
-        """
-        # if not self.undirected_edges:
-        #     return nx.is_directed_acyclic_graph(nx.DiGraph(self.edges()))
-
-        dag = self.to_dag()
-        return nx.is_directed_acyclic_graph(dag)
-
     def is_clique(self, nodes: Iterable) -> bool:
         """
         Checks if a set of nodes forms a clique. A clique is a subgraph
@@ -412,3 +402,18 @@ class PDAG(_CoreGraph):
         <AGraph ...
         """
         return nx.nx_agraph.to_agraph(self)
+
+    def _validate_graph_specific_edges(
+        self,
+        ebunch: (
+            Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
+        ),
+    ):
+        for edge in ebunch:
+            if len(edge) == 3:
+                u, v, edge_type = edge
+            elif len(edge) == 4:
+                u, v, _, edge_type = edge
+        if edge_type == "->":
+            if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
+                raise ValueError("Cycles are not allowed in a PDAG.")

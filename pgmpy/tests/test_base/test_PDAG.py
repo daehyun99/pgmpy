@@ -117,12 +117,13 @@ class TestPDAG:
         assert pdag.has_semidirected_path("A", "D", blocked_nodes={"C"}) is False
         assert pdag.has_semidirected_path("A", "B", ignore_direct_edge=True) is False
 
-    def test_has_acyclic_extension(self):
-        pdag = PDAG([("A", "B", "->"), ("B", "C", "--")])
-        directed_cycle = PDAG([("A", "B", "->"), ("B", "C", "->"), ("C", "A", "->")])
+    def test_acyclic(self):
+        ebunch = [("A", "B", "->"), ("B", "C", "--")]
+        PDAG(ebunch)
 
-        assert pdag.has_acyclic_extension() is True
-        assert directed_cycle.has_acyclic_extension() is False
+        with pytest.raises(ValueError):
+            directed_cycle = [("A", "B", "->"), ("B", "C", "->"), ("C", "A", "->")]
+            PDAG(directed_cycle)
 
     def test_to_cpdag(self):
         pdag = PDAG([("A", "B", "->"), ("B", "C", "--")])
