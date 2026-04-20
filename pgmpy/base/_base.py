@@ -21,7 +21,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
     Parameters
     ----------
-    ebunch : iterable of tuples, optional
+    edge_list : iterable of tuples, optional
         A list or iterable of edges to add at initialization.
 
     latents : set of nodes, (default=set())
@@ -127,16 +127,16 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
     def __init__(
         self,
-        ebunch: Iterable[tuple[Hashable, Hashable, Hashable]] = None,
+        edge_list: Iterable[tuple[Hashable, Hashable, Hashable]] = None,
         exposures: set[Hashable] | None = None,
         outcomes: set[Hashable] | None = None,
         latents: set[Hashable] | None = None,
         roles=None,
     ):
         super().__init__()
-        if ebunch:
-            self._validate_edges(ebunch=ebunch)
-            for edge in ebunch:
+        if edge_list:
+            self._validate_edges(ebunch=edge_list)
+            for edge in edge_list:
                 if len(edge) == 4:
                     u, v, key, edge_type = edge
                 elif len(edge) == 3:

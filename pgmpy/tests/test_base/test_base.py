@@ -23,7 +23,7 @@ def sample_graph1(edge_type=None):
         ("C", "D", edge_type),
         ("D", "E", edge_type),
     ]
-    return _CoreGraph(ebunch=edges)
+    return _CoreGraph(edge_list=edges)
 
 
 def sample_graph2(edge_type=None):
@@ -48,7 +48,7 @@ def sample_graph2(edge_type=None):
         ("B", "C", edge_type),
         ("B", "D", edge_type),
     ]
-    return _CoreGraph(ebunch=edges)
+    return _CoreGraph(edge_list=edges)
 
 
 def sample_graph3():
@@ -74,7 +74,7 @@ def sample_graph3():
         ("B", "X", "->"),
         ("C", "Y", "<-"),
     ]
-    return _CoreGraph(ebunch=edges)
+    return _CoreGraph(edge_list=edges)
 
 
 def check_graph_status(
@@ -104,7 +104,7 @@ class TestCoreGraph:
     def test_init_with_nodes(self):
         """Test the initialization of a `_CoreGraph` with nodes."""
         edges = [("A", "B", "->"), ("B", "C", "->")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         assert sorted(graph.nodes) == ["A", "B", "C"]
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
@@ -112,7 +112,7 @@ class TestCoreGraph:
     def test_init_with_edges(self):
         """Test the initialization of a `_CoreGraph` with edges."""
         edges = [("A", "B", "--"), ("A", "B", "-o"), ("B", "C", "<>")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         assert sorted(graph.edges(keys=True, data=True)) == [
             ("A", "B", 0, {"A": "-", "B": "-"}),
@@ -124,7 +124,7 @@ class TestCoreGraph:
     def test_init_with_exposures(self):
         """Test the initialization of a `_CoreGraph` with exposures."""
         edges = [("A", "B", "->")]
-        graph = _CoreGraph(ebunch=edges, exposures=["A"])
+        graph = _CoreGraph(edge_list=edges, exposures=["A"])
 
         assert sorted(graph.exposures) == ["A"]
         check_graph_status(graph, 2, 1, {"A"}, set(), set(), {"exposures": ["A"]})
@@ -132,7 +132,7 @@ class TestCoreGraph:
     def test_init_with_outcomes(self):
         """Test the initialization of a `_CoreGraph` with outcomes."""
         edges = [("A", "B", "->")]
-        graph = _CoreGraph(ebunch=edges, outcomes=["B"])
+        graph = _CoreGraph(edge_list=edges, outcomes=["B"])
 
         assert sorted(graph.outcomes) == ["B"]
         check_graph_status(graph, 2, 1, set(), {"B"}, set(), {"outcomes": ["B"]})
@@ -140,7 +140,7 @@ class TestCoreGraph:
     def test_init_with_latents(self):
         """Test the initialization of a `_CoreGraph` with latents."""
         edges = [("A", "B", "->")]
-        graph = _CoreGraph(ebunch=edges, latents=["A"])
+        graph = _CoreGraph(edge_list=edges, latents=["A"])
 
         assert sorted(graph.latents) == ["A"]
         check_graph_status(graph, 2, 1, set(), set(), {"A"}, {"latents": ["A"]})
@@ -148,7 +148,7 @@ class TestCoreGraph:
     def test_init_with_roles(self):
         """Test the initialization of a `_CoreGraph` with roles."""
         edges = [("A", "B", "->")]
-        graph = _CoreGraph(ebunch=edges, roles={"test_role": ["A"]})
+        graph = _CoreGraph(edge_list=edges, roles={"test_role": ["A"]})
 
         assert sorted(graph.get_roles()) == ["test_role"]
         check_graph_status(graph, 2, 1, set(), set(), set(), {"test_role": ["A"]})
@@ -157,7 +157,7 @@ class TestCoreGraph:
         """Test the initialization of a `_CoreGraph` with all values."""
         edges = [("A", "B", "->"), ("B", "C", "oo"), ("C", "D", "--")]
         graph = _CoreGraph(
-            ebunch=edges,
+            edge_list=edges,
             exposures=["A"],
             outcomes=["B"],
             latents=["C"],
@@ -186,32 +186,32 @@ class TestCoreGraph:
 
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), (None, "A", "->"), ("B", "C", "->")]
-            graph = _CoreGraph(ebunch=edges)
+            graph = _CoreGraph(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), ("A", None, "->"), ("B", "C", "->")]
-            graph = _CoreGraph(ebunch=edges)
+            graph = _CoreGraph(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # same node error
             edges = [("A", "A", "->")]
-            graph = _CoreGraph(ebunch=edges)
+            graph = _CoreGraph(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # same nodes error
             edges = [("A", "B", "->"), ("A", "A", "->"), ("C", "D", "--")]
-            graph = _CoreGraph(ebunch=edges)
+            graph = _CoreGraph(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `edge_type` value
             edges = [("A", "B", "-->")]
-            graph = _CoreGraph(ebunch=edges)
+            graph = _CoreGraph(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `edge_type` values
             edges = [("A", "B", "->"), ("A", "C", "o-->"), ("C", "D", "--")]
-            graph = _CoreGraph(ebunch=edges)
+            graph = _CoreGraph(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # Granting a role to a node that is not owned.
@@ -222,7 +222,7 @@ class TestCoreGraph:
         with pytest.raises(ValueError):  # Granting a role to a node that is not owned.
             edges = [("A", "B", "->")]
             roles = {"test_role1": "A", "test_role2": "C", "test_role3": "B"}
-            graph = _CoreGraph(ebunch=edges, roles=roles)
+            graph = _CoreGraph(edge_list=edges, roles=roles)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     def test_add_directed_edge(self):
@@ -460,7 +460,7 @@ class TestCoreGraph:
     def test_remove_directed_edge(self):
         """Test removing the direct edge of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("B", "C", "<-")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         graph.remove_edge("A", "B", "->")
         graph.remove_edge("B", "C", "<-")
@@ -475,7 +475,7 @@ class TestCoreGraph:
     def test_remove_undirected_edge(self):
         """Test removing the undirect edge of a `_CoreGraph`."""
         edges = [("A", "B", "--"), ("B", "C", "--")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         graph.remove_edge("A", "B", "--")
         graph.remove_edge("B", "C", "--")
@@ -490,7 +490,7 @@ class TestCoreGraph:
     def test_remove_bidirected_edge(self):
         """Test removing the bidirect edge of a `_CoreGraph`."""
         edges = [("A", "B", "<>"), ("B", "C", "<>")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         graph.remove_edge("A", "B", "<>")
         graph.remove_edge("B", "C", "<>")
@@ -505,7 +505,7 @@ class TestCoreGraph:
     def test_remove_unknown_edge(self):
         """Test removing the unknown edge of a `_CoreGraph`."""
         edges = [("A", "B", "-o"), ("B", "C", "o-"), ("C", "D", "oo")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         graph.remove_edge("A", "B", "-o")
         graph.remove_edge("B", "C", "o-")
@@ -522,7 +522,7 @@ class TestCoreGraph:
     def test_remove_multiedges(self):
         """Test removing multiedges of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("A", "B", "->"), ("A", "B", "--")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         graph.remove_edge("A", "B", "->")
         graph.remove_edge("A", "B", "--")
@@ -536,7 +536,7 @@ class TestCoreGraph:
     def test_remove_no_edge_type(self):
         """Test removing edges of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("A", "B", "->"), ("A", "B", "--")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
         graph.remove_edge("A", "B")
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
@@ -544,25 +544,25 @@ class TestCoreGraph:
         """Test failing remove edge of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("B", "C", "->")]
 
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
         graph.remove_edge("A", "B", "->")
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             graph.remove_edge(None, "C", "->")
         check_graph_status(graph, 3, 1, set(), set(), set(), {})
 
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
         graph.remove_edge("A", "B", "->")
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             graph.remove_edge("B", None, "->")
         check_graph_status(graph, 3, 1, set(), set(), set(), {})
 
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
         graph.remove_edge("A", "B", "->")
         with pytest.raises(ValueError):  # same node error
             graph.remove_edge("B", "B", "->")
         check_graph_status(graph, 3, 1, set(), set(), set(), {})
 
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
         graph.remove_edge("A", "B", "->")
         with pytest.raises(ValueError):  # invalid `edge_type` value
             graph.remove_edge("B", "C", "invalid_value")
@@ -571,7 +571,7 @@ class TestCoreGraph:
     def test_remove_directed_edges_from(self):
         """Test removing the direct edges of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("B", "C", "<-")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         graph.remove_edges_from(ebunch=edges)
 
@@ -585,7 +585,7 @@ class TestCoreGraph:
     def test_remove_undirected_edges_from(self):
         """Test removing the undirect edges of a `_CoreGraph`."""
         edges = [("A", "B", "--"), ("B", "C", "--")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         graph.remove_edges_from(ebunch=edges)
 
@@ -599,7 +599,7 @@ class TestCoreGraph:
     def test_remove_bidirected_edges_from(self):
         """Test removing the bidirect edges of a `_CoreGraph`."""
         edges = [("A", "B", "<>"), ("B", "C", "<>")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         graph.remove_edges_from(ebunch=edges)
 
@@ -613,7 +613,7 @@ class TestCoreGraph:
     def test_remove_unknown_edges_from(self):
         """Test removing the unknown edges of a `_CoreGraph`."""
         edges = [("A", "B", "-o"), ("B", "C", "o-"), ("C", "D", "oo")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         graph.remove_edges_from(ebunch=edges)
 
@@ -628,7 +628,7 @@ class TestCoreGraph:
     def test_remove_various_edges_from(self):
         """Test removing the various edge of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("B", "C", "--"), ("C", "D", "<o")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         graph.remove_edges_from(ebunch=edges)
 
@@ -643,7 +643,7 @@ class TestCoreGraph:
     def test_remove_multiedges_from(self):
         """Test removing multiedges of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("A", "B", "->"), ("A", "B", "--")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
 
         del_edges = [("A", "B", "->"), ("A", "B", "--")]
         graph.remove_edges_from(ebunch=del_edges)
@@ -658,27 +658,27 @@ class TestCoreGraph:
         """Test failing remove edges of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("B", "C", "->")]
 
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             graph.remove_edges_from([("A", "B", "->"), (None, "C", "->")])
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             graph.remove_edges_from([("A", "B", "->"), ("B", None, "->")])
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
         with pytest.raises(ValueError):  # miss `edge_type` value
             graph.remove_edges_from([("A", "B", "->"), ("B", "C")])
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
         with pytest.raises(ValueError):  # same node error
             graph.remove_edges_from([("A", "B", "->"), ("B", "B", "->")])
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
         with pytest.raises(ValueError):  # invalid `edge_type` value
             graph.remove_edges_from([("A", "B", "->"), ("B", "C", "invalid_value")])
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
@@ -701,7 +701,7 @@ class TestCoreGraph:
         latents = ["D"]
         roles = {"test_role": ["B"]}
         graph = _CoreGraph(
-            ebunch=edges,
+            edge_list=edges,
             exposures=exposures,
             outcomes=outcomes,
             latents=latents,
@@ -741,7 +741,7 @@ class TestCoreGraph:
         latents = ["D"]
         roles = {"test_role": ["B"]}
         graph = _CoreGraph(
-            ebunch=edges,
+            edge_list=edges,
             exposures=exposures,
             outcomes=outcomes,
             latents=latents,
@@ -762,7 +762,7 @@ class TestCoreGraph:
 
         # Different ebunch
         other_ebunch = _CoreGraph(
-            ebunch=[
+            edge_list=[
                 ("A", "B", "->"),
                 ("B", "C", "<>"),
                 ("B", "C", "->"),
@@ -778,7 +778,7 @@ class TestCoreGraph:
 
         # Different exposures
         other_exp = _CoreGraph(
-            ebunch=edges,
+            edge_list=edges,
             exposures=["B"],
             outcomes=outcomes,
             latents=latents,
@@ -789,7 +789,7 @@ class TestCoreGraph:
 
         # Different outcomes
         other_out = _CoreGraph(
-            ebunch=edges,
+            edge_list=edges,
             exposures=exposures,
             outcomes=["A"],
             latents=latents,
@@ -800,7 +800,7 @@ class TestCoreGraph:
 
         # Different latents
         other_lat = _CoreGraph(
-            ebunch=edges,
+            edge_list=edges,
             exposures=exposures,
             outcomes=outcomes,
             latents=["B"],
@@ -811,7 +811,7 @@ class TestCoreGraph:
 
         # Different roles
         other_roles = _CoreGraph(
-            ebunch=edges,
+            edge_list=edges,
             exposures=exposures,
             outcomes=outcomes,
             latents=latents,
@@ -860,7 +860,7 @@ class TestCoreGraph:
     def test_copy_with_ebunch1(self):
         """Test the `copy` method of a `_CoreGraph` with an ebunch."""
         edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
-        graph = _CoreGraph(ebunch=edges)
+        graph = _CoreGraph(edge_list=edges)
         graph_copy = graph.copy()
 
         assert graph.__eq__(graph_copy) == True
@@ -887,7 +887,7 @@ class TestCoreGraph:
         outcomes = ["C"]
         latents = ["D"]
 
-        graph = _CoreGraph(ebunch=edges, exposures=exposures, outcomes=outcomes, latents=latents)
+        graph = _CoreGraph(edge_list=edges, exposures=exposures, outcomes=outcomes, latents=latents)
         graph_copy = graph.copy()
 
         assert graph.__eq__(graph_copy) == True
@@ -911,7 +911,7 @@ class TestCoreGraph:
         """Test the `copy` method of a `_CoreGraph` with roles."""
         edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
         roles = {"test_role": ["A", "B"]}
-        graph = _CoreGraph(ebunch=edges, roles=roles)
+        graph = _CoreGraph(edge_list=edges, roles=roles)
         graph_copy = graph.copy()
 
         assert graph.__eq__(graph_copy) == True
@@ -937,7 +937,7 @@ class TestCoreGraph:
         latents = ["D"]
         roles = {"test_role": ["B"]}
         graph = _CoreGraph(
-            ebunch=edges,
+            edge_list=edges,
             exposures=exposures,
             outcomes=outcomes,
             latents=latents,

@@ -17,7 +17,7 @@ def mag():
         ("B", "C", "->"),
     ]
     roles = {"exposures": {"A"}, "outcomes": {"D"}, "adjustment": {"B", "C"}}
-    return MAG(ebunch=edges, roles=roles)
+    return MAG(edge_list=edges, roles=roles)
 
 
 @pytest.fixture
@@ -28,14 +28,14 @@ def mag2():
         ("P", "R", "->"),
         ("P", "L", "->"),
     ]
-    return MAG(ebunch=edges, latents={"L"})
+    return MAG(edge_list=edges, latents={"L"})
 
 
 # mag3 and mag4 are taken from Maathuis 2018 JMLR Figure 2
 @pytest.fixture
 def mag3():
     edges = [("V", "X", "->"), ("X", "Y", "->")]
-    return MAG(ebunch=edges)
+    return MAG(edge_list=edges)
 
 
 @pytest.fixture
@@ -50,7 +50,7 @@ def mag4():
         ("V3", "Y", "->"),
         ("V4", "Y", "->"),
     ]
-    return MAG(ebunch=edges)
+    return MAG(edge_list=edges)
 
 
 class TestMAG:
@@ -68,19 +68,19 @@ class TestMAG:
             ("U", "X", "->"),
         ]
         roles = {"exposures": "X", "outcomes": "Z", "adjustment": {"Y"}}
-        m1 = MAG(ebunch=e, latents={"L"}, roles=roles)
+        m1 = MAG(edge_list=e, latents={"L"}, roles=roles)
         m2 = MAG(
-            ebunch=e,
+            edge_list=e,
             latents={"L"},
             roles={"exposures": "X", "outcomes": "Z", "adjustment": {"Y"}},
         )
         assert m1 == m2
 
-        m3 = MAG(ebunch=e, latents={"L"}, roles={"exposures": "X"})
+        m3 = MAG(edge_list=e, latents={"L"}, roles={"exposures": "X"})
         assert m1 != m3
 
         m4 = MAG(
-            ebunch=[
+            edge_list=[
                 ("X", "Z", "<>"),
                 ("Y", "Z", "->"),
                 ("L", "X", "->"),
@@ -92,7 +92,7 @@ class TestMAG:
         )
         assert m1 != m4
 
-        m5 = MAG(ebunch=e, latents={"L", "U"}, roles=roles)
+        m5 = MAG(edge_list=e, latents={"L", "U"}, roles=roles)
         assert m1 != m5
 
     @pytest.mark.skip(

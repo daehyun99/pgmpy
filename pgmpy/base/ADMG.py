@@ -33,14 +33,14 @@ class ADMG(_CoreGraph):
 
     def __init__(
         self,
-        ebunch: Iterable[tuple[Hashable, Hashable, Hashable]] = None,
+        edge_list: Iterable[tuple[Hashable, Hashable, Hashable]] = None,
         exposures: set[Hashable] | None = None,
         outcomes: set[Hashable] | None = None,
         latents: set[Hashable] | None = None,
         roles=None,
     ):
         super().__init__(
-            ebunch=ebunch,
+            edge_list=edge_list,
             exposures=exposures,
             outcomes=outcomes,
             latents=latents,

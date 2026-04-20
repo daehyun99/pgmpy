@@ -18,7 +18,7 @@ class TestADMGInitialization:
     def test_initialization_with_directed_edges(self):
         """Test initialization with directed edges."""
         directed_edges = [("A", "B", "->"), ("B", "C", "->")]
-        admg = ADMG(ebunch=directed_edges)
+        admg = ADMG(edge_list=directed_edges)
 
         assert "A" in admg.nodes
         assert "B" in admg.nodes
@@ -29,7 +29,7 @@ class TestADMGInitialization:
     def test_initialization_with_bidirected_edges(self):
         """Test initialization with bidirected edges."""
         bidirected_edges = [("X", "Y", "<>"), ("Y", "Z", "<>")]
-        admg = ADMG(ebunch=bidirected_edges)
+        admg = ADMG(edge_list=bidirected_edges)
 
         assert "X" in admg.nodes
         assert "Y" in admg.nodes
@@ -42,7 +42,7 @@ class TestADMGInitialization:
         """Test initialization with latent variables."""
         bidirected_edges = [("L1", "L2", "<>")]
         latents = ["L1", "L2"]
-        admg = ADMG(ebunch=bidirected_edges, latents=latents)
+        admg = ADMG(edge_list=bidirected_edges, latents=latents)
 
         assert admg.latents == {"L1", "L2"}
 
@@ -50,7 +50,7 @@ class TestADMGInitialization:
         """Test initialization with roles variables."""
         directed_edges = [("A", "C", "->"), ("B", "C", "->")]
         roles = {"exposures": ("A", "B"), "outcomes": ["C"]}
-        admg = ADMG(ebunch=directed_edges, roles=roles)
+        admg = ADMG(edge_list=directed_edges, roles=roles)
 
         assert set(admg.get_role("exposures")) == {"A", "B"}
         assert admg.get_role("outcomes") == ["C"]
@@ -67,7 +67,7 @@ class TestADMGInitialization:
             ("E", "F", "<>"),
         ]
         admg = ADMG(
-            ebunch=edges,
+            edge_list=edges,
             latents=["A"],
             roles={"exposures": "X", "outcomes": "Y", "latents": "B"},
         )
@@ -90,7 +90,7 @@ class TestADMGInitialization:
             ("E", "F", "<>"),
         ]
         admg = ADMG(
-            ebunch=edges,
+            edge_list=edges,
             latents=["A", "B", "C"],
             roles={"exposures": "X", "outcomes": "Y", "latents": ("D", "E", "F")},
         )
@@ -310,7 +310,7 @@ class TestADMGGraphOperations:
         which compares both graph structure and variable-role mappings to allow comparison of two models.
         """
         admg = ADMG(
-            ebunch=[
+            edge_list=[
                 ("A", "B", "->"),
                 ("B", "C", "->"),
                 ("D", "E", "->"),
@@ -323,7 +323,7 @@ class TestADMGGraphOperations:
 
         # Case1: When the models are the same
         other1 = ADMG(
-            ebunch=[
+            edge_list=[
                 ("A", "B", "->"),
                 ("B", "C", "->"),
                 ("D", "E", "->"),
@@ -343,7 +343,7 @@ class TestADMGGraphOperations:
 
         # Case3: When the directed edges differ
         other3 = ADMG(
-            ebunch=[
+            edge_list=[
                 ("A", "C", "->"),
                 ("B", "C", "->"),
                 ("D", "E", "->"),
@@ -356,7 +356,7 @@ class TestADMGGraphOperations:
 
         # Case4: When the bidirected edges differ
         other4 = ADMG(
-            ebunch=[
+            edge_list=[
                 ("A", "B", "->"),
                 ("B", "C", "->"),
                 ("D", "E", "->"),
@@ -369,7 +369,7 @@ class TestADMGGraphOperations:
 
         # Case5: When the latents variables differ
         other5 = ADMG(
-            ebunch=[
+            edge_list=[
                 ("A", "B", "->"),
                 ("B", "C", "->"),
                 ("D", "E", "->"),
@@ -382,7 +382,7 @@ class TestADMGGraphOperations:
 
         # Case6: When the roles variables differ
         other6 = ADMG(
-            ebunch=[
+            edge_list=[
                 ("A", "B", "->"),
                 ("B", "C", "->"),
                 ("D", "E", "->"),

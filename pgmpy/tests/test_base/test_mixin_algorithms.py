@@ -20,7 +20,7 @@ def AncestralGraph():
         ("A", "D", "->"),
         ("B", "C", "->"),
     ]
-    graph = _CoreGraph(ebunch=edges1)
+    graph = _CoreGraph(edge_list=edges1)
     return graph
 
 
@@ -40,7 +40,7 @@ def MaximalAncestralGraph():
         ("B", "C", "->"),
         ("C", "D", "<>"),
     ]
-    graph = _CoreGraph(ebunch=edges1)
+    graph = _CoreGraph(edge_list=edges1)
     return graph
 
 

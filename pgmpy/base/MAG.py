@@ -18,7 +18,7 @@ class MAG(_CoreGraph):
 
     Parameters
     ----------
-    ebunch : iterable of tuples, optional
+    edge_list : iterable of tuples, optional
         A list or iterable of edges to add at initialization.
 
     latents : set, default=set()
@@ -44,7 +44,7 @@ class MAG(_CoreGraph):
     Examples
     --------
     >>> from pgmpy.base import MAG
-    >>> mag = MAG(ebunch=[("L", "A", "->"), ("B", "C", "->")], latents={"L"})
+    >>> mag = MAG(edge_list=[("L", "A", "->"), ("B", "C", "->")], latents={"L"})
     >>> sorted(mag.nodes())
     ['A', 'B', 'C', 'L']
 
@@ -53,7 +53,7 @@ class MAG(_CoreGraph):
     At construction:
 
     >>> mag = MAG(
-    ...     ebunch=[("L", "A", "->"), ("B", "C", "->")],
+    ...     edge_list=[("L", "A", "->"), ("B", "C", "->")],
     ...     latents={"L"},
     ...     exposures={"A"},
     ...     outcomes={"B"},
@@ -79,14 +79,14 @@ class MAG(_CoreGraph):
 
     def __init__(
         self,
-        ebunch: Iterable[tuple[Hashable, Hashable, Hashable]] = None,
+        edge_list: Iterable[tuple[Hashable, Hashable, Hashable]] = None,
         exposures: set[Hashable] | None = None,
         outcomes: set[Hashable] | None = None,
         latents: set[Hashable] | None = None,
         roles=None,
     ):
         super().__init__(
-            ebunch=ebunch,
+            edge_list=edge_list,
             exposures=exposures,
             outcomes=outcomes,
             latents=latents,
