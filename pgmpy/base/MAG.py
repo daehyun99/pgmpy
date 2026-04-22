@@ -93,7 +93,7 @@ class MAG(_CoreGraph):
         )
 
     def is_multigraph(self):
-        return True
+        return False
 
     def is_acyclic(self):
         return True

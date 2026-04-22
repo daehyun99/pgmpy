@@ -165,7 +165,7 @@ class ADMG(_CoreGraph):
         return super()._validate_graph_specific_edges(edge_list)
 
     def is_multigraph(self):
-        return True
+        return False
 
     def is_acyclic(self):
         return True

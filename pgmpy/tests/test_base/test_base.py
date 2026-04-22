@@ -2082,3 +2082,35 @@ class TestCoreGraph:
 
         with pytest.raises(ValueError):
             graph.has_edge("A", "B", "invalid_edge_type")
+
+    def test_is_multigraph(self):
+        graph = _CoreGraph()
+
+        assert graph.is_multigraph() is False
+
+    def test_is_multigraph_fails(self):
+        graph = _CoreGraph()
+
+        assert graph.is_multigraph() is False
+
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("A", "B", "<>")
+        graph.add_edge("A", "B", "--")
+
+        with pytest.raises(ValueError):
+            graph.add_edge("A", "B", "->")
+
+    def test_is_acyclic(self):
+        graph = _CoreGraph()
+
+        assert graph.is_acyclic() is True
+
+    def test_is_acyclic_fails(self):
+        graph = _CoreGraph()
+
+        assert graph.is_acyclic() is True
+
+        graph.add_edge("A", "B", "->")
+
+        with pytest.raises(ValueError):
+            graph.add_edge("B", "A", "->")

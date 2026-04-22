@@ -1023,13 +1023,13 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         Intended to be implemented by subclasses.
         """
         for u, v, edge_type in edge_list:
-            if self.is_multigraph() is not True:
+            if not self.is_multigraph():
                 if self.has_edge(u, v, edge_type):
                     raise ValueError(
                         f"Edge ({u}, {v}) with type '{edge_type}' already exists. "
                         f"{self.__class__.__name__} is not a multigraph."
                     )
-            if self.is_acyclic() is True:
+            if self.is_acyclic():
                 if edge_type == "->":
                     if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
                         raise ValueError(f"Direct cycles are not allowed in a {self.__class__.__name__}.")
