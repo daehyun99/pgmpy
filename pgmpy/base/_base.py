@@ -207,11 +207,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         """
         self._validate_edges(edge_list=[(u, v, edge_type)])
         self._validate_graph_specific_edge(u, v, edge_type)
-
-        _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
-
-        _key = super().add_edge(u, v, **kwargs)
-        self.edges[u, v, _key].update({u: _markers_dict[u], v: _markers_dict[v]})
+        self._add_edge(u, v, edge_type, **kwargs)
 
     def add_edges_from(
         self,
@@ -255,10 +251,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         self._validate_edges(edge_list=edge_list)
         self._validate_graph_specific_edges(edge_list=edge_list)
         for u, v, edge_type in edge_list:
-            _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
-
-            _key = super().add_edge(u, v, **kwargs)
-            self.edges[u, v, _key].update({u: _markers_dict[u], v: _markers_dict[v]})
+            self._add_edge(u, v, edge_type)
 
     def remove_edge(
         self,
@@ -307,21 +300,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         """
         self._validate_edges(edge_list=[(u, v, edge_type)])
 
-        keys_to_remove = []
-        edges = self.get_edge_data(u, v)
-        if edge_type is None:
-            keys_to_remove = list(edges.keys())
-        else:
-            _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
-            for key, data in edges.items():
-                if data[u] == _markers_dict[u] and data[v] == _markers_dict[v]:
-                    keys_to_remove.append(key)
-
-        if len(keys_to_remove) == 0:
-            raise ValueError(f"Edge ({u}, {v}, {edge_type}) not in graph.")
-        else:
-            for key in keys_to_remove:
-                super().remove_edge(u, v, key=key)
+        self._remove_edge(u, v, edge_type)
 
     def remove_edges_from(
         self,
@@ -360,21 +339,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         """
         self._validate_edges(edge_list=edge_list)
         for u, v, edge_type in edge_list:
-            keys_to_remove = []
-            edges = self.get_edge_data(u, v)
-            if edge_type is None:
-                keys_to_remove = list(edges.keys())
-            else:
-                _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
-                for key, data in edges.items():
-                    if data[u] == _markers_dict[u] and data[v] == _markers_dict[v]:
-                        keys_to_remove.append(key)
-
-            if len(keys_to_remove) == 0:
-                raise ValueError(f"Edge ({u}, {v}, {edge_type}) not in graph.")
-            else:
-                for key in keys_to_remove:
-                    super().remove_edge(u, v, key=key)
+            self._remove_edge(u, v, edge_type)
 
     def copy(self):
         """
@@ -836,6 +801,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
             * (u, v, type)      : data=True
             * (u, v)            : data=False
 
+        data : bool, optional (default=True)
+            If True, returns the edge type as a string (e.g., '->') instead of
+            the internal dictionary representation. Default is True.
+
         See Also
         --------
         `get_edges()`
@@ -1034,11 +1003,14 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         Intended to be implemented by subclasses.
         """
-        temp_graph = self.copy()
+        directed_ebunch = []
+        for src, dst, edge_type in self.get_edges(data=True):
+            if edge_type in {"->", "<-"}:
+                directed_ebunch.append((src, dst, edge_type))
+        temp_graph = _CoreGraph(directed_ebunch)
         for u, v, edge_type in edge_list:
-            _markers_dict = temp_graph._from_api_edge_type(edge=[u, v, edge_type])
-            _key = super(_CoreGraph, temp_graph).add_edge(u, v)
-            temp_graph.edges[u, v, _key].update({u: _markers_dict[u], v: _markers_dict[v]})
+            if edge_type in {"->", "<-"}:
+                temp_graph.add_edge(u, v, edge_type)
 
         if temp_graph.is_acyclic():
             if temp_graph.has_directed_cycle():
@@ -1129,3 +1101,37 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
             (">", ">"): "<>",
         }
         return marker_map.get((u_marker, v_marker), f"{u_marker}{v_marker}")
+
+    def _add_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        edge_type: str = "->",
+        **kwargs,
+    ) -> None:
+        _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
+
+        _key = super().add_edge(u, v, **kwargs)
+        self.edges[u, v, _key].update({u: _markers_dict[u], v: _markers_dict[v]})
+
+    def _remove_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        edge_type: str = None,
+    ) -> None:
+        keys_to_remove = []
+        edges = self.get_edge_data(u, v)
+        if edge_type is None:
+            keys_to_remove = list(edges.keys())
+        else:
+            _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
+            for key, data in edges.items():
+                if data[u] == _markers_dict[u] and data[v] == _markers_dict[v]:
+                    keys_to_remove.append(key)
+
+        if len(keys_to_remove) == 0:
+            raise ValueError(f"Edge ({u}, {v}, {edge_type}) not in graph.")
+        else:
+            for key in keys_to_remove:
+                super().remove_edge(u, v, key=key)
