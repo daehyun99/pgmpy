@@ -96,6 +96,9 @@ class MAG(_CoreGraph):
     def is_multigraph(self):
         return True
 
+    def is_acyclic(self):
+        return True
+
     # def to_pag(self):
     #     """
 

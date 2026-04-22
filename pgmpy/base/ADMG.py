@@ -155,23 +155,11 @@ class ADMG(_CoreGraph):
     #     # return True
     #     raise NotImplementedError("`is_valid_admg` is not supported now")
 
-    def _validate_graph_specific_edges(
-        self,
-        edge_list: (
-            Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
-        ),
-    ):
-        for edge in edge_list:
-            if len(edge) == 3:
-                u, v, edge_type = edge
-            elif len(edge) == 4:
-                u, v, _, edge_type = edge
-        if edge_type == "->":
-            if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
-                raise ValueError("Cycles are not allowed in a ADMG.")
-        elif edge_type == "<-":
-            if self.has_node(u) and self.has_node(v) and self.has_direct_path(u, v):
-                raise ValueError("Cycles are not allowed in a ADMG.")
+    def _validate_graph_specific_edges(self, edge_list):
+        return super()._validate_graph_specific_edges(edge_list)
 
     def is_multigraph(self):
+        return True
+
+    def is_acyclic(self):
         return True

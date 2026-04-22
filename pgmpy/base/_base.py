@@ -925,6 +925,9 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
     def is_multigraph(self):
         return False
 
+    def is_acyclic(self):
+        return True
+
     # ----------------------------------------------------------------------
     # Internal Methods (or Private Methods)
     # ----------------------------------------------------------------------
@@ -1019,13 +1022,20 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         Intended to be implemented by subclasses.
         """
-        if self.is_multigraph() is False:
-            for u, v, edge_type in edge_list:
+        for u, v, edge_type in edge_list:
+            if self.is_multigraph() is not True:
                 if self.has_edge(u, v, edge_type):
                     raise ValueError(
                         f"Edge ({u}, {v}) with type '{edge_type}' already exists. "
                         f"{self.__class__.__name__} is not a multigraph."
                     )
+            if self.is_acyclic() is True:
+                if edge_type == "->":
+                    if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
+                        raise ValueError(f"Direct cycles are not allowed in a {self.__class__.__name__}.")
+                elif edge_type == "<-":
+                    if self.has_node(u) and self.has_node(v) and self.has_direct_path(u, v):
+                        raise ValueError(f"Direct cycles are not allowed in a {self.__class__.__name__}.")
 
     def _from_api_edge_type(
         self,
