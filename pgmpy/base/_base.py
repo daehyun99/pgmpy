@@ -54,7 +54,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
     >>> edges = [("A", "B", "->"), ("B", "C", "->")]
     >>> G = _CoreGraph(edge_list=edges)
-    >>> G.get_edges(data=True))
+    >>> G.get_edges(data=True)
     [('A', 'B', '->'), ('B', 'C', '->')]
 
     **Nodes:**
@@ -76,7 +76,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
     >>> from pgmpy.base._base import _CoreGraph
     >>> G = _CoreGraph()
     >>> G.add_edge("A", "B", "->")
-    >>> G.get_edges(data=True))
+    >>> G.get_edges(data=True)
     [('A', 'B', '->')]
 
     Remove one edge,
@@ -84,7 +84,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
     >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
     >>> G = _CoreGraph(edge_list=edges)
     >>> G.remove_edge("A", "B", "->")
-    >>> G.get_edges(data=True))
+    >>> G.get_edges(data=True)
     [('B', 'C', '->'), ('C', 'D', '--')]
 
     **Exposures, Outcomes, and Latents:**
@@ -248,7 +248,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph()
         >>> G.add_edges_from(edge_list=edges)
-        >>> G.get_edges(data=True))
+        >>> G.get_edges(data=True)
         [('A', 'B', '->'), ('B', 'C', '->')]
 
         """
@@ -301,7 +301,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
         >>> G = _CoreGraph(edge_list=edges)
         >>> G.remove_edge("A", "B", "->")
-        >>> G.get_edges(data=True))
+        >>> G.get_edges(data=True)
         [('B', 'C', '->'), ('C', 'D', '--')]
 
         """
@@ -354,7 +354,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         >>> G = _CoreGraph(edge_list=edges)
         >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
         >>> G.remove_edges_from(edge_list=remove_edges)
-        >>> G.get_edges(data=True))
+        >>> G.get_edges(data=True)
         [('A', 'B', '->')]
 
         """
