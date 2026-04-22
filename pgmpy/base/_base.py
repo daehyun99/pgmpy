@@ -1007,10 +1007,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         for src, dst, edge_type in self.get_edges(data=True):
             if edge_type in {"->", "<-"}:
                 directed_ebunch.append((src, dst, edge_type))
-        temp_graph = _CoreGraph(directed_ebunch)
         for u, v, edge_type in edge_list:
             if edge_type in {"->", "<-"}:
-                temp_graph.add_edge(u, v, edge_type)
+                directed_ebunch.append((u, v, edge_type))
+        temp_graph = _CoreGraph(directed_ebunch)
 
         if temp_graph.is_acyclic():
             if temp_graph.has_directed_cycle():
