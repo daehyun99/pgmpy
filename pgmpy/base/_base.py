@@ -206,7 +206,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         """
         self._validate_edges(edge_list=[(u, v, edge_type)])
-        self._validate_graph_specific_edges(edge_list=[(u, v, edge_type)])
+        self._validate_graph_specific_edge(u, v, edge_type)
 
         _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
 
@@ -1034,20 +1034,62 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         Intended to be implemented by subclasses.
         """
+        temp_graph = self.copy()
         for u, v, edge_type in edge_list:
-            if not self.is_multigraph():
-                if self.has_edge(u, v, edge_type):
+            _markers_dict = temp_graph._from_api_edge_type(edge=[u, v, edge_type])
+            _key = super(_CoreGraph, temp_graph).add_edge(u, v)
+            temp_graph.edges[u, v, _key].update({u: _markers_dict[u], v: _markers_dict[v]})
+
+        if temp_graph.is_acyclic():
+            if temp_graph.has_directed_cycle():
+                raise ValueError(f"Direct cycles are not allowed in a {temp_graph.__class__.__name__}.")
+
+        if not temp_graph.is_multigraph():
+            from collections import Counter
+
+            edge_list = temp_graph.get_edges(data=True)
+            edge_counts = Counter(edge_list)
+
+            for (u, v, edge_type), count in edge_counts.items():
+                if count > 1:
                     raise ValueError(
-                        f"Edge ({u}, {v}) with type '{edge_type}' already exists. "
-                        f"{self.__class__.__name__} is not a multigraph."
+                        f"Edge ({u}, {v}) of type '{edge_type}' already exists {count} times. "
+                        f"{temp_graph.__class__.__name__} is not a multigraph."
                     )
-            if self.is_acyclic():
-                if edge_type == "->":
-                    if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
-                        raise ValueError(f"Direct cycles are not allowed in a {self.__class__.__name__}.")
-                elif edge_type == "<-":
-                    if self.has_node(u) and self.has_node(v) and self.has_direct_path(u, v):
-                        raise ValueError(f"Direct cycles are not allowed in a {self.__class__.__name__}.")
+
+    def _validate_graph_specific_edge(self, u, v, edge_type):
+        """
+        Validates graph-specific constraints on the given edge.
+
+        Parameters
+        ----------
+        u, v : Hashable
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
+
+        edge_type : str (default="->")
+            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
+
+        Notes
+        -----
+        Helper method that validates constraints specific to a graph subclass,
+        beyond the common checks performed in `_validate_edges()`.
+
+        Intended to be implemented by subclasses.
+        """
+        if not self.is_multigraph():
+            if self.has_edge(u, v, edge_type):
+                raise ValueError(
+                    f"Edge ({u}, {v}) with type '{edge_type}' already exists. "
+                    f"{self.__class__.__name__} is not a multigraph."
+                )
+        if self.is_acyclic():
+            if edge_type == "->":
+                if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
+                    raise ValueError(f"Direct cycles are not allowed in a {self.__class__.__name__}.")
+            elif edge_type == "<-":
+                if self.has_node(u) and self.has_node(v) and self.has_direct_path(u, v):
+                    raise ValueError(f"Direct cycles are not allowed in a {self.__class__.__name__}.")
 
     def _from_api_edge_type(
         self,
