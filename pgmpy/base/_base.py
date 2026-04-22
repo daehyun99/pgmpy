@@ -753,6 +753,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
             * (u, v, type)      : data=True
             * (u, v)            : data=False
 
+        See Also
+        --------
+        `get_edge()`
+
         Examples
         --------
         >>> edges = [("A", "B", "->"), ("A", "B", "<>"), ("B", "C", "->")]
@@ -836,6 +840,35 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         return result
 
     def has_edge(self, u, v, edge_type=None):
+        """
+        Returns True if the graph has an edge between nodes u and v.
+
+        Parameters
+        ----------
+        u : Hashable
+            The source node of the edge.
+        v : Hashable
+            The target node of the edge.
+        edge_type : str
+            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
+
+        Returns
+        -------
+        bool
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph()
+        >>> graph.add_edge("A", "B", "->")
+        >>> graph.has_edge("A", "B")
+        True
+        >>> graph.has_edge("A", "B", "->")
+        True
+        >>> graph.has_edge("A", "B", "--")
+        False
+
+        """
         if not super().has_edge(u, v):
             return False
 
