@@ -505,7 +505,7 @@ class _GraphAlgorithmMixin:
         ...     ("A", "D", "->"),
         ...     ("B", "C", "->"),
         ... ]
-        >>> graph = _CoreGraph(ebunch=edges)
+        >>> graph = _CoreGraph(edge_list=edges)
         >>> graph.has_inducing_path("C", "D", set())
         True
 
@@ -565,17 +565,32 @@ class _GraphAlgorithmMixin:
         True
 
         """
-        for path in nx.all_simple_edge_paths(self, u, v):
-            is_directed_path = True
-            for edge in path:
-                src, dst, key = edge
-                edge_type = self.get_edge_type(src, dst, key)
-                if edge_type != "->":
-                    is_directed_path = False
-                    break
-            if is_directed_path:
-                return True
-        return False
+        dag = self.get_directed_subgraph()
+        return nx.has_path(dag, u, v)
+
+    def get_directed_subgraph(self):
+        """
+        Return a graph with the same nodes as the original graph, but containing only directed edges.
+        """
+        directed_ebunch = []
+        for src, dst, edge_type in self.get_edges(data=True):
+            if edge_type == "->":
+                directed_ebunch.append((src, dst))
+            elif edge_type == "<-":
+                directed_ebunch.append((dst, src))
+
+        # # TODO(@daehyun99): [#2385] Implement code logic and test code When Refactor DAG
+        # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
+
+        # from pgmpy.base import DAG
+        # TODO(@daehyun99): [#2385] Refactoring nx.DiGraph -> DAG when Refactor DAG
+
+        dag = nx.DiGraph(directed_ebunch)
+        dag.add_nodes_from(self.nodes())
+        # for role, vars in self.get_role_dict().items():
+        #     dag.with_role(role=role, variables=vars, inplace=True)
+        return dag
 
     def has_directed_cycle(self):
         """
@@ -610,14 +625,15 @@ class _GraphAlgorithmMixin:
         # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
         # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         # # TODO(@daehyun99): [#2385] Implement code logic and test code When Refactor DAG
-        # networkx_ebunch = super().edges(keys=True, data=True)
+        # networkx_edge_list = super().edges(keys=True, data=True)
         # from pgmpy.base import DAG
         # dag = DAG()
-        # for edge in networkx_ebunch:
+        # for edge in networkx_edge_list:
         # if edge[-1] == {edge[0]: "-", edge[1]: ">"}:
         # dag.add_edge(edge[0], edge[1], "->")
 
-        raise NotImplementedError("`has_directed_cycle` is not supported now")
+        dag = self.get_directed_subgraph()
+        return not nx.is_directed_acyclic_graph(dag)
 
     def has_almost_directed_cycle(self):
         """

@@ -357,7 +357,7 @@ class TestCoreGraph:
         """Test adding the direct edges of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("B", "C", "->")]
         graph = _CoreGraph()
-        graph.add_edges_from(ebunch=edges)
+        graph.add_edges_from(edge_list=edges)
 
         assert sorted(graph.edges(keys=True, data=True)) == [
             ("A", "B", 0, {"A": "-", "B": ">"}),
@@ -369,7 +369,7 @@ class TestCoreGraph:
         """Test adding the undirect edges of a `_CoreGraph`."""
         edges = [("A", "B", "--"), ("B", "C", "--")]
         graph = _CoreGraph()
-        graph.add_edges_from(ebunch=edges)
+        graph.add_edges_from(edge_list=edges)
 
         assert sorted(graph.edges(keys=True, data=True)) == [
             ("A", "B", 0, {"A": "-", "B": "-"}),
@@ -381,7 +381,7 @@ class TestCoreGraph:
         """Test adding the bidirect edges of a `_CoreGraph`."""
         edges = [("A", "B", "<>"), ("B", "C", "<>")]
         graph = _CoreGraph()
-        graph.add_edges_from(ebunch=edges)
+        graph.add_edges_from(edge_list=edges)
 
         assert sorted(graph.edges(keys=True, data=True)) == [
             ("A", "B", 0, {"A": ">", "B": ">"}),
@@ -393,7 +393,7 @@ class TestCoreGraph:
         """Test adding the unknown edges of a `_CoreGraph`."""
         edges = [("A", "B", "-o"), ("B", "C", "o-"), ("C", "D", "oo")]
         graph = _CoreGraph()
-        graph.add_edges_from(ebunch=edges)
+        graph.add_edges_from(edge_list=edges)
 
         assert sorted(graph.edges(keys=True, data=True)) == [
             ("A", "B", 0, {"A": "-", "B": "o"}),
@@ -406,7 +406,7 @@ class TestCoreGraph:
         """Test adding the various edge of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("B", "C", "--"), ("C", "D", "<>")]
         graph = _CoreGraph()
-        graph.add_edges_from(ebunch=edges)
+        graph.add_edges_from(edge_list=edges)
 
         assert sorted(graph.edges(keys=True, data=True)) == [
             ("A", "B", 0, {"A": "-", "B": ">"}),
@@ -419,7 +419,7 @@ class TestCoreGraph:
         """Test adding multiedges of a `_CoreGraph`."""
         edges = [("A", "B", "->"), ("A", "B", "--"), ("A", "B", "oo")]
         graph = _CoreGraph()
-        graph.add_edges_from(ebunch=edges)
+        graph.add_edges_from(edge_list=edges)
 
         assert sorted(graph.edges(keys=True, data=True)) == [
             ("A", "B", 0, {"A": "-", "B": ">"}),
@@ -434,27 +434,27 @@ class TestCoreGraph:
 
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), (None, "A", "->"), ("B", "C", "->")]
-            graph.add_edges_from(ebunch=edges)
+            graph.add_edges_from(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `u`, `v` value
             edges = [("A", "B", "->"), ("A", None, "->"), ("B", "C", "->")]
-            graph.add_edges_from(ebunch=edges)
+            graph.add_edges_from(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # miss `edge_type` value
             edges = [("A", "B", "->"), ("A", "C"), ("B", "C", "->")]
-            graph.add_edges_from(ebunch=edges)
+            graph.add_edges_from(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # same node error
             edges = [("A", "B", "->"), ("A", "A", "->"), ("B", "C", "->")]
-            graph.add_edges_from(ebunch=edges)
+            graph.add_edges_from(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
         with pytest.raises(ValueError):  # invalid `edge_type` value
             edges = [("A", "B", "->"), ("B", "C", "-->"), ("C", "D", "->")]
-            graph.add_edges_from(ebunch=edges)
+            graph.add_edges_from(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
     def test_remove_directed_edge(self):
@@ -521,23 +521,29 @@ class TestCoreGraph:
 
     def test_remove_multiedges(self):
         """Test removing multiedges of a `_CoreGraph`."""
-        edges = [("A", "B", "->"), ("A", "B", "->"), ("A", "B", "--")]
+        edges = [("A", "B", "->"), ("A", "B", "<>"), ("A", "B", "--")]
         graph = _CoreGraph(edge_list=edges)
 
         graph.remove_edge("A", "B", "->")
         graph.remove_edge("A", "B", "--")
 
-        assert not graph.has_edge("A", "B")
+        assert not graph.has_edge("A", "B", "->")
+        assert graph.has_edge("A", "B", "<>")
+        assert not graph.has_edge("A", "B", "--")
 
-        assert sorted(graph.edges(keys=True, data=True)) == []
+        assert sorted(graph.edges(keys=True, data=True)) == [
+            ("A", "B", 1, {"A": ">", "B": ">"}),
+        ]
 
-        check_graph_status(graph, 2, 0, set(), set(), set(), {})
+        check_graph_status(graph, 2, 1, set(), set(), set(), {})
 
     def test_remove_no_edge_type(self):
         """Test removing edges of a `_CoreGraph`."""
-        edges = [("A", "B", "->"), ("A", "B", "->"), ("A", "B", "--")]
+        edges = [("A", "B", "->"), ("A", "B", "<>"), ("A", "B", "--")]
         graph = _CoreGraph(edge_list=edges)
         graph.remove_edge("A", "B")
+
+        assert not graph.has_edge("A", "B")
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
     def test_remove_edge_fails(self):
@@ -573,7 +579,7 @@ class TestCoreGraph:
         edges = [("A", "B", "->"), ("B", "C", "<-")]
         graph = _CoreGraph(edge_list=edges)
 
-        graph.remove_edges_from(ebunch=edges)
+        graph.remove_edges_from(edge_list=edges)
 
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
@@ -587,7 +593,7 @@ class TestCoreGraph:
         edges = [("A", "B", "--"), ("B", "C", "--")]
         graph = _CoreGraph(edge_list=edges)
 
-        graph.remove_edges_from(ebunch=edges)
+        graph.remove_edges_from(edge_list=edges)
 
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
@@ -601,7 +607,7 @@ class TestCoreGraph:
         edges = [("A", "B", "<>"), ("B", "C", "<>")]
         graph = _CoreGraph(edge_list=edges)
 
-        graph.remove_edges_from(ebunch=edges)
+        graph.remove_edges_from(edge_list=edges)
 
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
@@ -615,7 +621,7 @@ class TestCoreGraph:
         edges = [("A", "B", "-o"), ("B", "C", "o-"), ("C", "D", "oo")]
         graph = _CoreGraph(edge_list=edges)
 
-        graph.remove_edges_from(ebunch=edges)
+        graph.remove_edges_from(edge_list=edges)
 
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
@@ -630,7 +636,7 @@ class TestCoreGraph:
         edges = [("A", "B", "->"), ("B", "C", "--"), ("C", "D", "<o")]
         graph = _CoreGraph(edge_list=edges)
 
-        graph.remove_edges_from(ebunch=edges)
+        graph.remove_edges_from(edge_list=edges)
 
         assert not graph.has_edge("A", "B")
         assert not graph.has_edge("B", "C")
@@ -642,17 +648,22 @@ class TestCoreGraph:
 
     def test_remove_multiedges_from(self):
         """Test removing multiedges of a `_CoreGraph`."""
-        edges = [("A", "B", "->"), ("A", "B", "->"), ("A", "B", "--")]
+        edges = [("A", "B", "->"), ("A", "B", "<>"), ("A", "B", "--")]
         graph = _CoreGraph(edge_list=edges)
 
         del_edges = [("A", "B", "->"), ("A", "B", "--")]
-        graph.remove_edges_from(ebunch=del_edges)
+        graph.remove_edges_from(edge_list=del_edges)
 
-        assert not graph.has_edge("A", "B")
+        assert graph.has_edge("A", "B")
+        assert not graph.has_edge("A", "B", "->")
+        assert graph.has_edge("A", "B", "<>")
+        assert not graph.has_edge("A", "B", "--")
 
-        assert sorted(graph.edges(keys=True, data=True)) == []
+        assert sorted(graph.edges(keys=True, data=True)) == [
+            ("A", "B", 1, {"A": ">", "B": ">"}),
+        ]
 
-        check_graph_status(graph, 2, 0, set(), set(), set(), {})
+        check_graph_status(graph, 2, 1, set(), set(), set(), {})
 
     def test_remove_edges_from_fails(self):
         """Test failing remove edges of a `_CoreGraph`."""
@@ -709,7 +720,7 @@ class TestCoreGraph:
         )
 
         other = _CoreGraph()
-        other.add_edges_from(ebunch=edges)
+        other.add_edges_from(edge_list=edges)
         other.exposures = exposures
         other.outcomes = outcomes
         other.latents = latents
@@ -760,8 +771,8 @@ class TestCoreGraph:
         assert graph.__eq__(other_pdag) == False
         assert other_pdag.__eq__(graph) == False
 
-        # Different ebunch
-        other_ebunch = _CoreGraph(
+        # Different edge_list
+        other_edge_list = _CoreGraph(
             edge_list=[
                 ("A", "B", "->"),
                 ("B", "C", "<>"),
@@ -773,8 +784,8 @@ class TestCoreGraph:
             latents=latents,
             roles=roles,
         )
-        assert graph.__eq__(other_ebunch) == False
-        assert other_ebunch.__eq__(graph) == False
+        assert graph.__eq__(other_edge_list) == False
+        assert other_edge_list.__eq__(graph) == False
 
         # Different exposures
         other_exp = _CoreGraph(
@@ -857,8 +868,8 @@ class TestCoreGraph:
         assert graph.__eq__(graph_copy) == True
         assert graph_copy.__eq__(graph) == True
 
-    def test_copy_with_ebunch1(self):
-        """Test the `copy` method of a `_CoreGraph` with an ebunch."""
+    def test_copy_with_edge_list1(self):
+        """Test the `copy` method of a `_CoreGraph` with an edge_list."""
         edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
         graph = _CoreGraph(edge_list=edges)
         graph_copy = graph.copy()
@@ -868,8 +879,8 @@ class TestCoreGraph:
 
         check_graph_status(graph, 4, 3, set(), set(), set(), {})
 
-    def test_copy_with_ebunch2(self):
-        """Test the `copy` method of a `_CoreGraph` with an ebunch."""
+    def test_copy_with_edge_list2(self):
+        """Test the `copy` method of a `_CoreGraph` with an edge_list."""
         graph = _CoreGraph()
         graph.add_edge("A", "C", "->")
         graph.add_edge("C", "B", "<-")
@@ -882,7 +893,7 @@ class TestCoreGraph:
 
     def test_copy_with_attributes(self):
         """Test the `copy` method of a `_CoreGraph` with attributes."""
-        edges = [("A", "B", "->"), ("A", "B", "->"), ("B", "C", "->"), ("C", "D", "oo")]
+        edges = [("A", "B", "->"), ("A", "B", "<>"), ("B", "C", "->"), ("C", "D", "oo")]
         exposures = ["A"]
         outcomes = ["C"]
         latents = ["D"]
@@ -1944,54 +1955,162 @@ class TestCoreGraph:
         graph.add_edge("B", "C", "o-")
         graph.add_edge("A", "B", "<>")
 
-        assert sorted(graph.get_edges(keys=False, data=False)) == sorted(
+        assert sorted(graph.get_edges(data=False)) == sorted(
             [
                 ("A", "B"),
                 ("A", "B"),
                 ("B", "C"),
             ]
         )
-        assert sorted(graph.get_edges(keys=True, data=False)) == sorted(
-            [
-                ("A", "B", 0),
-                ("A", "B", 1),
-                ("B", "C", 0),
-            ]
-        )
-        assert sorted(graph.get_edges(keys=False, data=True)) == sorted(
+        assert sorted(graph.get_edges(data=True)) == sorted(
             [
                 ("A", "B", "->"),
                 ("A", "B", "<>"),
                 ("B", "C", "o-"),
             ]
         )
-        assert sorted(graph.get_edges(keys=True, data=True)) == sorted(
-            [
-                ("A", "B", 0, "->"),
-                ("A", "B", 1, "<>"),
-                ("B", "C", 0, "o-"),
-            ]
-        )
 
-    def test_get_supported_edge_types(self):
+    def test_get_edge_types(self):
         graph = _CoreGraph()
-        assert {"--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"} == graph.get_supported_edge_types()
+        assert {"--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"} == graph.get_edge_types()
 
-    def test_get_edge_type(self):
+    def test_get_edge(self):
         graph = _CoreGraph()
 
         graph.add_edge("A", "B", "->")
         graph.add_edge("A", "B", "--")
-        graph.add_edge("A", "B", "<>")
-        graph.add_edge("A", "B", "-o")
-        graph.add_edge("A", "B", "<-")
-        graph.add_edge("A", "B", "oo")
-        graph.add_edge("A", "B", "o-")
+        graph.add_edge("B", "C", "<>")
+        graph.add_edge("C", "D", "-o")
+        graph.add_edge("D", "E", "<-")
+        graph.add_edge("E", "F", "oo")
+        graph.add_edge("F", "G", "o-")
+        graph.add_node("H")
 
-        assert graph.get_edge_type("A", "B", 0) == "->"
-        assert graph.get_edge_type("A", "B", 1) == "--"
-        assert graph.get_edge_type("A", "B", 2) == "<>"
-        assert graph.get_edge_type("A", "B", 3) == "-o"
-        assert graph.get_edge_type("A", "B", 4) == "<-"
-        assert graph.get_edge_type("A", "B", 5) == "oo"
-        assert graph.get_edge_type("A", "B", 6) == "o-"
+        assert set(graph.get_edge("A", "B", data=True)) == {
+            ("A", "B", "->"),
+            ("A", "B", "--"),
+        }
+        assert set(graph.get_edge("B", "C", data=True)) == {
+            ("B", "C", "<>"),
+        }
+        assert set(graph.get_edge("D", "E")) == {
+            ("D", "E", "<-"),
+        }
+        assert set(graph.get_edge("E", "D")) == {
+            ("E", "D", "->"),
+        }
+        assert set(graph.get_edge("E", "F")) == {
+            ("E", "F", "oo"),
+        }
+        assert set(graph.get_edge("F", "G")) == {
+            ("F", "G", "o-"),
+        }
+
+    def test_get_edge_fails(self):
+        graph = _CoreGraph()
+        graph.add_node("A")
+        graph.add_node("B")
+
+        with pytest.raises(ValueError):
+            graph.get_edge("A", "B")
+
+    def test_replace_edge(self):
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "--")
+
+        graph.replace_edge("A", "B", old_type="--", new_type="->")
+        assert graph.get_edges(data=True) == (
+            [
+                ("A", "B", "->"),
+            ]
+        )
+
+        graph.replace_edge("A", "B", old_type="->", new_type="<>")
+        assert graph.get_edges(data=True) == (
+            [
+                ("A", "B", "<>"),
+            ]
+        )
+
+        graph.replace_edge("A", "B", old_type="<>", new_type="oo")
+        assert graph.get_edges(data=True) == (
+            [
+                ("A", "B", "oo"),
+            ]
+        )
+
+    def test_replace_edge_fails(self):
+        graph = _CoreGraph()
+        graph.add_node("C")
+        graph.add_edge("A", "B", "--")
+
+        with pytest.raises(ValueError):
+            graph.replace_edge("A", "B", old_type="!!", new_type="->")
+
+        with pytest.raises(ValueError):
+            graph.replace_edge("A", "B", old_type="--", new_type="~~")
+
+        with pytest.raises(ValueError):
+            graph.replace_edge("B", "C", old_type="--", new_type="->")
+
+    def test_has_edge(self):
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("B", "C", "--")
+        graph.add_edge("C", "D", "<>")
+        graph.add_node("E")
+
+        assert graph.has_edge("A", "B") is True
+        assert graph.has_edge("A", "B", "->") is True
+        assert graph.has_edge("B", "C", "--") is True
+        assert graph.has_edge("C", "D", "<>") is True
+        assert graph.has_edge("D", "C", "<>") is True
+        assert graph.has_edge("B", "A", "<-") is True
+        assert graph.has_edge("A", "B", "<-") is False
+        assert graph.has_edge("A", "B", "--") is False
+        assert graph.has_edge("A", "B", "<>") is False
+        assert graph.has_edge("A", "B", "-o") is False
+        assert graph.has_edge("A", "E") is False
+        assert graph.has_edge("A", "E", "->") is False
+
+    def test_has_edge_fails(self):
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("B", "C", "--")
+        graph.add_edge("C", "D", "<>")
+        graph.add_node("E")
+
+        with pytest.raises(ValueError):
+            graph.has_edge("A", "B", "invalid_edge_type")
+
+    def test_is_multigraph(self):
+        graph = _CoreGraph()
+
+        assert graph.is_multigraph() is False
+
+    def test_is_multigraph_fails(self):
+        graph = _CoreGraph()
+
+        assert graph.is_multigraph() is False
+
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("A", "B", "<>")
+        graph.add_edge("A", "B", "--")
+
+        with pytest.raises(ValueError):
+            graph.add_edge("A", "B", "->")
+
+    def test_is_acyclic(self):
+        graph = _CoreGraph()
+
+        assert graph.is_acyclic() is True
+
+    def test_is_acyclic_fails(self):
+        graph = _CoreGraph()
+
+        assert graph.is_acyclic() is True
+
+        graph.add_edge("A", "B", "->")
+
+        with pytest.raises(ValueError):
+            graph.add_edge("B", "A", "->")

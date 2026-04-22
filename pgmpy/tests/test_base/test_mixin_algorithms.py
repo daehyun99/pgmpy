@@ -445,7 +445,7 @@ class TestGraphAlgorithmMixin:
 
         assert isinstance(new_graph1, _CoreGraph)
         assert set(new_graph1.nodes()) == {"A", "B", "C"}
-        assert set(new_graph1.get_edges(keys=True, data=True)) == {("A", "B", 0, "->"), ("B", "C", 0, "->")}
+        assert set(new_graph1.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "->")}
 
         # ADMG
         graph2 = ADMG()
@@ -456,7 +456,7 @@ class TestGraphAlgorithmMixin:
 
         assert isinstance(new_graph2, ADMG)
         assert set(new_graph2.nodes()) == {"A", "B", "C"}
-        assert set(new_graph2.get_edges(keys=True, data=True)) == {("A", "B", 0, "->"), ("B", "C", 0, "->")}
+        assert set(new_graph2.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "->")}
 
         # MAG
         graph3 = MAG()
@@ -467,7 +467,7 @@ class TestGraphAlgorithmMixin:
 
         assert isinstance(new_graph3, MAG)
         assert set(new_graph3.nodes()) == {"A", "B", "C"}
-        assert set(new_graph3.get_edges(keys=True, data=True)) == {("A", "B", 0, "->"), ("B", "C", 0, "->")}
+        assert set(new_graph3.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "->")}
 
         # TODO(@daehyun99): [#2384] Expand DAG
         ...
@@ -493,7 +493,7 @@ class TestGraphAlgorithmMixin:
         assert new_graph.exposures == {"A"}
         assert new_graph.outcomes == {"C"}
         assert new_graph.latents == set()
-        assert set(new_graph.get_edges(keys=True, data=True)) == {("A", "B", 0, "->"), ("B", "C", 0, "->")}
+        assert set(new_graph.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "->")}
 
     def test_get_markov_blanket(self):
         """Test getting Markov blanket."""
@@ -589,3 +589,21 @@ class TestGraphAlgorithmMixin:
 
         assert nx.has_path(graph, "A", "D") is True
         assert graph.has_direct_path("A", "D") is True
+
+    # def test_get_directed_subgraph(self):
+    #     graph = _CoreGraph()
+
+    #     graph.add_edge("A", "B", "->")
+    #     graph.add_edge("B", "C", "->")
+    #     graph.add_edge("C", "D", "<>")
+    #     graph.add_edge("D", "E", "--")
+    #     graph.latents = "E"
+
+    #     subgraph = graph.get_directed_subgraph()
+
+    #     assert isinstance(
+    #         subgraph, _CoreGraph
+    #     )  # TODO(@daehyun99): [#2385] Refactoring _CoreGraph -> DAG when Refactor DAG
+    #     assert set(subgraph.nodes()) == {"A", "B", "C", "D", "E"}
+    #     assert set(subgraph.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "->")}
+    #     assert subgraph.latents == {"E"}
