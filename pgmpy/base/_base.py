@@ -304,17 +304,14 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         [('B', 'C', '->'), ('C', 'D', '--')]
 
         """
-        if isinstance(edge_type, str):
-            self._validate_edges(edge_list=[(u, v, edge_type)])
-            _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
-        else:
-            _markers_dict = edge_type
+        self._validate_edges(edge_list=[(u, v, edge_type)])
 
         keys_to_remove = []
         edges = self.get_edge_data(u, v)
         if edge_type is None:
             keys_to_remove = list(edges.keys())
         else:
+            _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
             for key, data in edges.items():
                 if data[u] == _markers_dict[u] and data[v] == _markers_dict[v]:
                     keys_to_remove.append(key)
@@ -998,9 +995,9 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
                 raise ValueError("Nodes cannot be None.")
             if u == v:
                 raise ValueError("Nodes cannot be the same for an edge.")
-            if not isinstance(edge_type, str):
+            if not isinstance(edge_type, str | None):
                 raise ValueError("edge_type must be a string.")
-            if edge_type is None or edge_type not in supported_types:
+            if edge_type is not None and edge_type not in supported_types:
                 raise ValueError(f"Types must be one of {supported_types}.")
 
     def _validate_graph_specific_edges(
