@@ -8,24 +8,30 @@ class ADMG(_CoreGraph):
     A class representing an Acyclic Directed Mixed Graph (ADMG).
 
     An ADMG is a directed graph that allows for both directed and bidirected edges.
-    This class extends the `networkx.MultiDiGraph` and provides additional functionality
-    for operations involving directed and bidirected edges.
 
     Parameters
     ----------
-    directed_edge_list : list of tuple, optional
-        List of directed edges to initialize the graph, where each tuple is (u, v).
-    bidirected_edge_list : list of tuple, optional
-        List of bidirected edges to initialize the graph, where each tuple is (u, v).
-    latents : set of str, optional
-        Set of latent variables in the graph. These are not directly represented as nodes
-        but are used to indicate the presence of bidirected edges.
-    roles : dict, optional (default: None)
+    edge_list : iterable of tuples, optional
+        A list or iterable of edges to add at initialization.
+
+    latents : set of nodes, (default=set())
+        A set of latent variables in the graph. These are not observed
+        variables but are used to represent unobserved confounding or
+        other latent structures.
+
+    exposures : set, (default=set())
+        Set of exposure variables in the graph. These are the variables
+        that represent the treatment or intervention being studied in a
+        causal analysis. Default is an empty set.
+
+    outcomes : set, (default=set())
+        Set of outcome variables in the graph. These are the variables
+        that represent the response or dependent variables being studied
+        in a causal analysis. Default is an empty set.
+
+    roles : dict, optional (default=None)
         A dictionary mapping roles to node names.
         The keys are roles, and the values are role names (strings or iterables of str).
-        If provided, this will automatically assign roles to the nodes in the graph.
-        Passing a key-value pair via ``roles`` is equivalent to calling
-        ``with_role(role, variables)`` for each key-value pair in the dictionary.
 
     """
 

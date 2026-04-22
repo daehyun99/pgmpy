@@ -21,25 +21,24 @@ class MAG(_CoreGraph):
     edge_list : iterable of tuples, optional
         A list or iterable of edges to add at initialization.
 
-    latents : set, default=set()
-        Set of latent (unobserved) variables.
+    latents : set of nodes, (default=set())
+        A set of latent variables in the graph. These are not observed
+        variables but are used to represent unobserved confounding or
+        other latent structures.
 
-    exposures : set, default=set()
+    exposures : set, (default=set())
         Set of exposure variables in the graph. These are the variables
         that represent the treatment or intervention being studied in a
         causal analysis. Default is an empty set.
 
-    outcomes : set, default=set()
+    outcomes : set, (default=set())
         Set of outcome variables in the graph. These are the variables
         that represent the response or dependent variables being studied
         in a causal analysis. Default is an empty set.
 
-    roles : dict, optional (default: None)
+    roles : dict, optional (default=None)
         A dictionary mapping roles to node names.
         The keys are roles, and the values are role names (strings or iterables of str).
-        If provided, this will automatically assign roles to the nodes in the graph.
-        Passing a key-value pair via ``roles`` is equivalent to calling
-        ``with_role(role, variables)`` for each key-value pair in the dictionary.
 
     Examples
     --------

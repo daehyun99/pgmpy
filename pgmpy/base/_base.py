@@ -54,7 +54,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
     >>> edges = [("A", "B", "->"), ("B", "C", "->")]
     >>> G = _CoreGraph(edge_list=edges)
-    >>> get_edges(data=True))
+    >>> G.get_edges(data=True))
     [('A', 'B', '->'), ('B', 'C', '->')]
 
     **Nodes:**
@@ -76,7 +76,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
     >>> from pgmpy.base._base import _CoreGraph
     >>> G = _CoreGraph()
     >>> G.add_edge("A", "B", "->")
-    >>> get_edges(data=True))
+    >>> G.get_edges(data=True))
     [('A', 'B', '->')]
 
     Remove one edge,
@@ -84,7 +84,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
     >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
     >>> G = _CoreGraph(edge_list=edges)
     >>> G.remove_edge("A", "B", "->")
-    >>> get_edges(data=True))
+    >>> G.get_edges(data=True))
     [('B', 'C', '->'), ('C', 'D', '--')]
 
     **Exposures, Outcomes, and Latents:**
@@ -248,7 +248,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         >>> edges = [("A", "B", "->"), ("B", "C", "->")]
         >>> G = _CoreGraph()
         >>> G.add_edges_from(edge_list=edges)
-        >>> get_edges(data=True))
+        >>> G.get_edges(data=True))
         [('A', 'B', '->'), ('B', 'C', '->')]
 
         """
@@ -300,7 +300,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
         >>> G = _CoreGraph(edge_list=edges)
         >>> G.remove_edge("A", "B", "->")
-        >>> get_edges(data=True))
+        >>> G.get_edges(data=True))
         [('B', 'C', '->'), ('C', 'D', '--')]
 
         """
@@ -356,7 +356,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         >>> G = _CoreGraph(edge_list=edges)
         >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
         >>> G.remove_edges_from(edge_list=remove_edges)
-        >>> get_edges(data=True))
+        >>> G.get_edges(data=True))
         [('A', 'B', '->')]
 
         """
@@ -793,7 +793,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
             return list(networkx_edge_list)
 
         # (u, v, edge_type)
-        return [(*edge[:-1], self._to_api_edge_type(edge[0], edge[1], edge[-1])) for edge in networkx_edge_list]
+        return [(u, v, self._to_api_edge_type(u, v, data)) for u, v, data in networkx_edge_list]
 
     def get_edge_types(self) -> set:
         """
@@ -836,7 +836,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         >>> graph.add_edge("A", "B", "<>")
         >>> graph.add_edge("B", "C", "--")
         >>> set(graph.get_edge("A", "B"))
-        {('A', 'B', '--'), ('A', 'B', '->'), ('A', 'B', '<>')}
+        {('A', 'B', '->'), ('A', 'B', '<>')}
         >>> set(graph.get_edge("B", "C"))
         {('B', 'C', '--')}
 
