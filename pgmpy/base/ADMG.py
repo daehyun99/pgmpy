@@ -13,9 +13,9 @@ class ADMG(_CoreGraph):
 
     Parameters
     ----------
-    directed_ebunch : list of tuple, optional
+    directed_edge_list : list of tuple, optional
         List of directed edges to initialize the graph, where each tuple is (u, v).
-    bidirected_ebunch : list of tuple, optional
+    bidirected_edge_list : list of tuple, optional
         List of bidirected edges to initialize the graph, where each tuple is (u, v).
     latents : set of str, optional
         Set of latent variables in the graph. These are not directly represented as nodes
@@ -157,11 +157,11 @@ class ADMG(_CoreGraph):
 
     def _validate_graph_specific_edges(
         self,
-        ebunch: (
+        edge_list: (
             Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
         ),
     ):
-        for edge in ebunch:
+        for edge in edge_list:
             if len(edge) == 3:
                 u, v, edge_type = edge
             elif len(edge) == 4:
@@ -172,3 +172,6 @@ class ADMG(_CoreGraph):
         elif edge_type == "<-":
             if self.has_node(u) and self.has_node(v) and self.has_direct_path(u, v):
                 raise ValueError("Cycles are not allowed in a ADMG.")
+
+    def is_multigraph(self):
+        return True

@@ -93,6 +93,9 @@ class MAG(_CoreGraph):
             roles=roles,
         )
 
+    def is_multigraph(self):
+        return True
+
     # def to_pag(self):
     #     """
 
@@ -164,7 +167,7 @@ class MAG(_CoreGraph):
 
     # def _validate_graph_specific_edges(
     #     self,
-    #     ebunch: (
+    #     edge_list: (
     #         Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
     #     ),
     # ):
