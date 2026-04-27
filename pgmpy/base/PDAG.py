@@ -149,16 +149,6 @@ class PDAG(_CoreGraph):
 
         return nx.has_path(graph, u, v)
 
-    def has_acyclic_extension(self) -> bool:
-        """
-        Returns True if the PDAG admits an acyclic DAG extension.
-        """
-        if not self.undirected_edges:
-            return nx.is_directed_acyclic_graph(nx.DiGraph(self.edges()))
-
-        dag = self.to_dag()
-        return nx.is_directed_acyclic_graph(dag)
-
     def is_clique(self, nodes: Iterable) -> bool:
         """
         Checks if a set of nodes forms a clique. A clique is a subgraph
@@ -170,7 +160,7 @@ class PDAG(_CoreGraph):
             The set of nodes to be checked for clique formation.
         """
         for node1, node2 in itertools.combinations(nodes, 2):
-            if not self.has_undirected_edge(node1, node2):
+            if not self.has_edge(node1, node2, "--"):
                 return False
         return True
 
@@ -240,7 +230,7 @@ class PDAG(_CoreGraph):
 
                 for x in xs:
                     for y in ys:
-                        if pdag.has_edge(x, y) and pdag.get_edge_type(x, y, 0) == "--":
+                        if pdag.has_edge(x, y) and (x, y, "--") in pdag.get_edge(x, y):
                             pdag.orient_undirected_edge(x, y, inplace=True)
                             changed = True
                             if debug:
@@ -254,7 +244,7 @@ class PDAG(_CoreGraph):
                     continue
 
                 for y, z, w in itertools.permutations(undirected_nbs, 3):
-                    if pdag.get_edge_type(y, w, 0) == "->" and pdag.get_edge_type(z, w, 0) == "->":
+                    if (y, w, "->") in pdag.get_edge(y, w) and (z, w, "->") in pdag.get_edge(z, w):
                         pdag.orient_undirected_edge(x, w, inplace=True)
                         changed = True
                         if debug:
@@ -304,16 +294,11 @@ class PDAG(_CoreGraph):
         """
         Returns the CPDAG corresponding to one DAG extension of the PDAG.
         """
-        from pgmpy.base import DAG
+        dag = self.to_dag()
 
-        if self.undirected_edges:
-            dag = self.to_dag()
-        else:
-            dag = DAG()
-            dag.add_nodes_from(self.nodes())
-            dag.add_edges_from(self.edges())
-            dag.latents = self.latents
-
+        # TODO(@daehyun99): [#2385] Implement method when Refactor DAG
+        # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
+        # TODO(@daehyun99): [#2385] Apply type hint(input, output)
         cpdag = dag.to_pdag()
         for role, vars in self.get_role_dict().items():
             cpdag.with_role(role=role, variables=vars, inplace=True)
@@ -398,6 +383,21 @@ class PDAG(_CoreGraph):
                             pass
                 break
         return dag
+
+    def has_acyclic_extension(self) -> bool:
+        """
+        Returns True if the PDAG admits an acyclic DAG extension.
+        """
+        ebunch = self.get_edges(data=True)
+        flag = False
+        for edge in ebunch:
+            if edge[2] == "--":
+                flag = True
+        if not flag:
+            return nx.is_directed_acyclic_graph(nx.DiGraph(self.edges()))
+
+        dag = self.to_dag()
+        return nx.is_directed_acyclic_graph(dag)
 
     def to_graphviz(self) -> object:
         """
