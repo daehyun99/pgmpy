@@ -412,18 +412,3 @@ class PDAG(_CoreGraph):
         <AGraph ...
         """
         return nx.nx_agraph.to_agraph(self)
-
-    # def _validate_graph_specific_edges(
-    #     self,
-    #     ebunch: (
-    #         Iterable[tuple[Hashable, Hashable, Hashable]] | Iterable[tuple[Hashable, Hashable, Hashable, Hashable]]
-    #     ),
-    # ):
-    #     for edge in ebunch:
-    #         if len(edge) == 3:
-    #             u, v, edge_type = edge
-    #         elif len(edge) == 4:
-    #             u, v, _, edge_type = edge
-    #         if edge_type == "->":
-    #             if self.has_node(u) and self.has_node(v) and self.has_directed_cycle():
-    #                 raise ValueError("Cycles are not allowed in a PDAG.")

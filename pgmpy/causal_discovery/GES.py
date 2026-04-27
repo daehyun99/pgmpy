@@ -166,7 +166,6 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
         for edges in remove_edges:
             new_model.replace_edge(edges[0], edges[1], "--", "->")
 
-        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def delete(
@@ -200,7 +199,6 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
         for h in H & u_neighbors:
             new_model.replace_edge(u, h, "--", "->")
 
-        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def turn(
@@ -235,7 +233,6 @@ class GES(_ScoreMixin, _BaseCausalDiscovery):
             else:
                 new_model.add_edge(c, v, "->")
 
-        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def _fit(self, X: pd.DataFrame):
