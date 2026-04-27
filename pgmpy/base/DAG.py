@@ -1055,16 +1055,15 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
                             edge_labels[(z, y)] = "reversible"
 
         # Create PDAG with directed and undirected edges
-        directed_edges = [edge for edge, label in edge_labels.items() if label == "compelled"]
-        undirected_edges = [edge for edge, label in edge_labels.items() if label == "reversible"]
+        directed_edges = [(*edge, "->") for edge, label in edge_labels.items() if label == "compelled"]
+        undirected_edges = [(*edge, "--") for edge, label in edge_labels.items() if label == "reversible"]
 
         from pgmpy.base import PDAG
 
-        pdag = PDAG(
-            directed_ebunch=directed_edges,
-            undirected_ebunch=undirected_edges,
-            latents=self.latents,
-        )
+        pdag = PDAG()
+        pdag.add_edges_from(directed_edges)
+        pdag.add_edges_from(undirected_edges)
+        pdag.latents = self.latents
         pdag.add_nodes_from(self.nodes())
         return pdag
 
