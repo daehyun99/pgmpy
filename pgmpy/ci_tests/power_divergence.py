@@ -48,39 +48,22 @@ class PowerDivergence(_BaseCITest):
 
     where :math:`F_{\chi^2_\nu}` is the CDF of the chi-square distribution with :math:`\nu` degrees of freedom.
 
-    Two corrections are applied during this aggregation. They make this implementation match
-    :func:`scipy.stats.chi2_contingency` and may cause numerical differences against other discrete CI test
-    implementations (notably R's ``bnlearn::ci.test(test="x2")`` and ``dagitty::ciTest(type="cis.chisq")``).
+    Two corrections are applied during this aggregation:
 
-    **1. Adjusted (sparse) degrees of freedom.** :math:`\nu^{(z)}` is computed from the rows and columns that are
-    actually observed in the stratum, not from the full cardinalities of :math:`X` and :math:`Y`:
-
-    .. math::
-        \nu^{(z)} = (|I_z^+| - 1)\,(|J_z^+| - 1),
-        \qquad
-        I_z^+ = \{\,i : R_i^{(z)} > 0\,\},
-        \quad
-        J_z^+ = \{\,j : C_j^{(z)} > 0\,\}.
-
-    A row or column that never occurs in a stratum contributes zero to both :math:`\nu^{(z)}` and
-    :math:`T_\lambda^{(z)}` (its expected counts are zero, so its per-cell terms vanish). A stratum that collapses
-    to a single active row or column has :math:`\nu^{(z)} = 0` and is effectively skipped. This convention agrees
-    with :func:`scipy.stats.chi2_contingency` and with dagitty's chi-square CI test, but differs from bnlearn's
-    ``x2`` which uses the structural dof :math:`(|\mathcal{X}|-1)(|\mathcal{Y}|-1) \prod_k |\mathcal{Z}_k|`
-    regardless of sparsity.
+    **1. Adjusted (sparse) degrees of freedom.** A row or column that never occurs in a stratum contributes zero to both
+    :math:`\nu^{(z)}` and :math:`T_\lambda^{(z)}` (its expected counts are zero, so its per-cell terms vanish). A
+    stratum that collapses to a single active row or column has :math:`\nu^{(z)} = 0` and is effectively skipped.
 
     **2. Yates' continuity correction on 2x2 strata.** Whenever a stratum's active contingency table is 2x2
     (equivalently, :math:`\nu^{(z)} = 1`), Yates' continuity correction is applied to the observed counts before
     the per-cell power-divergence terms are evaluated:
 
-    .. math::
-        \tilde{O}_{ij}^{(z)} = O_{ij}^{(z)} + \min\!\bigl(0.5,\; |E_{ij}^{(z)} - O_{ij}^{(z)}|\bigr)
-        \cdot \operatorname{sign}\!\bigl(E_{ij}^{(z)} - O_{ij}^{(z)}\bigr).
+    The effect size is Cramér's V:
 
-    This shrinks each observed count by up to 0.5 toward its expectation, slightly reducing the statistic on small
-    or sparse 2x2 tables and improving the calibration of the chi-square approximation. It matches
-    :func:`scipy.stats.chi2_contingency`. bnlearn and dagitty do not apply this correction; on 2x2 strata, this
-    implementation will report a statistic roughly 0.5%-2% smaller than theirs.
+    .. math::
+        V = \sqrt{\frac{T}{n \cdot (k - 1)}},
+
+    where :math:`k = \min(|X|, |Y|)` is the smaller number of categories and :math:`n` is the sample size.
 
     Parameters
     ----------
@@ -106,6 +89,8 @@ class PowerDivergence(_BaseCITest):
         The p-value for the test. Set after calling the test.
     dof_ : int
         Degrees of freedom :math:`\nu` for the test. Set after calling the test.
+    effect_size_ : float
+        Cramér's V. Set after calling the test.
 
     References
     ----------
@@ -215,7 +200,11 @@ class PowerDivergence(_BaseCITest):
         chi = terms.sum()
         p_value = stats.chi2.sf(chi, df=dof)
 
-        return _CITestResult(statistic=chi, p_value=p_value, attributes={"dof_": dof})
+        n = len(self.data)
+        k = min(self.data[X].nunique(), self.data[Y].nunique())
+        effect_size = np.sqrt(chi / (n * max(k - 1, 1)))
+
+        return _CITestResult(statistic=chi, p_value=p_value, effect_size=effect_size, attributes={"dof_": dof})
 
     def _power_divergence_terms(self, observed, expected, safe):
         """Per-cell power-divergence contribution for the (n_strata, kx, ky) table."""

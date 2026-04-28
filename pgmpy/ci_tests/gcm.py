@@ -21,6 +21,8 @@ class GCM(_ResidualMixin, _BaseCITest):
     where :math:`n` is the sample size. Under the null hypothesis :math:`X \perp Y \mid Z`, this statistic is
     asymptotically standard normal.
 
+    The effect size is correlation coefficient between the residuals: :math:`\textit{cor}(r_X, r_Y)`.
+
     Parameters
     ----------
     data : pandas.DataFrame
@@ -35,6 +37,8 @@ class GCM(_ResidualMixin, _BaseCITest):
         The GCM test statistic. Set after calling the test.
     p_value_ : float
         The p-value for the test. Set after calling the test.
+    effect_size_ : float
+        Cohen's d. Set after calling the test.
 
     References
     ----------
@@ -77,4 +81,7 @@ class GCM(_ResidualMixin, _BaseCITest):
         # Step 3: Compute p-value using standard normal distribution.
         p_value = 2 * stats.norm.sf(np.abs(t_stat))
 
-        return _CITestResult(statistic=t_stat, p_value=p_value)
+        # Step 4: Compute effect size as correlation coefficient between residuals.
+        effect_size = np.absolute(np.corrcoef(res_x, res_y, rowvar=False)[0, 1])
+
+        return _CITestResult(statistic=t_stat, p_value=p_value, effect_size=effect_size)

@@ -122,6 +122,7 @@ class _ResidualMixin:
 class _CITestResult:
     statistic: float | None
     p_value: float
+    effect_size: float | None = None
     attributes: dict[str, object] = field(default_factory=dict)
 
 
@@ -188,8 +189,9 @@ class _BaseCITest(BaseObject):
 
         Notes
         -----
-        Always sets ``self.statistic_`` and ``self.p_value_`` as side effects,
-        regardless of the return value. Access these attributes to inspect raw results.
+        Always sets ``self.statistic_``, ``self.p_value_``, and ``self.effect_size_``
+        as side effects, regardless of the return value. Access these attributes to
+        inspect raw results.
         CI test instances are not thread-safe; use a separate instance per thread
         for parallel computation.
         """
@@ -239,6 +241,7 @@ class _BaseCITest(BaseObject):
 
         self.statistic_ = result.statistic
         self.p_value_ = result.p_value
+        self.effect_size_ = result.effect_size
         for attr_name, attr_value in result.attributes.items():
             setattr(self, attr_name, attr_value)
 
@@ -263,7 +266,7 @@ class _BaseCITest(BaseObject):
             raise ValueError(f"X and Y cannot appear in Z. Found {X if X in Z else Y} in Z.")
 
 
-def get_ci_test(test=None, data=None):
+def get_ci_test(test=None, data=None, use_cache=True):
     """
     Return an instantiated CI test object given a test name, instance, or data.
 
@@ -372,6 +375,7 @@ def get_ci_test(test=None, data=None):
         if cls.get_class_tag("requires_data", tag_value_default=True):
             if data is None:
                 raise ValueError(f"CI test '{cls.__name__}' requires data, but data is None.")
-            return cls(data=data)
-        return cls()
+            return cls(data=data, use_cache=use_cache)
+        else:
+            return cls(use_cache=use_cache)
     raise ValueError(f"Unknown CI test: {test!r}")
