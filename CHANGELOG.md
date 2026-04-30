@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.1] - 2026-04-30
+## [1.1.2] - 2026-04-30
 ### Added
 1. Prioritization option for PC orientation to control rule application order (#3363).
 2. Effect sizes for CI tests (#3358).
@@ -32,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 5. Fixes incorrect `has_missing_data` tag for tubingen dataset (#3231).
 6. Fixes minor typo in ValueError messages in `state_name.py` (#3309).
 7. Fixes failing doctests in `BIF`, `NET`, `XMLBIF`, and `UAI` readwrite modules (#3226, #3230, #3262, #3263).
+
+## [1.1.1] - 2026-04-30
+Version skipped due to errors in build and tagging.
 
 ## [1.1.0] - 2026-04-01
 ### Added
