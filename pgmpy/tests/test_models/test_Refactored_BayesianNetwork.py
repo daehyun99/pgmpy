@@ -1,7 +1,7 @@
 import pytest
 
 from pgmpy.factors.discrete import TabularCPD
-from pgmpy.models.Refactored_BayesianNetwork import BayesianNetwork
+from pgmpy.models.Refactored_BayesianNetwork import BayesianNetwork, NodeObject
 
 
 class TestRefactoredBayesianNetwork:
@@ -42,3 +42,18 @@ class TestRefactoredBayesianNetwork:
 
         for method_name in ("fit", "predict", "simulate", "query"):
             assert not hasattr(model, method_name)
+
+    def test_get_node_returns_nodeobject_with_metadata(self):
+        model = BayesianNetwork([("B", "F")], roles={"instrument": ["B"]})
+        cpd_f = TabularCPD("F", 2, [[0.9, 0.2], [0.1, 0.8]], evidence=["B"], evidence_card=[2])
+        model.add_cpds(cpd_f)
+
+        node_obj = model.get_node("F")
+        assert isinstance(node_obj, NodeObject)
+        assert node_obj.node == "F"
+        assert node_obj.parents == {"B"}
+        assert node_obj.children == set()
+        assert node_obj.roles == set()
+        assert node_obj.local_model == cpd_f
+
+        assert model.get_node("B").roles == {"instrument"}
