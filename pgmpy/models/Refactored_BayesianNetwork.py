@@ -87,7 +87,7 @@ class BayesianNetwork(DAG):
         if node not in self.nodes():
             raise ValueError("Node not present in the graph")
 
-        roles = {role for role in self.node[node].keys() if self.node[node][role]}
+        roles = {role for role in self[node].keys() if self[node][role]}
         node_obj = self.nodedict.get(node, NodeObject(node=node))
         node_obj.parents = set(self.predecessors(node))
         node_obj.children = set(self.successors(node))
