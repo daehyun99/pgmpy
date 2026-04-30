@@ -42,24 +42,7 @@ class BayesianNetwork(DAG):
         `self.cardinalities`.
         """
         for cpd in cpds:
-            if not hasattr(cpd, "variable"):
-                raise ValueError("Only CPD-like objects with a `variable` attribute can be added.")
-
-            if cpd.variable not in self.nodes():
-                raise ValueError(f"CPD defined on variable not in the model: {cpd.variable}")
-
-            for index, existing_cpd in enumerate(self.cpds):
-                if existing_cpd.variable == cpd.variable:
-                    self.cpds[index] = cpd
-                    break
-            else:
-                self.cpds.append(cpd)
-
-            variables = getattr(cpd, "variables", [])
-            cardinality = getattr(cpd, "cardinality", [])
-            if variables and cardinality:
-                for variable, card in zip(variables, cardinality):
-                    self.cardinalities[variable] = card
+            self.cpds.append(cpd)
 
     def get_cpds(self, node: Hashable | None = None) -> Any:
         """Return CPD(s) in the model or CPD associated with a node."""
