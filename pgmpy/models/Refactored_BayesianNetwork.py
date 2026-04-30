@@ -75,12 +75,6 @@ class BayesianNetwork(DAG):
             if cpd.variable in self.nodes:
                 self.nodes[cpd.variable]["local_model"] = cpd
 
-    def add_node(self, node_for_adding: Hashable, **attr: Any) -> None:
-        super().add_node(node_for_adding, **attr)
-
-    def add_edge(self, u: Hashable, v: Hashable, **attr: Any) -> None:
-        super().add_edge(u, v, **attr)
-
     def get_cpds(self, node: Hashable | None = None) -> Any:
         """Return CPD(s) in the model or CPD associated with a node."""
         if node is None:
@@ -99,7 +93,7 @@ class BayesianNetwork(DAG):
             raise ValueError("Node not present in the graph")
 
         node_attrs = self.nodes[node]
-        roles = {role for role, active in node_attrs.items() if isinstance(active, bool) and active}
+        roles = {role for role in self[node].keys() if self[node][role]}
 
         return NodeObject(
             node=node,
