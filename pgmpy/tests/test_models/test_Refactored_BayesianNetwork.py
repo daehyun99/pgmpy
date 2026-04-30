@@ -57,3 +57,18 @@ class TestRefactoredBayesianNetwork:
         assert node_obj.local_model == cpd_f
 
         assert model.get_node("B").roles == {"instrument"}
+
+
+    def test_get_node_string_representation_is_readable(self):
+        model = BayesianNetwork([("B", "F")], roles={"instrument": ["B"]})
+        cpd_f = TabularCPD("F", 2, [[0.9, 0.2], [0.1, 0.8]], evidence=["B"], evidence_card=[2])
+        model.add_cpds(cpd_f)
+
+        node_text = str(model.get_node("F"))
+
+        assert "NodeObject(" in node_text
+        assert "node='F'" in node_text
+        assert "parents=['B']" in node_text
+        assert "children=[]" in node_text
+        assert "roles=[]" in node_text
+        assert "local_model=TabularCPD" in node_text
