@@ -15,11 +15,10 @@ class NodeObject:
     node: Hashable
     parents: set[Hashable] = field(default_factory=set)
     children: set[Hashable] = field(default_factory=set)
-    roles: set[str] = field(default_factory=set)
+    roles: Any = None
     local_model: Any = None
     estimator: Any = None
     data: Any = None
-
 
     def __str__(self) -> str:
         """Return a readable summary of node-level metadata."""
@@ -93,7 +92,8 @@ class BayesianNetwork(DAG):
             raise ValueError("Node not present in the graph")
 
         node_attrs = self.nodes[node]
-        roles = {role for role in self[node].keys() if self[node][role]}
+
+        roles = self.nodes[node]["roles"]
 
         return NodeObject(
             node=node,
@@ -115,9 +115,7 @@ class BayesianNetwork(DAG):
             evidence = set(getattr(cpd, "get_evidence", lambda: [])())
             parents = set(self.get_parents(node))
             if evidence != parents:
-                raise ValueError(
-                    f"CPD associated with {node} doesn't have proper parents associated with it."
-                )
+                raise ValueError(f"CPD associated with {node} doesn't have proper parents associated with it.")
 
             if hasattr(cpd, "is_valid_cpd") and not cpd.is_valid_cpd():
                 raise ValueError(f"Sum or integral of conditional probabilities for node {node} is not equal to 1.")
