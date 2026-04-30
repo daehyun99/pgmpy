@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from pgmpy import config, logger
+from pgmpy.distribution import Categorical
 from pgmpy.extern import tabulate
 from pgmpy.factors.discrete import DiscreteFactor
 from pgmpy.utils import compat_fns
@@ -208,6 +209,106 @@ class TabularCPD(DiscreteFactor):
             return self.values.reshape(tuple([self.cardinality[0], np.prod(self.cardinality[1:])]))
         else:
             return self.values.reshape(tuple([np.prod(self.cardinality), 1]))
+
+
+    def fit(self, X: pd.DataFrame, y: pd.Series | np.ndarray | None = None):
+        """Estimate CPD values from data.
+
+        Parameters
+        ----------
+        X: pandas.DataFrame
+            DataFrame containing evidence columns. If `y` is None, must also contain
+            the target variable column.
+
+        y: array-like, optional
+            Target variable samples for `self.variable`.
+
+        Returns
+        -------
+        TabularCPD
+            Returns self for estimator-style chaining.
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError("X must be a pandas DataFrame.")
+
+        evidence = self.variables[1:]
+
+        if y is None:
+            required = [self.variable] + evidence
+            missing = [col for col in required if col not in X.columns]
+            if missing:
+                raise ValueError(f"Missing required columns in X: {missing}")
+            data = X[required].copy()
+        else:
+            missing = [col for col in evidence if col not in X.columns]
+            if missing:
+                raise ValueError(f"Missing evidence columns in X: {missing}")
+            data = X[evidence].copy()
+            data[self.variable] = y
+
+        if self.state_names:
+            for var in self.variables:
+                if var in self.state_names:
+                    data[var] = pd.Categorical(data[var], categories=self.state_names[var], ordered=False)
+
+        counts = pd.crosstab(
+            index=data[self.variable],
+            columns=[data[var] for var in evidence] if evidence else None,
+            dropna=False,
+        )
+
+        if not evidence:
+            counts = counts.to_frame()
+
+        counts = counts.reindex(index=self.state_names[self.variable], fill_value=0)
+
+        if evidence:
+            full_columns = pd.MultiIndex.from_product([self.state_names[var] for var in evidence], names=evidence)
+            counts = counts.reindex(columns=full_columns, fill_value=0)
+
+        probs = counts.to_numpy(dtype=float)
+        column_sums = probs.sum(axis=0, keepdims=True)
+        valid = column_sums > 0
+        probs[:, valid[0]] = probs[:, valid[0]] / column_sums[:, valid[0]]
+
+        self.values = probs.reshape(tuple(self.cardinality))
+        return self
+
+    def predict_proba(self, X: pd.DataFrame | None = None):
+        """Return a Categorical distribution for each sample in X."""
+        evidence = self.variables[1:]
+        values_2d = compat_fns.to_numpy(self.get_values()).T
+
+        if not evidence:
+            probs = values_2d
+            n_rows = 1 if X is None else len(X)
+            probs = np.repeat(probs, n_rows, axis=0)
+            return Categorical(classes=self.state_names[self.variable], probs=probs)
+
+        if X is None:
+            raise ValueError("X must be provided for CPDs with evidence variables.")
+
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError("X must be a pandas DataFrame.")
+
+        missing = [col for col in evidence if col not in X.columns]
+        if missing:
+            raise ValueError(f"Missing evidence columns in X: {missing}")
+
+        index_map = {}
+        for col_idx, states in enumerate(product(*[self.state_names[var] for var in evidence])):
+            index_map[states] = col_idx
+
+        probs = []
+        for _, row in X[evidence].iterrows():
+            key = tuple(row[var] for var in evidence)
+            probs.append(values_2d[index_map[key]])
+
+        return Categorical(classes=self.state_names[self.variable], probs=np.vstack(probs))
+
+    def predict(self, X: pd.DataFrame | None = None):
+        """Predict the most probable state for each sample."""
+        return self.predict_proba(X).mode()
 
     def __str__(self):
         return self._make_table_str(tablefmt="grid")
