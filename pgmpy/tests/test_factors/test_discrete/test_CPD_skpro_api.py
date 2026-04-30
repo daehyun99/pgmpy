@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from skbase.base import BaseEstimator
 
 from pgmpy.distribution import Categorical
 from pgmpy.factors.discrete import TabularCPD
@@ -59,3 +60,14 @@ def test_fit_updates_cpd_from_data():
 
     expected = np.array([[1.0, 1 / 3], [0.0, 2 / 3]])
     np.testing.assert_allclose(cpd.get_values(), expected)
+
+
+def test_tabular_cpd_is_base_estimator():
+    cpd = TabularCPD(
+        variable="grade",
+        variable_card=2,
+        values=[[0.7], [0.3]],
+        state_names={"grade": ["A", "B"]},
+    )
+
+    assert isinstance(cpd, BaseEstimator)

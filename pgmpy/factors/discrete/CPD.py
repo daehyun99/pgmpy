@@ -10,6 +10,7 @@ from shutil import get_terminal_size
 
 import numpy as np
 import pandas as pd
+from skbase.base import BaseEstimator
 
 from pgmpy import config, logger
 from pgmpy.distribution import Categorical
@@ -18,7 +19,7 @@ from pgmpy.factors.discrete import DiscreteFactor
 from pgmpy.utils import compat_fns
 
 
-class TabularCPD(DiscreteFactor):
+class TabularCPD(DiscreteFactor, BaseEstimator):
     """
     Defines the conditional probability distribution table (CPD table)
 
@@ -171,6 +172,7 @@ class TabularCPD(DiscreteFactor):
         if not isinstance(state_names, dict):
             raise ValueError(f"state_names must be of type dict. Got {type(state_names)}")
 
+        BaseEstimator.__init__(self)
         super().__init__(variables, cardinality, values_casted.flatten(), state_names=state_names)
 
     def __repr__(self):
