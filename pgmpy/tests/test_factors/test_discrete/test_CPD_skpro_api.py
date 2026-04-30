@@ -71,3 +71,21 @@ def test_tabular_cpd_is_base_estimator():
     )
 
     assert isinstance(cpd, BaseEstimator)
+
+def test_categorical_sample_shape_and_values():
+    dist = Categorical(classes=["A", "B"], probs=[[0.7, 0.3], [0.2, 0.8]])
+    samples = dist.sample(n_samples=5, random_state=7)
+
+    assert samples.shape == (2, 5)
+    assert set(np.unique(samples)).issubset({"A", "B"})
+
+
+def test_categorical_plot_returns_axes():
+    import matplotlib
+
+    matplotlib.use("Agg")
+
+    dist = Categorical(classes=["A", "B"], probs=[0.7, 0.3])
+    ax = dist.plot()
+
+    assert ax.get_ylabel() == "Probability"
