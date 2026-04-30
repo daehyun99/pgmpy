@@ -19,6 +19,21 @@ class NodeObject:
     data: Any = None
 
 
+    def __str__(self) -> str:
+        """Return a readable summary of node-level metadata."""
+        return (
+            "NodeObject("
+            f"node={self.node!r}, "
+            f"parents={sorted(self.parents, key=str)!r}, "
+            f"children={sorted(self.children, key=str)!r}, "
+            f"roles={sorted(self.roles)!r}, "
+            f"local_model={type(self.local_model).__name__ if self.local_model is not None else None}, "
+            f"estimator={type(self.estimator).__name__ if self.estimator is not None else None}, "
+            f"data={'set' if self.data is not None else None}"
+            ")"
+        )
+
+
 class BayesianNetwork(DAG):
     """Graph container for Bayesian network structure and CPD metadata.
 
