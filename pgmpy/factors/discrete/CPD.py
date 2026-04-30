@@ -233,6 +233,9 @@ class TabularCPD(DiscreteFactor, BaseEstimator):
         if not isinstance(X, pd.DataFrame):
             raise TypeError("X must be a pandas DataFrame.")
 
+        from pgmpy.base import DAG
+        from pgmpy.parameter_estimator import DiscreteMLE
+
         evidence = self.variables[1:]
 
         if y is None:
@@ -248,32 +251,18 @@ class TabularCPD(DiscreteFactor, BaseEstimator):
             data = X[evidence].copy()
             data[self.variable] = y
 
-        if self.state_names:
-            for var in self.variables:
-                if var in self.state_names:
-                    data[var] = pd.Categorical(data[var], categories=self.state_names[var], ordered=False)
+        model = DAG()
+        model.add_node(self.variable)
+        model.add_nodes_from(evidence)
+        model.add_edges_from((ev, self.variable) for ev in evidence)
 
-        counts = pd.crosstab(
-            index=data[self.variable],
-            columns=[data[var] for var in evidence] if evidence else None,
-            dropna=False,
+        fitted_cpd = DiscreteMLE._estimate_cpd(
+            model=model, data=data, state_names=self.state_names, node=self.variable
         )
+        if evidence and fitted_cpd.variables[1:] != evidence:
+            fitted_cpd = fitted_cpd.reorder_parents(new_order=evidence, inplace=False)
 
-        if not evidence:
-            counts = counts.to_frame()
-
-        counts = counts.reindex(index=self.state_names[self.variable], fill_value=0)
-
-        if evidence:
-            full_columns = pd.MultiIndex.from_product([self.state_names[var] for var in evidence], names=evidence)
-            counts = counts.reindex(columns=full_columns, fill_value=0)
-
-        probs = counts.to_numpy(dtype=float)
-        column_sums = probs.sum(axis=0, keepdims=True)
-        valid = column_sums > 0
-        probs[:, valid[0]] = probs[:, valid[0]] / column_sums[:, valid[0]]
-
-        self.values = probs.reshape(tuple(self.cardinality))
+        self.values = fitted_cpd.values.reshape(tuple(self.cardinality))
         return self
 
     def predict_proba(self, X: pd.DataFrame | None = None):
