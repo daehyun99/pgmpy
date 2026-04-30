@@ -4,6 +4,7 @@ from skbase.base import BaseEstimator
 
 from pgmpy.distribution import Categorical
 from pgmpy.factors.discrete import TabularCPD
+from pgmpy.parameter_estimator import DiscreteMLE
 
 
 def test_predict_proba_returns_categorical_distribution():
@@ -60,6 +61,29 @@ def test_fit_updates_cpd_from_data():
 
     expected = np.array([[1.0, 1 / 3], [0.0, 2 / 3]])
     np.testing.assert_allclose(cpd.get_values(), expected)
+
+
+def test_fit_delegates_to_discrete_mle_estimator(monkeypatch):
+    cpd = TabularCPD(
+        variable="grade",
+        variable_card=2,
+        values=[[0.5, 0.5], [0.5, 0.5]],
+        evidence=["diff"],
+        evidence_card=[2],
+        state_names={"grade": ["A", "B"], "diff": ["easy", "hard"]},
+    )
+    data = pd.DataFrame({"diff": ["easy", "hard"], "grade": ["A", "B"]})
+    called = {"value": False}
+
+    original_estimate_cpd = DiscreteMLE._estimate_cpd
+
+    def wrapped(*args, **kwargs):
+        called["value"] = True
+        return original_estimate_cpd(*args, **kwargs)
+
+    monkeypatch.setattr(DiscreteMLE, "_estimate_cpd", wrapped)
+    cpd.fit(data)
+    assert called["value"]
 
 
 def test_tabular_cpd_is_base_estimator():
