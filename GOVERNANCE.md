@@ -28,7 +28,7 @@ The current maintainers of the project are:
 - **Nimish Purohit** ([@Nimish-4](https://github.com/Nimish-4))
 - **Raunak Dev** ([@DARHWOLF](https://github.com/DARHWOLF))
 
-Emeritus Maintainers:
+Emeritus Maintainers and Leads:
 
 - **Abinash Panda** ([@abinashpanda](https://github.com/abinashpanda))
 - **Utkarsh Gupta** ([@khalibartan](https://github.com/khalibartan))
@@ -40,6 +40,10 @@ Emeritus Maintainers:
 pgmpy follows a Benevolent Dictator (BDFL) model. The Project Lead has final say on decisions where the maintainers cannot reach agreement, and holds overall responsibility for the long-term technical direction of pgmpy.
 
 The current Project Lead is **Ankur Ankan** ([@ankurankan](https://github.com/ankurankan)).
+
+Former Project (Co-)Leads:
+
+- **Abinash Panda** ([@abinashpanda](https://github.com/abinashpanda))
 
 ## Decision making
 
