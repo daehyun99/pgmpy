@@ -5,8 +5,10 @@ import itertools
 
 import networkx as nx
 
+from pgmpy.base._base import _CoreGraph
 
-class UndirectedGraph(nx.Graph):
+
+class UndirectedGraph(_CoreGraph):
     """Base class for all the Undirected Graphical models.
 
     Each node in the graph can represent either a random variable, `Factor`,
@@ -66,11 +68,30 @@ class UndirectedGraph(nx.Graph):
 
     """
 
+    SUPPORTED_EDGE_TYPES = frozenset(["--"])
+
     def __init__(self, ebunch=None):
         """Initialize UndirectedGraph with optional edges."""
-        super().__init__(ebunch)
+        super().__init__()
+        edge_list = ebunch
+        if edge_list:
+            self._validate_edges(edge_list=edge_list)
+            for edge in edge_list:
+                if len(edge) == 3:
+                    u, v, edge_type = edge
+                elif len(edge) == 2:
+                    u, v = edge
+                    edge_type = "--"
 
-    def add_edge(self, u, v, weight=None):
+                self.add_edge(u, v, edge_type=edge_type)
+
+    def add_edge(
+        self,
+        u,
+        v,
+        edge_type: str = "--",
+        **kwargs,
+    ) -> None:
         """Add an edge between u and v.
 
         The nodes u and v will be automatically added if they are
@@ -110,7 +131,7 @@ class UndirectedGraph(nx.Graph):
         {'weight': 0.1}
 
         """
-        super().add_edge(u, v, weight=weight)
+        super().add_edge(u, v, edge_type=edge_type)
 
     def add_edges_from(self, ebunch, weights=None):
         """Add all the edges in ebunch.
@@ -233,3 +254,167 @@ class UndirectedGraph(nx.Graph):
 
         """
         return nx.is_chordal(self)
+
+    def is_acyclic(self):
+        return True
+
+    def _validate_edges(
+        self,
+        edge_list,
+    ):
+        """
+        Validates the value input by the user, then either raises an error.
+
+        Parameters
+        ----------
+        edge_list : list of tuples
+            [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...]
+
+        Notes
+        -----
+        Helper method that validates the input for
+            `add_edge()`,
+            `add_edges_from()`,
+            `remove_edge()`,
+            `remove_edges_from()`.
+        """
+        if not edge_list:
+            return
+        supported_types = self.SUPPORTED_EDGE_TYPES
+
+        for edge in edge_list:
+            if len(edge) == 3:
+                u, v, edge_type = edge
+            elif len(edge) == 2:
+                u, v = edge
+                edge_type = "--"
+            else:
+                raise ValueError(f"Edge tuple must have 3 elements. Got {len(edge)}.")
+
+            if (u is None) or (v is None):
+                raise ValueError("Nodes cannot be None.")
+            if u == v:
+                raise ValueError("Nodes cannot be the same for an edge.")
+            if not isinstance(edge_type, str | None):
+                raise ValueError("edge_type must be a string.")
+            if edge_type is not None and edge_type not in supported_types:
+                raise ValueError(f"Types must be one of {supported_types}.")
+
+    def _validate_graph_specific_edge(self, u, v, edge_type):
+        """
+        Validates graph-specific constraints on the given edge.
+
+        Parameters
+        ----------
+        u, v : Hashable
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
+
+        edge_type : str (default="->")
+            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
+
+        Notes
+        -----
+        Helper method that validates constraints specific to a graph subclass,
+        beyond the common checks performed in `_validate_edges()`.
+
+        Intended to be implemented by subclasses.
+        """
+        if not self.is_multigraph():
+            if self.has_edge(u, v, edge_type):
+                self.remove_edge(u, v, edge_type="--")
+        if self.is_acyclic():
+            if edge_type == "->":
+                if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
+                    raise ValueError(f"Direct cycles are not allowed in a {self.__class__.__name__}.")
+            elif edge_type == "<-":
+                if self.has_node(u) and self.has_node(v) and self.has_direct_path(u, v):
+                    raise ValueError(f"Direct cycles are not allowed in a {self.__class__.__name__}.")
+
+    def remove_edge(
+        self,
+        u,
+        v,
+        edge_type: str = "--",
+    ) -> None:
+        """
+        Remove an edge between u and v.
+
+        Parameters
+        ----------
+        u, v : Hashable
+            Nodes can be, for example, strings or numbers.
+            Nodes must be hashable (and not None) Python objects.
+
+        edge_type : str (default=None)
+            The type should be None or a value from SUPPORTED_EDGE_TYPES.
+            If the type is `None`, remove all edges between `u` and `v`.
+
+        kwargs : keyword arguments, optional
+            Edge data (or labels or objects) can be assigned using
+            keyword arguments.
+
+        Returns
+        -------
+        None
+
+        See Also
+        --------
+        `remove_edges_from()`
+
+        Notes
+        -----
+        This method is expected to be usable without being implemented in a subclass of the graph class.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
+        >>> G = _CoreGraph(edge_list=edges)
+        >>> G.remove_edge("A", "B", "->")
+        >>> G.get_edges(data=True)
+        [('B', 'C', '->'), ('C', 'D', '--')]
+
+        """
+        self._validate_edges(edge_list=[(u, v, edge_type)])
+
+        self._remove_edge(u, v, edge_type)
+
+    def remove_edges_from(
+        self,
+        edge_list,
+    ) -> None:
+        """
+        Remove all the edges in edge_list.
+
+        Parameters
+        ----------
+        edge_list : list of tuples
+            [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...]
+
+        Returns
+        -------
+        None
+
+        See Also
+        --------
+        `remove_edge()`
+
+        Notes
+        -----
+        This method is expected to be usable without being implemented in a subclass of the graph class.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
+        >>> G = _CoreGraph(edge_list=edges)
+        >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
+        >>> G.remove_edges_from(edge_list=remove_edges)
+        >>> G.get_edges(data=True)
+        [('A', 'B', '->')]
+
+        """
+        self._validate_edges(edge_list=edge_list)
+        for u, v in edge_list:
+            self._remove_edge(u, v)
