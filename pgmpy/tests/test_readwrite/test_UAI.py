@@ -359,11 +359,19 @@ class TestUAIReaderTorch(unittest.TestCase):
         self.assertListEqual(self.reader_string_with_comment.tables, tables_expected)
 
     def test_get_model(self):
+        from networkx.classes.coreviews import AdjacencyView
+
         model = self.reader_string.get_model()
         edge_expected = {
-            "var_2": {"var_0": {"weight": None}, "var_1": {"weight": None}},
-            "var_0": {"var_2": {"weight": None}, "var_1": {"weight": None}},
-            "var_1": {"var_2": {"weight": None}, "var_0": {"weight": None}},
+            "var_0": AdjacencyView(
+                {"var_1": {0: {"var_0": "-", "var_1": "-"}}, "var_2": {0: {"var_0": "-", "var_2": "-"}}}
+            ),
+            "var_1": AdjacencyView(
+                {"var_2": {0: {"var_1": "-", "var_2": "-"}}, "var_0": {0: {"var_0": "-", "var_1": "-"}}}
+            ),
+            "var_2": AdjacencyView(
+                {"var_1": {0: {"var_1": "-", "var_2": "-"}}, "var_0": {0: {"var_0": "-", "var_2": "-"}}}
+            ),
         }
 
         self.assertListEqual(sorted(model.nodes()), sorted(["var_0", "var_2", "var_1"]))
