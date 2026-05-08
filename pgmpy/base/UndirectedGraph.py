@@ -131,7 +131,7 @@ class UndirectedGraph(_CoreGraph):
         {'weight': 0.1}
 
         """
-        super().add_edge(u, v, edge_type=edge_type)
+        super().add_edge(u, v, edge_type=edge_type, key=0)
 
     def add_edges_from(self, ebunch, weights=None):
         """Add all the edges in ebunch.
@@ -320,9 +320,6 @@ class UndirectedGraph(_CoreGraph):
 
         Intended to be implemented by subclasses.
         """
-        if not self.is_multigraph():
-            if self.has_edge(u, v, edge_type):
-                self.remove_edge(u, v, edge_type="--")
         if self.is_acyclic():
             if edge_type == "->":
                 if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
