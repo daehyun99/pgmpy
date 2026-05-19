@@ -155,9 +155,8 @@ class TOPIC(_BaseCausalDiscovery):
 
             # Step 1.3: Prune edges into the source. Repeatedly remove the parent whose removal least decreases the
             # score, using min_improvement as the tolerance (symmetric with the edge-addition threshold above).
-            # The last remaining parent is never removed.
             current_parents = list(dag_current.get_parents(source))
-            while len(current_parents) > 1:
+            while current_parents:
                 old_score = score.local_score(source, tuple(current_parents))
                 best_parent = None
                 best_harm = float("-inf")
