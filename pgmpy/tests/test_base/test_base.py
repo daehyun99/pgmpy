@@ -214,6 +214,16 @@ class TestCoreGraph:
             graph = _CoreGraph(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
+        with pytest.raises(ValueError, match="3 elements"):  # 2-tuple edge (missing `edge_type`)
+            edges = [("A", "B")]
+            graph = _CoreGraph(edge_list=edges)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
+        with pytest.raises(ValueError, match="3 elements"):  # 4-tuple edge
+            edges = [("A", "B", "key", "->")]
+            graph = _CoreGraph(edge_list=edges)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
         with pytest.raises(ValueError):  # Granting a role to a node that is not owned.
             roles = {"test_role": "A"}
             graph = _CoreGraph(roles=roles)
@@ -347,6 +357,12 @@ class TestCoreGraph:
         with pytest.raises(ValueError):
             graph.add_edge("A", "B", dict())
 
+        with pytest.raises(TypeError):  # edge_type is required (no default)
+            graph.add_edge("A", "B")
+
+        with pytest.raises(ValueError, match=r"Got \('A', 'B', None\)"):  # None is not a valid edge_type
+            graph.add_edge("A", "B", None)
+
         assert not graph.has_edge("A", "B")
 
         assert sorted(graph.edges(keys=True, data=True)) == []
@@ -442,8 +458,13 @@ class TestCoreGraph:
             graph.add_edges_from(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-        with pytest.raises(ValueError):  # miss `edge_type` value
+        with pytest.raises(ValueError, match="3 elements"):  # 2-tuple edge (missing `edge_type`)
             edges = [("A", "B", "->"), ("A", "C"), ("B", "C", "->")]
+            graph.add_edges_from(edge_list=edges)
+        check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
+        with pytest.raises(ValueError, match="3 elements"):  # 4-tuple edge
+            edges = [("A", "B", "->"), ("A", "C", "key", "->"), ("B", "C", "->")]
             graph.add_edges_from(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
@@ -456,6 +477,12 @@ class TestCoreGraph:
             edges = [("A", "B", "->"), ("B", "C", "-->"), ("C", "D", "->")]
             graph.add_edges_from(edge_list=edges)
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
+
+    def test_add_edges_from_duplicate_edge_fails(self):
+        """Duplicate edges within a single `add_edges_from` call are rejected, consistent with `add_edge`."""
+        graph = _CoreGraph()
+        with pytest.raises(ValueError, match="already exists"):
+            graph.add_edges_from([("A", "B", "--"), ("A", "B", "--")])
 
     def test_remove_directed_edge(self):
         """Test removing the direct edge of a `_CoreGraph`."""
@@ -537,12 +564,23 @@ class TestCoreGraph:
 
         check_graph_status(graph, 2, 1, set(), set(), set(), {})
 
-    def test_remove_no_edge_type(self):
-        """Test removing edges of a `_CoreGraph`."""
+    def test_remove_edge_requires_edge_type(self):
+        """`remove_edge` requires an explicit edge_type; there is no None 'remove all' shortcut."""
         edges = [("A", "B", "->"), ("A", "B", "<>"), ("A", "B", "--")]
         graph = _CoreGraph(edge_list=edges)
-        graph.remove_edge("A", "B")
 
+        # edge_type is required (no default).
+        with pytest.raises(TypeError):
+            graph.remove_edge("A", "B")
+
+        # None is not a valid edge_type, and the error reports the offending edge.
+        with pytest.raises(ValueError, match=r"Got \('A', 'B', None\)"):
+            graph.remove_edge("A", "B", None)
+
+        # Parallel edges must be removed one explicit type at a time.
+        graph.remove_edge("A", "B", "->")
+        graph.remove_edge("A", "B", "<>")
+        graph.remove_edge("A", "B", "--")
         assert not graph.has_edge("A", "B")
         check_graph_status(graph, 2, 0, set(), set(), set(), {})
 
@@ -573,6 +611,11 @@ class TestCoreGraph:
         with pytest.raises(ValueError):  # invalid `edge_type` value
             graph.remove_edge("B", "C", "invalid_value")
         check_graph_status(graph, 3, 1, set(), set(), set(), {})
+
+        graph = _CoreGraph(edge_list=edges)
+        with pytest.raises(ValueError, match="not in graph"):  # no edge of this type between the nodes
+            graph.remove_edge("A", "B", "<>")
+        check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
     def test_remove_directed_edges_from(self):
         """Test removing the direct edges of a `_CoreGraph`."""
@@ -680,8 +723,13 @@ class TestCoreGraph:
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
         graph = _CoreGraph(edge_list=edges)
-        with pytest.raises(ValueError):  # miss `edge_type` value
+        with pytest.raises(ValueError, match="3 elements"):  # 2-tuple edge (missing `edge_type`)
             graph.remove_edges_from([("A", "B", "->"), ("B", "C")])
+        check_graph_status(graph, 3, 2, set(), set(), set(), {})
+
+        graph = _CoreGraph(edge_list=edges)
+        with pytest.raises(ValueError, match="3 elements"):  # 4-tuple edge
+            graph.remove_edges_from([("A", "B", "->"), ("B", "C", "key", "->")])
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
         graph = _CoreGraph(edge_list=edges)
@@ -1871,83 +1919,83 @@ class TestCoreGraph:
 
         check_graph_status(graph, 0, 0, set(), set(), set(), {})
 
-    def test_from_api_edge_type_cases(self):
+    def test_to_markers_cases(self):
         # 1. Circle-Line Edge
         edge_tuple = ("A", "B", "o-")
         graph = _CoreGraph()
-        assert graph._from_api_edge_type(edge_tuple) == {"B": "-", "A": "o"}
+        assert graph._to_markers(edge_tuple) == {"B": "-", "A": "o"}
 
         # 2. Arrow-Circle Edge
         edge_tuple = ("A", "B", "<o")
         graph = _CoreGraph()
-        assert graph._from_api_edge_type(edge_tuple) == {"B": "o", "A": ">"}
+        assert graph._to_markers(edge_tuple) == {"B": "o", "A": ">"}
         # 3. Bidirected Edge
         edge_tuple = ("A", "B", "<>")
         graph = _CoreGraph()
-        assert graph._from_api_edge_type(edge_tuple) == {"A": ">", "B": ">"}
+        assert graph._to_markers(edge_tuple) == {"A": ">", "B": ">"}
 
         # 4. Undirected Edge (General case via else block)
         edge_tuple = ("A", "B", "--")
         graph = _CoreGraph()
-        assert graph._from_api_edge_type(edge_tuple) == {"A": "-", "B": "-"}
+        assert graph._to_markers(edge_tuple) == {"A": "-", "B": "-"}
 
         # 5. Directed Edge (Forward - General case via else block)
         edge_tuple = ("A", "B", "->")
         graph = _CoreGraph()
-        assert graph._from_api_edge_type(edge_tuple) == {"A": "-", "B": ">"}
+        assert graph._to_markers(edge_tuple) == {"A": "-", "B": ">"}
 
-    def test_from_api_edge_type_fails(self):
+    def test_to_markers_fails(self):
         invalid_edge = ("A", "B", "key", "<-")
         graph = _CoreGraph()
         with pytest.raises(ValueError):
-            graph._from_api_edge_type(invalid_edge)
+            graph._to_markers(invalid_edge)
 
-    def test_to_api_edge_type_cases(self):
+    def test_to_edge_type_cases(self):
         # 1. Reverse Arrow Edge (Explicit check: u='>', v='-')
         u, v = "B", "A"
         markers = {"B": ">", "A": "-"}
         graph = _CoreGraph()
-        assert graph._to_api_edge_type(u, v, markers) == "<-"
+        assert graph._to_edge_type(u, v, markers) == "<-"
 
         # 2. Circle-Line Edge (Explicit check: u='o', v='-')
         u, v = "A", "B"
         markers = {"A": "o", "B": "-"}
         graph = _CoreGraph()
-        assert graph._to_api_edge_type(u, v, markers) == "o-"
+        assert graph._to_edge_type(u, v, markers) == "o-"
 
         # 3. Arrow-Circle Edge (Explicit check: u='>', v='o')
         u, v = "A", "B"
         markers = {"A": ">", "B": "o"}
         graph = _CoreGraph()
-        assert graph._to_api_edge_type(u, v, markers) == "<o"
+        assert graph._to_edge_type(u, v, markers) == "<o"
 
         # 4. Bidirected Edge (Explicit check: u='>', v='>')
         u, v = "A", "B"
         markers = {"A": ">", "B": ">"}
         graph = _CoreGraph()
-        assert graph._to_api_edge_type(u, v, markers) == "<>"
+        assert graph._to_edge_type(u, v, markers) == "<>"
 
         # 5. Directed Edge (Forward - General case via else block)
         u, v = "A", "B"
         markers = {"A": "-", "B": ">"}
         graph = _CoreGraph()
-        assert graph._to_api_edge_type(u, v, markers) == "->"
+        assert graph._to_edge_type(u, v, markers) == "->"
 
         # 6. Undirected Edge (General case via else block)
         u, v = "A", "B"
         markers = {"A": "-", "B": "-"}
         graph = _CoreGraph()
 
-        assert graph._to_api_edge_type(u, v, markers) == "--"
+        assert graph._to_edge_type(u, v, markers) == "--"
 
-    def test_to_api_edge_type_fails(self):
+    def test_to_edge_type_fails(self):
         # Missing marker for node 'u' or 'v'
         u, v = "A", "B"
         markers = {"A": "-"}  # 'B' is missing
         graph = _CoreGraph()
 
         with pytest.raises(KeyError):
-            graph._to_api_edge_type(u, v, markers)
+            graph._to_edge_type(u, v, markers)
 
     def test_get_edges(self):
         graph = _CoreGraph()
@@ -1969,10 +2017,6 @@ class TestCoreGraph:
                 ("B", "C", "o-"),
             ]
         )
-
-    def test_get_edge_types(self):
-        graph = _CoreGraph()
-        assert {"--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"} == graph.get_edge_types()
 
     def test_get_edge(self):
         graph = _CoreGraph()
@@ -2083,34 +2127,22 @@ class TestCoreGraph:
         with pytest.raises(ValueError):
             graph.has_edge("A", "B", "invalid_edge_type")
 
-    def test_is_multigraph(self):
+    def test_add_duplicate_edge_fails(self):
+        """Parallel edges of different types coexist, but a duplicate of the same type is rejected."""
         graph = _CoreGraph()
-
-        assert graph.is_multigraph() is False
-
-    def test_is_multigraph_fails(self):
-        graph = _CoreGraph()
-
-        assert graph.is_multigraph() is False
-
         graph.add_edge("A", "B", "->")
         graph.add_edge("A", "B", "<>")
         graph.add_edge("A", "B", "--")
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="already exists"):
             graph.add_edge("A", "B", "->")
 
-    def test_is_acyclic(self):
-        graph = _CoreGraph()
+    def test_add_cyclic_edge_fails(self):
+        """A directed edge that closes a directed cycle is rejected, in both `->` and `<-` forms."""
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "->")])
 
-        assert graph.is_acyclic() is True
+        with pytest.raises(ValueError, match="cycle"):
+            graph.add_edge("C", "A", "->")
 
-    def test_is_acyclic_fails(self):
-        graph = _CoreGraph()
-
-        assert graph.is_acyclic() is True
-
-        graph.add_edge("A", "B", "->")
-
-        with pytest.raises(ValueError):
-            graph.add_edge("B", "A", "->")
+        with pytest.raises(ValueError, match="cycle"):
+            graph.add_edge("A", "C", "<-")

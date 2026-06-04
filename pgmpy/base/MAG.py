@@ -92,12 +92,6 @@ class MAG(_CoreGraph):
             roles=roles,
         )
 
-    def is_multigraph(self):
-        return False
-
-    def is_acyclic(self):
-        return True
-
     # def to_pag(self):
     #     """
 

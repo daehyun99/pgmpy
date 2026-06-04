@@ -160,12 +160,3 @@ class ADMG(_CoreGraph):
     #     # TODO(@daehyun99): [#2385] Checking edge type(direct, bidirect)
     #     # return True
     #     raise NotImplementedError("`is_valid_admg` is not supported now")
-
-    def _validate_graph_specific_edges(self, edge_list):
-        return super()._validate_graph_specific_edges(edge_list)
-
-    def is_multigraph(self):
-        return False
-
-    def is_acyclic(self):
-        return True

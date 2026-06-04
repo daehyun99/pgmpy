@@ -10,38 +10,66 @@ from pgmpy.base._mixin_roles import _GraphRolesMixin
 
 class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
     """
-    Base graph class for pgmpy.
+    Base class for all graph types in pgmpy.
 
-    This class provides a generalized representation for all graph `edge_types` in pgmpy.
-    All specific graph classes (e.g., `DAG`, `PDAG`, ...) inherit from `_CoreGraph`.
-
-    Subclasses are expected to define their own `SUPPORTED_EDGE_TYPES` to restrict the kinds of edges they can store.
-
-    It also provides generalized algorithms and methods that work across all inheriting graph `edge_types`.
+    This class provides a generalized representation for all graph `edge_types` in pgmpy. All specific graph classes
+    (e.g., `DAG`, `PDAG`, ...) inherit from `_CoreGraph`. Subclasses are expected to define their own
+    `SUPPORTED_EDGE_TYPES` to restrict the kinds of edges they can store. It also provides generalized algorithms and
+    methods that work across all inheriting graphs.
 
     Parameters
     ----------
     edge_list : iterable of tuples, optional
-        A list or iterable of edges to add at initialization.
+        A list or iterable of edges of the form [(variable1, variable2, edge_type), ... ] to add at initialization.
+        The edge type must be one of the following: "--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"
 
     latents : set of nodes, (default=set())
-        A set of latent variables in the graph. These are not observed
-        variables but are used to represent unobserved confounding or
-        other latent structures.
+        A set of latent variables in the graph. These represent the variables for which we do not have any data.
 
     exposures : set, (default=set())
-        Set of exposure variables in the graph. These are the variables
-        that represent the treatment or intervention being studied in a
-        causal analysis. Default is an empty set.
+        Set of exposure variables in the graph. These are the variables that represent the treatment or intervention
+        being studied in a causal analysis. Default is an empty set.
 
     outcomes : set, (default=set())
-        Set of outcome variables in the graph. These are the variables
-        that represent the response or dependent variables being studied
-        in a causal analysis. Default is an empty set.
+        Set of outcome variables in the graph. These are the variables that represent the response or dependent
+        variables being studied in a causal analysis. Default is an empty set.
 
     roles : dict, optional (default=None)
         A dictionary mapping roles to node names.
         The keys are roles, and the values are role names (strings or iterables of str).
+
+    Notes
+    -----
+    **Internal edge representation.**
+
+    Although ``_CoreGraph`` exposes edges through string ``edge_type`` codes such as ``"->"`` or ``"<>"``, it does *not*
+    store them as directed edges. Internally the class subclasses an *undirected* ``networkx.MultiGraph``, and the
+    orientation of every edge is encoded by a pair of per-endpoint **markers** stored on the edge's data dictionary,
+    keyed by the two node identifiers.
+
+    Each endpoint carries one of three markers: ``"-"`` (a tail / no arrowhead), ``">"`` (an arrowhead), or ``"o"`` (a
+    circle endpoint whose orientation is unspecified, as used in PAGs). An ``edge_type`` is therefore just the pair of
+    endpoint markers: for an edge between ``u`` and ``v`` the dict ``{u: <u-marker>, v: <v-marker>}`` is stored on the
+    edge. For example ``"A->B"`` is stored as ``{"A": "-", "B": ">"}`` and ``"A<>B"`` as ``{"A": ">", "B": ">"}``. The
+    nine supported codes map to the following ``{u, v}`` marker dicts::
+
+        --  : {u: "-", v: "-"}      ->  : {u: "-", v: ">"}      <-  : {u: ">", v: "-"}
+        <>  : {u: ">", v: ">"}      o-  : {u: "o", v: "-"}      -o  : {u: "-", v: "o"}
+        o>  : {u: "o", v: ">"}      <o  : {u: ">", v: "o"}      oo  : {u: "o", v: "o"}
+
+    ``_to_markers`` performs the ``edge_type`` to marker-dict conversion and ``_to_edge_type`` the inverse;
+    ``get_edges`` / ``get_edge`` use the latter to present edges back as string codes.
+
+    **Why this scheme.**
+
+    The obvious choice, a ``networkx.DiGraph``, can only express a single directed orientation per ordered pair and
+    cannot record undirected (``"--"``), bidirected (``"<>"``), or circle (``"o"``) endpoints. Encoding orientation as
+    endpoint markers on an undirected graph instead lets a single structure represent every edge type used across
+    pgmpy's ``_CoreGraph``-based classes (``PDAG``, ``ADMG``, ``MAG``, ...), each of which restricts itself to a subset
+    via ``SUPPORTED_EDGE_TYPES``. Using a *multi*-graph additionally allows a pair of nodes to be joined by more than
+    one edge of different types at once (for example a directed ``"A->B"`` together with a bidirected ``"A<>B"``, as
+    needed by ADMGs), which a simple graph could not hold. A second edge of the *same* type between a pair is still
+    rejected (see ``add_edge``), so the multigraph capacity is used only for genuinely distinct edge types.
 
     Examples
     --------
@@ -127,18 +155,16 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
     def __init__(
         self,
-        edge_list: Iterable[tuple[Hashable, Hashable, Hashable]] = None,
+        edge_list: Iterable[tuple[Hashable, Hashable, str]] | None = None,
         exposures: set[Hashable] | None = None,
         outcomes: set[Hashable] | None = None,
         latents: set[Hashable] | None = None,
-        roles=None,
+        roles: dict[str, str | Iterable[Hashable]] | None = None,
     ):
         super().__init__()
         if edge_list:
             self._validate_edges(edge_list=edge_list)
-            for edge in edge_list:
-                if len(edge) == 3:
-                    u, v, edge_type = edge
+            for u, v, edge_type in edge_list:
                 self.add_edge(u, v, edge_type=edge_type)
 
         self.exposures = set() if exposures is None else set(exposures)
@@ -154,15 +180,11 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         for role, vars in roles.items():
             self.with_role(role=role, variables=vars, inplace=True)
 
-    # ----------------------------------------------------------------------
-    # Public API (or Public Methods)
-    # ----------------------------------------------------------------------
-
     def add_edge(
         self,
         u: Hashable,
         v: Hashable,
-        edge_type: str = "->",
+        edge_type: str,
         **kwargs,
     ) -> None:
         """
@@ -177,8 +199,8 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
             Nodes can be, for example, strings or numbers.
             Nodes must be hashable (and not None) Python objects.
 
-        edge_type : str (default="->")
-            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
+        edge_type : str
+            Must be one of the values in `SUPPORTED_EDGE_TYPES`. This argument is required.
 
         kwargs : keyword arguments, optional
             Edge data (or labels or objects) can be assigned using
@@ -190,11 +212,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `add_edges_from()`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
+        add_edges_from : Add multiple edges at once.
 
         Examples
         --------
@@ -206,12 +224,24 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         """
         self._validate_edges(edge_list=[(u, v, edge_type)])
-        self._validate_graph_specific_edge(u, v, edge_type)
-        self._add_edge(u, v, edge_type, **kwargs)
+
+        # A pair of nodes can have at most one edge of a given type.
+        if self.has_edge(u, v, edge_type):
+            raise ValueError(f"Edge ({u}, {v}) of type '{edge_type}' already exists in {self.__class__.__name__}.")
+
+        # Directed edges must not close a directed cycle.
+        if edge_type == "->" and self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
+            raise ValueError(f"Adding edge ({u}, {v}, '{edge_type}') would create a directed cycle.")
+        if edge_type == "<-" and self.has_node(u) and self.has_node(v) and self.has_direct_path(u, v):
+            raise ValueError(f"Adding edge ({u}, {v}, '{edge_type}') would create a directed cycle.")
+
+        markers = self._to_markers(edge=(u, v, edge_type))
+        key = super().add_edge(u, v, **kwargs)
+        self.edges[u, v, key].update({u: markers[u], v: markers[v]})
 
     def add_edges_from(
         self,
-        edge_list: Iterable[tuple[Hashable, Hashable, Hashable]],
+        edge_list: Iterable[tuple[Hashable, Hashable, str]],
         **kwargs,
     ) -> None:
         """
@@ -232,11 +262,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `add_edge()`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
+        add_edge : Add a single edge.
 
         Examples
         --------
@@ -249,15 +275,14 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         """
         self._validate_edges(edge_list=edge_list)
-        self._validate_graph_specific_edges(edge_list=edge_list)
         for u, v, edge_type in edge_list:
-            self._add_edge(u, v, edge_type)
+            self.add_edge(u, v, edge_type)
 
     def remove_edge(
         self,
         u: Hashable,
         v: Hashable,
-        edge_type: str = None,
+        edge_type: str,
     ) -> None:
         """
         Remove an edge between u and v.
@@ -268,9 +293,9 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
             Nodes can be, for example, strings or numbers.
             Nodes must be hashable (and not None) Python objects.
 
-        edge_type : str (default=None)
-            The type should be None or a value from SUPPORTED_EDGE_TYPES.
-            If the type is `None`, remove all edges between `u` and `v`.
+        edge_type : str
+            One of the values in `SUPPORTED_EDGE_TYPES`. The edge of this type
+            between `u` and `v` is removed. This argument is required.
 
         kwargs : keyword arguments, optional
             Edge data (or labels or objects) can be assigned using
@@ -282,11 +307,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `remove_edges_from()`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
+        remove_edges_from : Remove multiple edges at once.
 
         Examples
         --------
@@ -300,11 +321,16 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         """
         self._validate_edges(edge_list=[(u, v, edge_type)])
 
-        self._remove_edge(u, v, edge_type)
+        markers = self._to_markers(edge=(u, v, edge_type))
+        for key, data in self.get_edge_data(u, v).items():
+            if data[u] == markers[u] and data[v] == markers[v]:
+                super().remove_edge(u, v, key=key)
+                return
+        raise ValueError(f"Edge ({u}, {v}, {edge_type}) not in graph.")
 
     def remove_edges_from(
         self,
-        edge_list: Iterable[tuple[Hashable, Hashable, Hashable]],
+        edge_list: Iterable[tuple[Hashable, Hashable, str]],
     ) -> None:
         """
         Remove all the edges in edge_list.
@@ -320,11 +346,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `remove_edge()`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
+        remove_edge : Remove a single edge.
 
         Examples
         --------
@@ -339,7 +361,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         """
         self._validate_edges(edge_list=edge_list)
         for u, v, edge_type in edge_list:
-            self._remove_edge(u, v, edge_type)
+            self.remove_edge(u, v, edge_type)
 
     def copy(self):
         """
@@ -353,10 +375,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         -------
         graph: graph object
             A copy of the graph object.
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
 
         Examples
         --------
@@ -372,7 +390,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         graph_copy = self.__class__()
         graph_copy.add_nodes_from(self.nodes(data=True))
         for u, v, markers in edge_list:
-            edge_type = self._to_api_edge_type(u, v, markers=markers)
+            edge_type = self._to_edge_type(u, v, markers=markers)
             graph_copy.add_edge(u, v, edge_type=edge_type)
         for role, vars in self.get_role_dict().items():
             graph_copy.with_role(role=role, variables=vars, inplace=True)
@@ -399,16 +417,12 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `get_parents()`
-        `get_children()`
-        `get_ancestors()`
-        `get_descendants()`
-        `get_spouses()`
-        `get_reachable_nodes()`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
+        get_parents : Parent nodes (via incoming directed edges).
+        get_children : Child nodes (via outgoing directed edges).
+        get_ancestors : All ancestors of a node (including the node itself).
+        get_descendants : All descendants of a node (including the node itself).
+        get_spouses : Spouse nodes (via bidirected edges).
+        get_reachable_nodes : Nodes reachable from a node via a given edge type.
 
         Examples
         --------
@@ -421,15 +435,11 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         ['A']
 
         """
-        # Check node's value
-        if node is None:
-            raise ValueError("Node cannot be None.")
         if node not in self.nodes():
             raise ValueError(f"Node {node} not in graph.")
 
-        # Check edge_type's value
         if (edge_type is not None) and (edge_type not in self.SUPPORTED_EDGE_TYPES):
-            raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
+            raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}. Got {edge_type}.")
 
         neighboring_nodes = self.neighbors(node)
 
@@ -439,7 +449,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         filtered_neighbors = set()
         for neighbor in neighboring_nodes:
             edge_data = self.get_edge_data(node, neighbor)
-            _markers_dict = self._from_api_edge_type(edge=[node, neighbor, edge_type])
+            _markers_dict = self._to_markers(edge=(node, neighbor, edge_type))
             for _, data in edge_data.items():
                 if data[node] == _markers_dict[node] and data[neighbor] == _markers_dict[neighbor]:
                     filtered_neighbors.add(neighbor)
@@ -464,16 +474,12 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `get_neighbors()`
-        `get_children()`
-        `get_ancestors()`
-        `get_descendants()`
-        `get_spouses()`
-        `get_reachable_nodes()`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
+        get_neighbors : Adjacent nodes, optionally filtered by edge type.
+        get_children : Child nodes (via outgoing directed edges).
+        get_ancestors : All ancestors of a node (including the node itself).
+        get_descendants : All descendants of a node (including the node itself).
+        get_spouses : Spouse nodes (via bidirected edges).
+        get_reachable_nodes : Nodes reachable from a node via a given edge type.
 
         Examples
         --------
@@ -505,16 +511,12 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `get_neighbors()`
-        `get_parents()`
-        `get_ancestors()`
-        `get_descendants()`
-        `get_spouses()`
-        `get_reachable_nodes()`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
+        get_neighbors : Adjacent nodes, optionally filtered by edge type.
+        get_parents : Parent nodes (via incoming directed edges).
+        get_ancestors : All ancestors of a node (including the node itself).
+        get_descendants : All descendants of a node (including the node itself).
+        get_spouses : Spouse nodes (via bidirected edges).
+        get_reachable_nodes : Nodes reachable from a node via a given edge type.
 
         Examples
         --------
@@ -546,16 +548,12 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `get_neighbors()`
-        `get_parents()`
-        `get_children()`
-        `get_descendants()`
-        `get_spouses()`
-        `get_reachable_nodes()`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
+        get_neighbors : Adjacent nodes, optionally filtered by edge type.
+        get_parents : Parent nodes (via incoming directed edges).
+        get_children : Child nodes (via outgoing directed edges).
+        get_descendants : All descendants of a node (including the node itself).
+        get_ancestors : All ancestors of a node (including the node itself).
+        get_reachable_nodes : Nodes reachable from a node via a given edge type.
 
         Examples
         --------
@@ -587,16 +585,12 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `get_neighbors()`
-        `get_parents()`
-        `get_children()`
-        `get_descendants()`
-        `get_spouses()`
-        `get_reachable_nodes()`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
+        get_neighbors : Adjacent nodes, optionally filtered by edge type.
+        get_parents : Parent nodes (via incoming directed edges).
+        get_children : Child nodes (via outgoing directed edges).
+        get_descendants : All descendants of a node (including the node itself).
+        get_spouses : Spouse nodes (via bidirected edges).
+        get_reachable_nodes : Nodes reachable from a node via a given edge type.
 
         Examples
         --------
@@ -639,16 +633,12 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `get_neighbors()`
-        `get_parents()`
-        `get_children()`
-        `get_ancestors()`
-        `get_spouses()`
-        `get_reachable_nodes()`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
+        get_neighbors : Adjacent nodes, optionally filtered by edge type.
+        get_parents : Parent nodes (via incoming directed edges).
+        get_children : Child nodes (via outgoing directed edges).
+        get_ancestors : All ancestors of a node (including the node itself).
+        get_spouses : Spouse nodes (via bidirected edges).
+        get_reachable_nodes : Nodes reachable from a node via a given edge type.
 
         Examples
         --------
@@ -694,16 +684,12 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `get_neighbors()`
-        `get_parents()`
-        `get_children()`
-        `get_ancestors()`
-        `get_spouses()`
-        `get_descendants()`
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
+        get_neighbors : Adjacent nodes, optionally filtered by edge type.
+        get_parents : Parent nodes (via incoming directed edges).
+        get_children : Child nodes (via outgoing directed edges).
+        get_ancestors : All ancestors of a node (including the node itself).
+        get_spouses : Spouse nodes (via bidirected edges).
+        get_descendants : All descendants of a node (including the node itself).
 
         Examples
         --------
@@ -755,7 +741,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `get_edge()`
+        get_edge : Edges between a specific pair of nodes.
 
         Examples
         --------
@@ -774,20 +760,9 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
             return list(networkx_edge_list)
 
         # (u, v, edge_type)
-        return [(u, v, self._to_api_edge_type(u, v, data)) for u, v, data in networkx_edge_list]
+        return [(u, v, self._to_edge_type(u, v, data)) for u, v, data in networkx_edge_list]
 
-    def get_edge_types(self) -> set:
-        """
-        Retrieves the list of supported edge types for the instance.
-
-        Returns
-        -------
-        set
-
-        """
-        return self.SUPPORTED_EDGE_TYPES
-
-    def get_edge(self, u: Hashable, v: Hashable, data: bool = True) -> list[tuple]:
+    def get_edge(self, u: Hashable, v: Hashable, data: bool = True) -> list[tuple[Hashable, ...]]:
         """
         Retrieve edge with optional API-formatted edge types.
 
@@ -811,7 +786,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
 
         See Also
         --------
-        `get_edges()`
+        get_edges : All edges in the graph.
 
         Examples
         --------
@@ -826,14 +801,14 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         {('B', 'C', '--')}
 
         """
-        result = []
+        result: list[tuple[Hashable, ...]] = []
         if not self.has_edge(u, v):
             raise ValueError(f"Edge ({u}, {v}) not in graph.")
 
         keys = self[u][v]
         for key_val, marker in keys.items():
             if data:
-                edge_type = self._to_api_edge_type(u, v, marker)
+                edge_type = self._to_edge_type(u, v, marker)
                 result.append((u, v, edge_type))
             else:
                 result.append((u, v))
@@ -936,16 +911,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         self.remove_edge(u, v, old_type)
         self.add_edge(u, v, new_type)
 
-    def is_multigraph(self):
-        return False
-
-    def is_acyclic(self):
-        return True
-
-    # ----------------------------------------------------------------------
-    # Internal Methods (or Private Methods)
-    # ----------------------------------------------------------------------
-
     def __eq__(self, other):
         """
         Checks if two graphs are equal. Two graphs are considered equal if they
@@ -960,10 +925,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         -------
         bool:
             True if the graphs are equal, False otherwise.
-
-        Notes
-        -----
-        This method is expected to be usable without being implemented in a subclass of the graph class.
 
         Examples
         --------
@@ -989,124 +950,26 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         ----------
         edge_list : list of tuples
             [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...]
-
-        Notes
-        -----
-        Helper method that validates the input for
-            `add_edge()`,
-            `add_edges_from()`,
-            `remove_edge()`,
-            `remove_edges_from()`.
         """
-        if not edge_list:
-            return
-        supported_types = self.SUPPORTED_EDGE_TYPES
-
         for edge in edge_list:
-            if len(edge) == 2:
-                u, v = edge
-                edge_type = "->"
-            elif len(edge) == 3:
-                u, v, edge_type = edge
-            elif len(edge) == 4:
-                u, v, _, edge_type = edge
-            else:
-                raise ValueError(f"Edge tuple must have 3 elements. Got {len(edge)}.")
+            if len(edge) != 3:
+                raise ValueError(f"Edge tuple must have 3 elements. Edge {edge} is of length {len(edge)}.")
+
+            u, v, edge_type = edge
 
             if (u is None) or (v is None):
-                raise ValueError("Nodes cannot be None.")
+                raise ValueError(f"Nodes cannot be None. Got {(u, v, edge_type)}.")
             if u == v:
-                raise ValueError("Nodes cannot be the same for an edge.")
-            if not isinstance(edge_type, str | None):
-                raise ValueError("edge_type must be a string.")
-            if edge_type is not None and edge_type not in supported_types:
-                raise ValueError(f"Types must be one of {supported_types}.")
+                raise ValueError(f"Nodes cannot be the same for an edge. Got {(u, v, edge_type)}.")
+            if not isinstance(edge_type, str) or edge_type not in self.SUPPORTED_EDGE_TYPES:
+                raise ValueError(f"edge_type must be one of {self.SUPPORTED_EDGE_TYPES}. Got {(u, v, edge_type)}.")
 
-    def _validate_graph_specific_edges(
+    def _to_markers(
         self,
-        edge_list,
-    ):
+        edge: tuple[Hashable, Hashable, str],
+    ) -> dict[Hashable, str]:
         """
-        Validates graph-specific constraints on the given edges.
-
-        Parameters
-        ----------
-        edge_list : list of tuples
-            [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...]
-
-        Notes
-        -----
-        Helper method that validates constraints specific to a graph subclass,
-        beyond the common checks performed in `_validate_edges()`.
-
-        Intended to be implemented by subclasses.
-        """
-        directed_ebunch = []
-        for src, dst, edge_type in self.get_edges(data=True):
-            if edge_type in {"->", "<-"}:
-                directed_ebunch.append((src, dst, edge_type))
-        for u, v, edge_type in edge_list:
-            if edge_type in {"->", "<-"}:
-                directed_ebunch.append((u, v, edge_type))
-        temp_graph = _CoreGraph(directed_ebunch)
-
-        if temp_graph.is_acyclic():
-            if temp_graph.has_directed_cycle():
-                raise ValueError(f"Direct cycles are not allowed in a {temp_graph.__class__.__name__}.")
-
-        if not temp_graph.is_multigraph():
-            from collections import Counter
-
-            edge_list = temp_graph.get_edges(data=True)
-            edge_counts = Counter(edge_list)
-
-            for (u, v, edge_type), count in edge_counts.items():
-                if count > 1:
-                    raise ValueError(
-                        f"Edge ({u}, {v}) of type '{edge_type}' already exists {count} times. "
-                        f"{temp_graph.__class__.__name__} is not a multigraph."
-                    )
-
-    def _validate_graph_specific_edge(self, u, v, edge_type):
-        """
-        Validates graph-specific constraints on the given edge.
-
-        Parameters
-        ----------
-        u, v : Hashable
-            Nodes can be, for example, strings or numbers.
-            Nodes must be hashable (and not None) Python objects.
-
-        edge_type : str (default="->")
-            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
-
-        Notes
-        -----
-        Helper method that validates constraints specific to a graph subclass,
-        beyond the common checks performed in `_validate_edges()`.
-
-        Intended to be implemented by subclasses.
-        """
-        if not self.is_multigraph():
-            if self.has_edge(u, v, edge_type):
-                raise ValueError(
-                    f"Edge ({u}, {v}) with type '{edge_type}' already exists. "
-                    f"{self.__class__.__name__} is not a multigraph."
-                )
-        if self.is_acyclic():
-            if edge_type == "->":
-                if self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
-                    raise ValueError(f"Direct cycles are not allowed in a {self.__class__.__name__}.")
-            elif edge_type == "<-":
-                if self.has_node(u) and self.has_node(v) and self.has_direct_path(u, v):
-                    raise ValueError(f"Direct cycles are not allowed in a {self.__class__.__name__}.")
-
-    def _from_api_edge_type(
-        self,
-        edge: tuple[Hashable, Hashable, str] | list[Hashable],
-    ) -> dict:
-        """
-        The `_from_api_edge_type` method converts the user's `edge_type` input into an internal representation.
+        The `_to_markers` method converts the user's `edge_type` input into an internal representation.
         """
         u, v, edge_type = edge
         if edge_type == "<-":
@@ -1120,14 +983,14 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         else:
             return {u: edge_type[0], v: edge_type[1]}
 
-    def _to_api_edge_type(
+    def _to_edge_type(
         self,
         u: Hashable,
         v: Hashable,
         markers: dict,
     ) -> str:
         """
-        The `_to_api_edge_type` method converts the internal representation into the user's `edge_type` input.
+        The `_to_edge_type` method converts the internal representation into the user's `edge_type` input.
         """
         u_marker = markers[u]
         v_marker = markers[v]
@@ -1139,37 +1002,3 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
             (">", ">"): "<>",
         }
         return marker_map.get((u_marker, v_marker), f"{u_marker}{v_marker}")
-
-    def _add_edge(
-        self,
-        u: Hashable,
-        v: Hashable,
-        edge_type: str = "->",
-        **kwargs,
-    ) -> None:
-        _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
-
-        _key = super().add_edge(u, v, **kwargs)
-        self.edges[u, v, _key].update({u: _markers_dict[u], v: _markers_dict[v]})
-
-    def _remove_edge(
-        self,
-        u: Hashable,
-        v: Hashable,
-        edge_type: str = None,
-    ) -> None:
-        keys_to_remove = []
-        edges = self.get_edge_data(u, v)
-        if edge_type is None:
-            keys_to_remove = list(edges.keys())
-        else:
-            _markers_dict = self._from_api_edge_type(edge=[u, v, edge_type])
-            for key, data in edges.items():
-                if data[u] == _markers_dict[u] and data[v] == _markers_dict[v]:
-                    keys_to_remove.append(key)
-
-        if len(keys_to_remove) == 0:
-            raise ValueError(f"Edge ({u}, {v}, {edge_type}) not in graph.")
-        else:
-            for key in keys_to_remove:
-                super().remove_edge(u, v, key=key)
