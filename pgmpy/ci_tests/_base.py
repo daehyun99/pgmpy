@@ -75,7 +75,7 @@ class _ResidualMixin:
             model.fit(Z_data, target_data)
             pred = model.predict(Z_data)
 
-        return pred, cat_index
+        return pred, cat_index, model
 
     def get_residuals(self, X: str, Z: list) -> pd.DataFrame | pd.Series:
         """
@@ -109,23 +109,26 @@ class _ResidualMixin:
         z_data_source = self.data.assign(_intercept_Z=np.ones(self.data.shape[0]))
 
         Z_data = pd.get_dummies(z_data_source.loc[:, z_cols])
-        pred, cat_index = self._fit_predict(X, Z_data)
+        pred, cat_index, estimator = self._fit_predict(X, Z_data)
 
         if self.dtypes[X] in ("C", "O"):
             dummies = pd.get_dummies(self.data.loc[:, X]).loc[:, cat_index.categories[cat_index.codes]]
-            return (dummies - pred).iloc[:, :-1]
+            residual = (dummies - pred).iloc[:, :-1]
         else:
-            return self.data.loc[:, X] - pred
+            residual = self.data.loc[:, X] - pred
+
+        return residual, estimator
 
 
 @dataclass(frozen=True)
 class _CITestResult:
     statistic: float | None
     p_value: float
+    effect_size: float | None = None
     attributes: dict[str, object] = field(default_factory=dict)
 
 
-class _BaseCITest(BaseObject):
+class BaseCITest(BaseObject):
     """
     Base class for all Conditional Independence (CI) tests.
 
@@ -188,8 +191,9 @@ class _BaseCITest(BaseObject):
 
         Notes
         -----
-        Always sets ``self.statistic_`` and ``self.p_value_`` as side effects,
-        regardless of the return value. Access these attributes to inspect raw results.
+        Always sets ``self.statistic_``, ``self.p_value_``, and ``self.effect_size_``
+        as side effects, regardless of the return value. Access these attributes to
+        inspect raw results.
         CI test instances are not thread-safe; use a separate instance per thread
         for parallel computation.
         """
@@ -239,6 +243,7 @@ class _BaseCITest(BaseObject):
 
         self.statistic_ = result.statistic
         self.p_value_ = result.p_value
+        self.effect_size_ = result.effect_size
         for attr_name, attr_value in result.attributes.items():
             setattr(self, attr_name, attr_value)
 
@@ -263,14 +268,14 @@ class _BaseCITest(BaseObject):
             raise ValueError(f"X and Y cannot appear in Z. Found {X if X in Z else Y} in Z.")
 
 
-def get_ci_test(test=None, data=None):
+def get_ci_test(test=None, data=None, use_cache=True):
     """
     Return an instantiated CI test object given a test name, instance, or data.
 
     This is the recommended factory for obtaining a CI test. It supports four
     calling patterns:
 
-    1. **Pass-through**: if ``test`` is already a :class:`_BaseCITest` instance, it is
+    1. **Pass-through**: if ``test`` is already a :class:`BaseCITest` instance, it is
        returned as-is.
     2. **Callable**: if ``test`` is any other callable (e.g. a custom function), it is
        returned as-is.
@@ -281,7 +286,7 @@ def get_ci_test(test=None, data=None):
 
     Parameters
     ----------
-    test : str, _BaseCITest instance, callable, or None
+    test : str, BaseCITest instance, callable, or None
         The CI test to retrieve. If a string, must match the ``name`` tag of a
         registered CI test (e.g. ``"chi_square"``, ``"pearsonr"``). If ``None``,
         the default test for the data type of ``data`` is used.
@@ -291,7 +296,7 @@ def get_ci_test(test=None, data=None):
 
     Returns
     -------
-    _BaseCITest or callable
+    BaseCITest or callable
         An instantiated CI test object ready to call, or the original callable if
         ``test`` was already callable.
 
@@ -304,7 +309,7 @@ def get_ci_test(test=None, data=None):
     ValueError
         If the resolved CI test requires data but ``data`` is ``None``.
     ValueError
-        If ``test`` is not a string, ``_BaseCITest`` instance, callable, or ``None``.
+        If ``test`` is not a string, ``BaseCITest`` instance, callable, or ``None``.
 
     Examples
     --------
@@ -342,7 +347,7 @@ def get_ci_test(test=None, data=None):
 
     from pgmpy.utils import get_dataset_type
 
-    if isinstance(test, _BaseCITest):
+    if isinstance(test, BaseCITest):
         return test
 
     if callable(test):
@@ -361,7 +366,7 @@ def get_ci_test(test=None, data=None):
         raise ValueError(f"Invalid `test` argument: {test!r}")
 
     tests = all_objects(
-        object_types=_BaseCITest,
+        object_types=BaseCITest,
         package_name="pgmpy.ci_tests",
         return_names=False,
         filter_tags=filter_tags,
@@ -372,6 +377,7 @@ def get_ci_test(test=None, data=None):
         if cls.get_class_tag("requires_data", tag_value_default=True):
             if data is None:
                 raise ValueError(f"CI test '{cls.__name__}' requires data, but data is None.")
-            return cls(data=data)
-        return cls()
+            return cls(data=data, use_cache=use_cache)
+        else:
+            return cls(use_cache=use_cache)
     raise ValueError(f"Unknown CI test: {test!r}")

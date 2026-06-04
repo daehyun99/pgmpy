@@ -5,10 +5,10 @@ from sklearn.cross_decomposition import CCA
 
 from pgmpy.utils import preprocess_data
 
-from ._base import _BaseCITest, _CITestResult, _ResidualMixin
+from ._base import BaseCITest, _CITestResult, _ResidualMixin
 
 
-class PillaiTrace(_ResidualMixin, _BaseCITest):
+class PillaiTrace(_ResidualMixin, BaseCITest):
     r"""
     Pillai's trace test for conditional independence with mixed data [1].
 
@@ -43,6 +43,8 @@ class PillaiTrace(_ResidualMixin, _BaseCITest):
     with numerator degrees of freedom :math:`df_1 = pq` and denominator degrees of freedom
     :math:`df_2 = s (n - 1 + s - p - q)`, where :math:`n` is the sample size.
 
+    The effect size is partial eta-squared: :math:`\eta^2 = V / s`.
+
     Parameters
     ----------
     data : pandas.DataFrame
@@ -60,16 +62,18 @@ class PillaiTrace(_ResidualMixin, _BaseCITest):
         Pillai's trace statistic :math:`V`. Set after calling the test.
     p_value_ : float
         The p-value for the test, computed via F-approximation. Set after calling the test.
+    effect_size_ : float
+        Partial eta-squared. Set after calling the test.
+    estimator_x_ : sklearn-compatible estimator
+        The fitted estimator used for predicting X.
+    estimator_y_ : sklearn-compatible estimator
+        The fitted estimator used for predicting Y.
 
     References
     ----------
-    .. [1] Ankan, Ankur, and Johannes Textor. "A simple unified approach to testing high-dimensional conditional
-           independences for categorical and ordinal data." Proceedings of the AAAI Conference on Artificial
-           Intelligence.
-    .. [2] Li, C.; and Shepherd, B. E. 2010. Test of Association Between Two Ordinal Variables While Adjusting for
-           Covariates. Journal of the American Statistical Association.
-    .. [3] Muller, K. E. and Peterson B. L. (1984) Practical Methods for computing power in testing the multivariate
-           general linear hypothesis. Computational Statistics & Data Analysis.
+    - :cite:p:`ankan_textor_2023`
+    - :cite:p:`li_shepherd_2010`
+    - :cite:p:`muller_peterson_1984`
     """
 
     _tags = {
@@ -112,8 +116,8 @@ class PillaiTrace(_ResidualMixin, _BaseCITest):
             The p-value.
         """
         # Steps 1: Compute residuals of X and Y given Z.
-        res_x = self.get_residuals(X, Z)
-        res_y = self.get_residuals(Y, Z)
+        res_x, self.estimator_x_ = self.get_residuals(X, Z)
+        res_y, self.estimator_y_ = self.get_residuals(Y, Z)
 
         if isinstance(res_x, pd.Series):
             res_x = res_x.to_frame()
@@ -138,4 +142,4 @@ class PillaiTrace(_ResidualMixin, _BaseCITest):
         f_stat = (coef / df1) * (df2 / (s - coef))
         p_value = 1 - stats.f.cdf(f_stat, df1, df2)
 
-        return _CITestResult(statistic=coef, p_value=p_value)
+        return _CITestResult(statistic=coef, p_value=p_value, effect_size=coef / s)

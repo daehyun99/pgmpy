@@ -4,7 +4,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-from skbase.utils.dependencies import _check_soft_dependencies
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
@@ -102,7 +101,7 @@ def test_build_skeleton_from_ind(variant):
         variant=variant,
         ci_test="independence_match",
         return_type="pdag",
-        n_jobs=2,
+        n_jobs=1,
         show_progress=False,
     )
     estimator.fit(
@@ -126,7 +125,7 @@ def test_build_skeleton_from_ind(variant):
         variant=variant,
         ci_test="independence_match",
         return_type="pdag",
-        n_jobs=2,
+        n_jobs=1,
         show_progress=False,
     )
 
@@ -162,52 +161,54 @@ def test_build_skeleton_from_ind(variant):
 
 
 def test_skeleton_to_pdag():
+    pc = PC()
+
     # D - A - C - B  ==> D - A -> C <- B
-    skel = nx.Graph([("A", "D"), ("A", "C"), ("B", "C")])
-    sep_sets = {
+    pc.skeleton_ = nx.Graph([("A", "D"), ("A", "C"), ("B", "C")])
+    pc.separating_sets_ = {
         frozenset({"D", "C"}): ("A",),
         frozenset({"A", "B"}): tuple(),
         frozenset({"D", "B"}): ("A",),
     }
-    pdag = PC()._orient_colliders(skel, sep_sets)
+    pdag = pc._orient_colliders()
     pdag = pdag.apply_meeks_rules(apply_r4=False)
     assert set(pdag.edges()) == {("B", "C"), ("A", "D"), ("A", "C"), ("D", "A")}
 
     # C - A - B  ==> C -> A <- B
-    skel = nx.Graph([("A", "B"), ("A", "C")])
-    sep_sets = {frozenset({"B", "C"}): ()}
-    pdag = PC()._orient_colliders(skeleton=skel, separating_sets=sep_sets)
+    pc.skeleton_ = nx.Graph([("A", "B"), ("A", "C")])
+    pc.separating_sets_ = {frozenset({"B", "C"}): ()}
+    pdag = pc._orient_colliders()
     pdag = pdag.apply_meeks_rules(apply_r4=False)
     assert set(pdag.edges()) == {("B", "A"), ("C", "A")}
 
     # C - A - B ==> C - A - B
-    skel = nx.Graph([("A", "B"), ("A", "C")])
-    sep_sets = {frozenset({"B", "C"}): ("A",)}
-    pdag = PC()._orient_colliders(skeleton=skel, separating_sets=sep_sets)
+    pc.skeleton_ = nx.Graph([("A", "B"), ("A", "C")])
+    pc.separating_sets_ = {frozenset({"B", "C"}): ("A",)}
+    pdag = pc._orient_colliders()
     pdag = pdag.apply_meeks_rules(apply_r4=False)
     assert set(pdag.edges()) == {("A", "B"), ("B", "A"), ("A", "C"), ("C", "A")}
 
     # {A, B} - C - D ==> {A, B} -> C -> D
-    skel = nx.Graph([("A", "C"), ("B", "C"), ("C", "D")])
-    sep_sets = {
+    pc.skeleton_ = nx.Graph([("A", "C"), ("B", "C"), ("C", "D")])
+    pc.separating_sets_ = {
         frozenset({"A", "B"}): tuple(),
         frozenset({"A", "D"}): ("C",),
         frozenset({"B", "D"}): ("C",),
     }
-    pdag = PC()._orient_colliders(skeleton=skel, separating_sets=sep_sets)
+    pdag = pc._orient_colliders()
     pdag = pdag.apply_meeks_rules(apply_r4=False)
     assert set(pdag.edges()) == {("A", "C"), ("B", "C"), ("C", "D")}
 
     # C - A - B - {C, D} ==> C <- A -> B <- D; B -> C
-    skel = nx.Graph([("A", "B"), ("A", "C"), ("B", "C"), ("B", "D")])
-    sep_sets = {frozenset({"A", "D"}): tuple(), frozenset({"C", "D"}): ("A", "B")}
-    pdag = PC()._orient_colliders(skeleton=skel, separating_sets=sep_sets)
+    pc.skeleton_ = nx.Graph([("A", "B"), ("A", "C"), ("B", "C"), ("B", "D")])
+    pc.separating_sets_ = {frozenset({"A", "D"}): tuple(), frozenset({"C", "D"}): ("A", "B")}
+    pdag = pc._orient_colliders()
     pdag = pdag.apply_meeks_rules(apply_r4=False)
     assert set(pdag.edges()) == {("A", "B"), ("B", "C"), ("A", "C"), ("D", "B")}
 
-    skel = nx.Graph([("A", "B"), ("B", "C"), ("A", "D"), ("B", "D"), ("C", "D")])
-    sep_sets = {frozenset({"A", "C"}): ("B",)}
-    pdag = PC()._orient_colliders(skeleton=skel, separating_sets=sep_sets)
+    pc.skeleton_ = nx.Graph([("A", "B"), ("B", "C"), ("A", "D"), ("B", "D"), ("C", "D")])
+    pc.separating_sets_ = {frozenset({"A", "C"}): ("B",)}
+    pdag = pc._orient_colliders()
     pdag = pdag.apply_meeks_rules(apply_r4=False)
     assert set(pdag.edges()) == {
         ("A", "B"),
@@ -218,6 +219,18 @@ def test_skeleton_to_pdag():
         ("B", "D"),
         ("C", "D"),
     }
+
+    # A - B - C - D: two conflicting colliders at B and C.
+    # A->B<-C and B->C<-D conflict on the B-C edge. The second
+    # collider should be skipped so the edge is not deleted.
+    pc.skeleton_ = nx.Graph([("A", "B"), ("B", "C"), ("C", "D")])
+    pc.separating_sets_ = {
+        frozenset({"A", "C"}): tuple(),
+        frozenset({"A", "D"}): ("B",),
+        frozenset({"B", "D"}): tuple(),
+    }
+    pdag = pc._orient_colliders()
+    assert set(pdag.edges()) == {("A", "B"), ("C", "B"), ("C", "D"), ("D", "C")}
 
 
 @pytest.mark.parametrize("variant", ["orig", "stable", "parallel"])
@@ -233,7 +246,7 @@ def test_estimate_dag(variant):
         variant="orig",
         ci_test="independence_match",
         return_type="dag",
-        n_jobs=2,
+        n_jobs=1,
         show_progress=False,
     ).fit(data, independencies=ind)
 
@@ -249,7 +262,7 @@ def test_estimate_dag(variant):
         variant="orig",
         ci_test="independence_match",
         return_type="dag",
-        n_jobs=2,
+        n_jobs=1,
         show_progress=False,
     ).fit(data, independencies=model.get_independencies())
 
@@ -339,7 +352,7 @@ def test_build_skeleton_discrete(variant):
             ci_test=test,
             return_type="pdag",
             significance_level=0.005,
-            n_jobs=2,
+            n_jobs=1,
             show_progress=False,
         )
         est.fit(X=data)
@@ -356,7 +369,7 @@ def test_build_dag_discrete(variant):
         ci_test="chi_square",
         return_type="dag",
         significance_level=0.001,
-        n_jobs=2,
+        n_jobs=1,
         show_progress=False,
     )
     est.fit(X=data)
@@ -389,10 +402,6 @@ def test_search_space():
         assert edge in search_space
 
 
-@pytest.mark.skipif(
-    not _check_soft_dependencies("xgboost", severity="none"),
-    reason="execute only if required dependency present",
-)
 @pytest.mark.parametrize("ci_test", ["pearsonr", "pillai", "gcm"])
 @pytest.mark.parametrize("variant", ["orig", "stable", "parallel"])
 def test_build_skeleton_continuous(ci_test, variant):
@@ -405,7 +414,7 @@ def test_build_skeleton_continuous(ci_test, variant):
         variant=variant,
         ci_test=ci_test,
         return_type="pdag",
-        n_jobs=2,
+        n_jobs=1,
         show_progress=False,
     )
     est.fit(X=data)
@@ -448,7 +457,7 @@ def test_build_skeleton_continuous(ci_test, variant):
         variant=variant,
         ci_test=fake_ci,
         return_type="pdag",
-        n_jobs=2,
+        n_jobs=1,
         show_progress=False,
     )
     est.fit(X=data)
@@ -460,10 +469,6 @@ def test_build_skeleton_continuous(ci_test, variant):
     assert est.separating_sets_ == expected_sepsets
 
 
-@pytest.mark.skipif(
-    not _check_soft_dependencies("xgboost", severity="none"),
-    reason="execute only if required dependency present",
-)
 @pytest.mark.parametrize("ci_test", ["pearsonr", "pillai", "gcm"])
 @pytest.mark.parametrize("variant", ["orig", "stable", "parallel"])
 def test_build_dag_continuous(ci_test, variant):
@@ -474,7 +479,7 @@ def test_build_dag_continuous(ci_test, variant):
         variant=variant,
         ci_test=ci_test,
         return_type="dag",
-        n_jobs=2,
+        n_jobs=1,
         show_progress=False,
     )
     est.fit(X=data)
@@ -486,7 +491,7 @@ def test_build_dag_continuous(ci_test, variant):
 def test_pc_alarm():
     alarm_model = load_model("bnlearn/alarm")
     data = BayesianModelSampling(alarm_model).forward_sample(size=int(1e4), seed=42)
-    est = PC(variant="stable", max_cond_vars=5, n_jobs=2, show_progress=False)
+    est = PC(variant="stable", max_cond_vars=5, n_jobs=1, show_progress=False)
     est.fit(X=data)
 
 
@@ -499,7 +504,7 @@ def test_pc_asia(caplog):
         variant="stable",
         max_cond_vars=4,
         expert_knowledge=background,
-        n_jobs=2,
+        n_jobs=1,
         show_progress=False,
     )
 
@@ -530,7 +535,7 @@ def test_pc_asia_expert():
                 ("bronc", "dysp"),
             ]
         ),
-        n_jobs=2,
+        n_jobs=1,
         show_progress=False,
     )
     est.fit(X=data)
@@ -554,7 +559,7 @@ def test_temporal_pc_cancer():
     est = PC(
         variant="stable",
         expert_knowledge=background,
-        n_jobs=2,
+        n_jobs=1,
         show_progress=False,
     )
     est.fit(X=data)
@@ -749,3 +754,21 @@ def test_stable_variant_order_independence():
         skeletons.append(edges)
 
     assert all(s == skeletons[0] for s in skeletons)
+
+
+@pytest.mark.parametrize("orient_rule", ["pvalue", "effect"])
+def test_orient_rule(orient_rule):
+    cancer_model = load_model("bnlearn/cancer")
+    data = cancer_model.simulate(n_samples=int(5e4), seed=42)
+
+    est = PC(
+        variant="stable",
+        ci_test="chi_square",
+        orient_rule=orient_rule,
+        show_progress=False,
+    )
+    est.fit(X=data)
+
+    pdag = est.causal_graph_
+    assert ("Pollution", "Cancer") in pdag.edges() or ("Cancer", "Pollution") in pdag.edges()
+    assert ("Smoker", "Cancer") in pdag.edges() or ("Cancer", "Smoker") in pdag.edges()

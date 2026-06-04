@@ -2,10 +2,10 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from ._base import _BaseCITest, _CITestResult
+from ._base import BaseCITest, _CITestResult
 
 
-class Pearsonr(_BaseCITest):
+class Pearsonr(BaseCITest):
     r"""
     Partial Correlation test for conditional independence.
 
@@ -21,6 +21,8 @@ class Pearsonr(_BaseCITest):
     where :math:`n` is the sample size and :math:`|Z|` is the number of conditioning variables. Under the null
     hypothesis :math:`X \perp Y \mid Z`, this statistic is Student's t distribution with :math:`n - |Z| - 2` degrees of
     freedom.
+
+    The effect size is the absolute partial correlation :math:`|\rho_{XY \mid Z}|`.
 
     Parameters
     ----------
@@ -51,11 +53,13 @@ class Pearsonr(_BaseCITest):
         ranging from -1 to 1. Set after calling the test.
     p_value_ : float
         The p-value for the test. Set after calling the test.
+    effect_size_ : float
+        Absolute partial correlation. Set after calling the test.
 
     References
     ----------
-    .. [1] https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
-    .. [2] https://en.wikipedia.org/wiki/Partial_correlation#Using_linear_regression
+    - :cite:p:`peerj_blue_driver`
+    - :cite:p:`wikipedia_partial_correlation`
     """
 
     _tags = {
@@ -103,4 +107,4 @@ class Pearsonr(_BaseCITest):
             p_value = 2 * stats.t.sf(np.abs(t_statistic), df=dof)
             attributes["dof_"] = dof
 
-        return _CITestResult(statistic=coef, p_value=p_value, attributes=attributes)
+        return _CITestResult(statistic=coef, p_value=p_value, effect_size=abs(coef), attributes=attributes)

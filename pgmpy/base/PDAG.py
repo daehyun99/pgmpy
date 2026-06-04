@@ -120,10 +120,32 @@ class PDAG(_CoreGraph):
             If True, ignores the direct edge `source -> target` when checking for
             a path.
 
-        Examples
-        --------
-        >>> from pgmpy.base import PDAG
-        ...
+        if (source in blocked_nodes) or (target in blocked_nodes):
+            return False
+        if source == target:
+            return True
+        if not (self.has_node(source) and self.has_node(target)):
+            return False
+
+        # BFS directly over the underlying DiGraph. Undirected edges are stored
+        # as both u->v and v->u in self._succ, so successors() naturally yields
+        # the correct semi-directed neighborhood without needing to materialize
+        # a filtered subgraph copy.
+        succ = self._succ
+        visited = {source}
+        stack = [source]
+        while stack:
+            node = stack.pop()
+            for child in succ[node]:
+                if child in visited or child in blocked_nodes:
+                    continue
+                if ignore_direct_edge and node == source and child == target:
+                    continue
+                if child == target:
+                    return True
+                visited.add(child)
+                stack.append(child)
+        return False
 
         """
         blocked_nodes = set() if blocked_nodes is None else set(blocked_nodes)
@@ -331,9 +353,7 @@ class PDAG(_CoreGraph):
 
         References
         ----------
-        [1] Dor, Dorit, and Michael Tarsi.
-          "A simple algorithm to construct a consistent extension of a partially oriented graph."
-            Technicial Report R-185, Cognitive Systems Laboratory, UCLA (1992): 45.
+        - :cite:p:`dor_tarsi_1992`
         """
         # Add required edges if it doesn't form a new v-structure or an opposite edge
         # is already present in the network.

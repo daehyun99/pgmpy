@@ -71,7 +71,7 @@ class MAG(_CoreGraph):
 
     References
     ----------
-    .. [1] Zhang, J. (2008). Causal Reasoning with Ancestral Graphs. Journal of Machine Learning Research, 9(7).
+    - :cite:p:`zhang_2008`
     """
 
     SUPPORTED_EDGE_TYPES = frozenset(["--", "->", "<-", "<>"])
