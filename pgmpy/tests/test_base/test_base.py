@@ -2022,3 +2022,76 @@ class TestCoreGraph:
 
         with pytest.raises(KeyError):
             graph._to_edge_type(u, v, markers)
+
+    def test_to_pandas_adjacency(self):
+        """Test the `_CoreGraph.to_pandas_adjacency` method across encodings."""
+        # marker: directed + bidirected; cell holds the mark at the COLUMN endpoint
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>")])
+        adj = graph.to_pandas_adjacency()  # default encoding="marker"
+        assert adj.loc["A", "B"] == ">"  # arrowhead at B
+        assert adj.loc["B", "A"] == "-"  # tail at A
+        assert adj.loc["B", "C"] == ">"
+        assert adj.loc["C", "B"] == ">"
+        assert adj.loc["A", "C"] == 0  # no edge
+        assert adj.loc["A", "A"] == 0  # diagonal
+
+        # marker: circle (partially-directed) marks
+        graph = _CoreGraph(edge_list=[("A", "B", "o>"), ("C", "D", "oo")])
+        adj = graph.to_pandas_adjacency()
+        assert adj.loc["A", "B"] == ">"  # arrow at B
+        assert adj.loc["B", "A"] == "o"  # circle at A
+        assert adj.loc["C", "D"] == "o"
+        assert adj.loc["D", "C"] == "o"
+
+        # marker: coincident directed + bidirected (ADMG) -> tuple of marks
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("A", "B", "<>")
+        adj = graph.to_pandas_adjacency()
+        assert adj.loc["A", "B"] == (">", ">")  # arrowheads at B from both edges
+        assert adj.loc["B", "A"] == ("-", ">")  # tail (from ->) and arrow (from <>) at A
+
+        # causal-learn: integer codes, mark at the ROW endpoint
+        graph = _CoreGraph(edge_list=[("A", "B", "->")])
+        adj = graph.to_pandas_adjacency(encoding="causal-learn")
+        assert adj.loc["A", "B"] == -1  # TAIL at A (row)
+        assert adj.loc["B", "A"] == 1  # ARROW at B (row)
+
+        # causal-learn: coincident -> composite codes 4 / 5
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("A", "B", "<>")
+        adj = graph.to_pandas_adjacency(encoding="causal-learn")
+        assert adj.loc["A", "B"] == 4  # TAIL_AND_ARROW at A
+        assert adj.loc["B", "A"] == 5  # ARROW_AND_ARROW at B
+
+        # pcalg amat.pag: column-indexed, 1=circle 2=arrowhead 3=tail
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("C", "D", "o>")])
+        adj = graph.to_pandas_adjacency(encoding="pcalg")
+        assert adj.loc["A", "B"] == 2  # arrowhead at B (column)
+        assert adj.loc["B", "A"] == 3  # tail at A
+        assert adj.loc["C", "D"] == 2  # arrowhead at D
+        assert adj.loc["D", "C"] == 1  # circle at C
+
+        # pcalg: cannot represent coincident edges -> raise
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("A", "B", "<>")
+        with pytest.raises(ValueError, match="pcalg"):
+            graph.to_pandas_adjacency(encoding="pcalg")
+
+        # bnlearn: binary, directed + undirected only
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("C", "D", "--")])
+        adj = graph.to_pandas_adjacency(encoding="bnlearn")
+        assert adj.loc["A", "B"] == 1 and adj.loc["B", "A"] == 0  # arc A->B
+        assert adj.loc["C", "D"] == 1 and adj.loc["D", "C"] == 1  # undirected
+
+        # bnlearn: cannot represent bidirected -> raise
+        graph = _CoreGraph(edge_list=[("A", "B", "<>")])
+        with pytest.raises(ValueError, match="bnlearn"):
+            graph.to_pandas_adjacency(encoding="bnlearn")
+
+        # fails: unknown encoding
+        graph = _CoreGraph(edge_list=[("A", "B", "->")])
+        with pytest.raises(ValueError, match="encoding"):
+            graph.to_pandas_adjacency(encoding="nonsense")

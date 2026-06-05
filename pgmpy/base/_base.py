@@ -3,6 +3,7 @@ from collections.abc import Hashable, Iterable
 from typing import Any
 
 import networkx as nx
+import pandas as pd
 
 from pgmpy.base._mixin_algorithms import _GraphAlgorithmMixin
 from pgmpy.base._mixin_roles import _GraphRolesMixin
@@ -910,6 +911,124 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         #       so additional logic will need to be developed to handle this in the future.
         self.remove_edge(u, v, old_type)
         self.add_edge(u, v, new_type)
+
+    def to_pandas_adjacency(self, encoding: str = "marker", nodelist=None) -> pd.DataFrame:
+        """
+        Return the adjacency matrix of the graph as a ``pandas.DataFrame``.
+
+        Each off-diagonal cell describes one endpoint of the edge between the two
+        nodes. The value and which endpoint it refers to depend on ``encoding``,
+        chosen to match the conventions of common ecosystem tools.
+
+        Parameters
+        ----------
+        encoding : str (default="marker")
+            One of:
+
+            - ``"marker"`` : native, human-readable. ``M.loc[u, v]`` is the marker
+              at ``v`` (the column endpoint) of the edge between ``u`` and ``v``:
+              ``"-"`` (tail), ``">"`` (arrowhead), ``"o"`` (circle), or ``0`` for no
+              edge. When a pair is joined by more than one edge (e.g. an ADMG with a
+              directed *and* a bidirected edge), the cell holds a sorted tuple of
+              markers.
+            - ``"causal-learn"`` : integer codes interoperable with causal-learn's
+              ``GeneralGraph``. ``M.loc[u, v]`` is the mark at ``u`` (the row
+              endpoint): ``0`` no edge, ``-1`` tail, ``1`` arrowhead, ``2`` circle,
+              ``4`` tail-and-arrowhead, ``5`` arrowhead-and-arrowhead (the last two
+              for coincident directed + bidirected edges).
+            - ``"pcalg"`` : integer codes of pcalg's ``amat.pag``. ``M.loc[u, v]`` is
+              the mark at ``v`` (the column endpoint): ``0`` no edge, ``1`` circle,
+              ``2`` arrowhead, ``3`` tail.
+            - ``"bnlearn"`` : binary codes of bnlearn's ``amat``. ``M.loc[u, v] = 1``
+              iff there is an arc ``u`` -> ``v``; an undirected edge is symmetric.
+
+        nodelist : list, optional (default=None)
+            The row/column ordering. If ``None``, the sorted node list is used.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A square adjacency matrix indexed by the nodes.
+
+        Raises
+        ------
+        ValueError
+            If ``encoding`` is unknown, or if the graph contains an edge the chosen
+            encoding cannot represent (coincident edges for ``"pcalg"``;
+            bidirected/circle/coincident edges for ``"bnlearn"``).
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> G = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>")])
+        >>> G.to_pandas_adjacency().loc["A", "B"]
+        '>'
+        """
+        valid = {"marker", "causal-learn", "pcalg", "bnlearn"}
+        if encoding not in valid:
+            raise ValueError(f"encoding must be one of {sorted(valid)}. Got {encoding!r}.")
+
+        nodes = sorted(self.nodes()) if nodelist is None else list(nodelist)
+        adj = pd.DataFrame(0, index=nodes, columns=nodes, dtype=object if encoding == "marker" else int)
+
+        pcalg_code = {"o": 1, ">": 2, "-": 3}
+        causal_learn_code = {"-": -1, ">": 1, "o": 2}
+
+        def to_causal_learn(marks, u, v):
+            # Endpoint mark(s) -> causal-learn endpoint code, including composites.
+            if len(marks) == 1:
+                return causal_learn_code[marks[0]]
+            combined = sorted(marks)
+            if combined == ["-", ">"]:
+                return 4  # TAIL_AND_ARROW
+            if combined == [">", ">"]:
+                return 5  # ARROW_AND_ARROW
+            raise ValueError(
+                f"causal-learn adjacency cannot represent the coincident endpoint marks {marks} between {u} and {v}."
+            )
+
+        seen = set()
+        for u, v in self.get_edges(data=False):
+            if frozenset((u, v)) in seen:
+                continue
+            seen.add(frozenset((u, v)))
+
+            edge_data = self.get_edge_data(u, v).values()
+            marks_u = [data[u] for data in edge_data]  # markers at u
+            marks_v = [data[v] for data in edge_data]  # markers at v
+
+            if encoding == "marker":
+                adj.at[u, v] = marks_v[0] if len(marks_v) == 1 else tuple(sorted(marks_v))
+                adj.at[v, u] = marks_u[0] if len(marks_u) == 1 else tuple(sorted(marks_u))
+            elif encoding == "pcalg":
+                if len(marks_v) > 1:
+                    raise ValueError(
+                        f"pcalg adjacency cannot represent the {len(marks_v)} coincident edges between {u} and {v}."
+                    )
+                adj.at[u, v] = pcalg_code[marks_v[0]]
+                adj.at[v, u] = pcalg_code[marks_u[0]]
+            elif encoding == "causal-learn":
+                adj.at[u, v] = to_causal_learn(marks_u, u, v)
+                adj.at[v, u] = to_causal_learn(marks_v, u, v)
+            else:  # bnlearn
+                if len(marks_u) > 1:
+                    raise ValueError(
+                        f"bnlearn adjacency cannot represent the {len(marks_u)} coincident edges between {u} and {v}."
+                    )
+                pair = (marks_u[0], marks_v[0])
+                if pair == ("-", ">"):
+                    adj.at[u, v] = 1
+                elif pair == (">", "-"):
+                    adj.at[v, u] = 1
+                elif pair == ("-", "-"):
+                    adj.at[u, v] = 1
+                    adj.at[v, u] = 1
+                else:
+                    raise ValueError(
+                        f"bnlearn adjacency only supports directed and undirected edges; "
+                        f"cannot represent the edge between {u} and {v}."
+                    )
+        return adj
 
     def __eq__(self, other):
         """
