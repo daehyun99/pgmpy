@@ -426,6 +426,7 @@ class _GraphAlgorithms:
 
         Examples
         --------
+        >>> from pgmpy.base import ADMG
         >>> edges = [
         ...     ("A", "B", "->"),
         ...     ("B", "C", "->"),
@@ -439,8 +440,8 @@ class _GraphAlgorithms:
         >>> admg.with_role(role="exposures", variables={"A"}, inplace=True)
         >>> admg.with_role(role="outcomes", variables={"C"}, inplace=True)
 
-        >>> admg.get_markov_blanket("B")
-        {'A', 'C', 'E'}
+        >>> sorted(admg.get_markov_blanket("B"))
+        ['A', 'C', 'E']
 
         References
         ----------
