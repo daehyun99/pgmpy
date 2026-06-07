@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pytest
+from skbase.utils.dependencies import _check_soft_dependencies
 
 from pgmpy.base import ADMG, DAG, PDAG
 from pgmpy.base._base import _CoreGraph
@@ -2162,3 +2163,60 @@ class TestCoreGraph:
         assert set(ancestral.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "->")}
         ancestral.add_edge("A", "C", "->")
         assert not graph.has_edge("A", "C")
+
+    @pytest.mark.skipif(
+        not _check_soft_dependencies("daft-pgm", severity="none"),
+        reason="execute only if required dependency present",
+    )
+    def test_to_daft(self):
+        """Test `_CoreGraph.to_daft`: directed/undirected edges render; unsupported marks raise."""
+        import daft
+
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("C", "B", "<-"), ("C", "D", "--")], latents=["D"])
+        # default layout returns a daft PGM object
+        assert isinstance(graph.to_daft(), daft.PGM)
+        # explicit dict positions, non-latex labels, and per-node / per-edge params are all accepted
+        positions = {node: (i, 0) for i, node in enumerate(sorted(graph.nodes()))}
+        assert isinstance(
+            graph.to_daft(
+                node_pos=positions,
+                latex=False,
+                node_params={"A": {"shape": "rectangle"}},
+                edge_params={("A", "B"): {"label": "x"}},
+            ),
+            daft.PGM,
+        )
+
+        # invalid node_pos handling
+        with pytest.raises(ValueError, match="node_pos"):
+            graph.to_daft(node_pos="nonsense")
+        with pytest.raises(ValueError, match="No position specified"):
+            graph.to_daft(node_pos={"A": (0, 0)})
+
+        # daft cannot represent bidirected or circle endpoints -> raise a clear error naming the edge type
+        with pytest.raises(ValueError, match="daft"):
+            ADMG(edge_list=[("A", "B", "<>")]).to_daft()
+        with pytest.raises(ValueError, match="daft"):
+            _CoreGraph(edge_list=[("A", "B", "o>")]).to_daft()
+
+    @pytest.mark.skipif(
+        not _check_soft_dependencies("pygraphviz", severity="none"),
+        reason="execute only if required dependency present",
+    )
+    def test_to_graphviz(self):
+        """Test `_CoreGraph.to_graphviz`: every edge type maps to graphviz arrowtail/arrowhead."""
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>"), ("C", "D", "--"), ("D", "E", "o>")])
+        agraph = graph.to_graphviz()
+        assert agraph.is_directed()
+        # mark -> arrow: '-' -> none, '>' -> normal, 'o' -> odot; mark at u is arrowtail, mark at v is arrowhead
+        expected = {
+            ("A", "B"): ("none", "normal"),  # ->
+            ("B", "C"): ("normal", "normal"),  # <>
+            ("C", "D"): ("none", "none"),  # --
+            ("D", "E"): ("odot", "normal"),  # o>
+        }
+        for (u, v), (tail, head) in expected.items():
+            edge = agraph.get_edge(u, v)
+            assert edge.attr["dir"] == "both"
+            assert edge.attr["arrowtail"] == tail
+            assert edge.attr["arrowhead"] == head

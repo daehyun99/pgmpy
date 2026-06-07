@@ -424,17 +424,3 @@ class PDAG(_CoreGraph):
 
         dag = self.to_dag()
         return nx.is_directed_acyclic_graph(dag)
-
-    def to_graphviz(self) -> object:
-        """
-        Retuns a pygraphviz object for the DAG. pygraphviz is useful for
-        visualizing the network structure.
-
-        Examples
-        --------
-        >>> from pgmpy.example_models import load_model
-        >>> model = load_model("bnlearn/alarm")
-        >>> model.to_graphviz()  # doctest: +ELLIPSIS
-        <AGraph ...
-        """
-        return nx.nx_agraph.to_agraph(self)

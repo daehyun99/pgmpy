@@ -6,10 +6,11 @@ import networkx as nx
 import pandas as pd
 
 from pgmpy.base._mixin_algorithms import _GraphAlgorithmMixin
+from pgmpy.base._mixin_plotting import _GraphPlottingMixin
 from pgmpy.base._mixin_roles import _GraphRolesMixin
 
 
-class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
+class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin, _GraphPlottingMixin):
     """
     Base class for all graph types in pgmpy.
 
