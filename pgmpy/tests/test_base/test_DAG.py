@@ -207,7 +207,7 @@ class TestDAGCreation(unittest.TestCase):
         pdag = dag.to_pdag()
 
         # Expected edges in the PDAG
-        expected_edges = {("X", "Y", "->"), ("Y", "Z", "<-")}
+        expected_edges = {("X", "Y", "->"), ("Z", "Y", "->")}
         # Check that all expected edges are present
         self.assertEqual(set(pdag.get_edges(data=True)), expected_edges)
         # Check that the PDAG has the correct number of nodes
@@ -234,12 +234,12 @@ class TestDAGCreation(unittest.TestCase):
         expected_edges = {
             ("W", "Y", "->"),
             ("X", "W", "->"),
-            ("X", "Z3", "<-"),
-            ("Y", "Z2", "<-"),
+            ("Z3", "X", "->"),
+            ("Z2", "Y", "->"),
             ("Z1", "X", "->"),
             ("Z1", "Z3", "->"),
             ("Z3", "Y", "->"),
-            ("Z3", "Z2", "<-"),
+            ("Z2", "Z3", "->"),
         }
 
         # Check that all expected edges are present

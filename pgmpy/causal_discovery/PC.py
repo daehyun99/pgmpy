@@ -401,7 +401,8 @@ class PC(_ConstraintMixin, BaseCausalDiscovery):
             else:
                 directed_edges.add((u, v))
 
-        pdag_oriented = PDAG(directed_ebunch=directed_edges, undirected_ebunch=undirected_edges)
+        ebunch = [(u, v, "->") for u, v in directed_edges] + [(u, v, "--") for u, v in undirected_edges]
+        pdag_oriented = PDAG(edge_list=ebunch)
         pdag_oriented.add_nodes_from(pdag.nodes())
 
         return pdag_oriented

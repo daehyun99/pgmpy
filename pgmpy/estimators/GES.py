@@ -97,9 +97,15 @@ class GES(StructureEstimator):
         current_model: PDAG,
     ) -> list[tuple[Hashable, Hashable]]:
         """
-        Return all edges that can be considered for deletion.
+        Return all edges that can be considered for deletion. An undirected edge yields both orders
+        ``(u, v)`` and ``(v, u)`` (deletion is order-dependent via the conditioning set).
         """
-        return sorted(current_model.edges())
+        legal_edges = []
+        for u, v, edge_type in current_model.get_edges(data=True):
+            legal_edges.append((u, v))
+            if edge_type == "--":
+                legal_edges.append((v, u))
+        return sorted(legal_edges)
 
     def _legal_edge_turns(
         self,
@@ -110,8 +116,10 @@ class GES(StructureEstimator):
         """
         legal_turns: list[tuple[Hashable, Hashable]] = []
 
-        for u, v in sorted(current_model.edges()):
+        for u, v, edge_type in current_model.get_edges(data=True):
             legal_turns.append((v, u))
+            if edge_type == "--":
+                legal_turns.append((u, v))
 
         return legal_turns
 
@@ -139,15 +147,13 @@ class GES(StructureEstimator):
                 raise ValueError(f"Some nodes in T={T} are adjacent to u={u}.")
 
         new_model = current_model.copy()
-
-        # Add directed edge u -> v
-        new_model.add_edge(u, v)
+        if not new_model.has_edge(u, v, "->"):
+            new_model.add_edge(u, v, "->")
 
         # Orient v - t as t -> v for all t in T
-        remove_edges = [(v, t) for t in T]
-        new_model.remove_edges_from(remove_edges)
+        for t in T:
+            new_model.replace_edge(t, v, "--", "->")
 
-        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def delete(
@@ -166,21 +172,23 @@ class GES(StructureEstimator):
             raise ValueError(f"H={H} is not a subset of NA_vu={na_vu}.")
 
         new_model = current_model.copy()
-
-        # Remove edge between u and v (both directions if present)
-        new_model.remove_edges_from([(u, v), (v, u)])
+        if new_model.has_edge(u, v, "--"):
+            new_model.remove_edge(u, v, "--")
+        if new_model.has_edge(u, v, "->"):
+            new_model.remove_edge(u, v, "->")
+        if new_model.has_edge(v, u, "->"):
+            new_model.remove_edge(v, u, "->")
 
         # Orient v - h as v -> h for all h in H
         for h in H:
-            if new_model.has_undirected_edge(v, h):
-                new_model.remove_edge(h, v)
+            if new_model.has_edge(v, h, "--"):
+                new_model.replace_edge(v, h, "--", "->")
 
         # For h in H ∩ Ne(u), orient u - h as u -> h
         u_neighbors = set(new_model.get_neighbors(u, "--"))
         for h in H & u_neighbors:
-            new_model.remove_edge(h, u)
+            new_model.replace_edge(u, h, "--", "->")
 
-        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def turn(
@@ -195,27 +203,25 @@ class GES(StructureEstimator):
         """
         C = set(C)
 
-        # Validity check (as per your current logic)
-        if current_model.has_edge(u, v) and not current_model.has_edge(v, u):
+        if current_model.has_edge(u, v, "->"):
             raise ValueError(f"The edge {u} -> {v} already exists.")
 
         new_model = current_model.copy()
 
-        # Remove v -> u if present
-        if new_model.has_edge(v, u):
-            new_model.remove_edge(v, u)
-
-        # Ensure u -> v exists
-        if not new_model.has_edge(u, v):
-            new_model.add_edge(u, v)
+        if new_model.has_edge(v, u, "--"):
+            new_model.remove_edge(v, u, "--")
+        if new_model.has_edge(v, u, "->"):
+            new_model.remove_edge(v, u, "->")
+        if not new_model.has_edge(u, v, "->"):
+            new_model.add_edge(u, v, "->")
 
         # For each c in C: orient v - c as c -> v
         for c in C:
-            if new_model.has_edge(v, c):
-                new_model.remove_edge(v, c)
-            new_model.add_edge(c, v)
+            if new_model.has_edge(c, v, "--"):
+                new_model.replace_edge(c, v, "--", "->")
+            else:
+                new_model.add_edge(c, v, "->")
 
-        # new_model.calibrate_directed_undirected_edges()
         return new_model
 
     def _score_valid_insertions(
@@ -322,7 +328,7 @@ class GES(StructureEstimator):
         """
         Dispatch turn operator depending on edge type.
         """
-        if current_model.has_edge(u, v) and current_model.has_edge(v, u):
+        if current_model.has_edge(u, v, "--"):
             return self._score_valid_turns_undirected(u, v, current_model, score_fn)
         else:
             return self._score_valid_turns_directed(u, v, current_model, score_fn)

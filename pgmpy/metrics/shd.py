@@ -45,8 +45,8 @@ class SHD(BaseSupervisedMetric):
     PDAGs are also supported:
 
     >>> from pgmpy.base import PDAG
-    >>> pdag1 = PDAG(directed_ebunch=[(1, 2)], undirected_ebunch=[(2, 3)])
-    >>> pdag2 = PDAG(directed_ebunch=[(1, 2), (2, 3)])
+    >>> pdag1 = PDAG(edge_list=[(1, 2, "->"), (2, 3, "--")])
+    >>> pdag2 = PDAG(edge_list=[(1, 2, "->"), (2, 3, "->")])
     >>> shd(true_causal_graph=pdag1, est_causal_graph=pdag2)
     1
     """
@@ -67,17 +67,24 @@ class SHD(BaseSupervisedMetric):
         self.edge_reverse_penalty = edge_reverse_penalty
         super().__init__()
 
+    @staticmethod
+    def _binary_adjacency(graph, nodes_list):
+        """
+        0/1 directed adjacency matrix ordered by `nodes_list`: directed edges are asymmetric and
+        undirected edges symmetric. Marker-based graphs provide this directly via
+        ``to_adjacency(encoding="binary")``; a legacy ``DiGraph``-based graph (the current ``DAG``,
+        which does not yet inherit ``_CoreGraph``) is converted through networkx.
+        """
+        if hasattr(graph, "to_adjacency"):
+            return graph.to_adjacency(encoding="binary", nodelist=nodes_list).to_numpy()
+        dag = nx.DiGraph(graph.edges())
+        dag.add_nodes_from(list(nx.isolates(graph)))
+        return np.asarray(nx.adjacency_matrix(dag, nodelist=nodes_list).todense())
+
     def _evaluate(self, true_causal_graph, est_causal_graph):
-
-        nodes_list = true_causal_graph.nodes()
-
-        dag_true = nx.DiGraph(true_causal_graph.edges())
-        dag_true.add_nodes_from(list(nx.isolates(true_causal_graph)))
-        m1 = nx.adjacency_matrix(dag_true, nodelist=nodes_list).todense()
-
-        dag_est = nx.DiGraph(est_causal_graph.edges())
-        dag_est.add_nodes_from(list(nx.isolates(est_causal_graph)))
-        m2 = nx.adjacency_matrix(dag_est, nodelist=nodes_list).todense()
+        nodes_list = list(true_causal_graph.nodes())
+        m1 = self._binary_adjacency(true_causal_graph, nodes_list)
+        m2 = self._binary_adjacency(est_causal_graph, nodes_list)
 
         shd = 0
 

@@ -7,42 +7,42 @@ class TestPDAG:
     def test_init_normal(self):
         # Mix directed and undirected
         ebunch_mix = [("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")]
-        pdag = PDAG(ebunch=ebunch_mix)
+        pdag = PDAG(edge_list=ebunch_mix)
         assert set(pdag.nodes()) == {"A", "B", "C", "D"}
-        assert sorted(pdag.get_edges(keys=False, data=True)) == [
+        assert sorted(pdag.get_edges(data=True)) == [
             ("A", "B", "--"),
             ("A", "C", "->"),
-            ("C", "D", "<-"),
             ("D", "B", "--"),
+            ("D", "C", "->"),
         ]
 
         pdag = PDAG(
-            ebunch=ebunch_mix,
+            edge_list=ebunch_mix,
             latents=["A", "C"],
         )
         assert set(pdag.nodes()) == {"A", "B", "C", "D"}
-        assert sorted(pdag.get_edges(keys=False, data=True)) == [
+        assert sorted(pdag.get_edges(data=True)) == [
             ("A", "B", "--"),
             ("A", "C", "->"),
-            ("C", "D", "<-"),
             ("D", "B", "--"),
+            ("D", "C", "->"),
         ]
         assert pdag.latents == {"A", "C"}
 
         # Only undirected
         ebunch_undir = [("A", "C", "--"), ("D", "C", "--"), ("B", "A", "--"), ("B", "D", "--")]
-        pdag = PDAG(ebunch=ebunch_undir)
+        pdag = PDAG(edge_list=ebunch_undir)
         assert set(pdag.nodes()) == {"A", "B", "C", "D"}
-        assert sorted(pdag.get_edges(keys=False, data=True)) == [
+        assert sorted(pdag.get_edges(data=True)) == [
             ("A", "B", "--"),
             ("A", "C", "--"),
             ("C", "D", "--"),
             ("D", "B", "--"),
         ]
 
-        pdag = PDAG(ebunch=ebunch_undir, latents=["A", "D"])
+        pdag = PDAG(edge_list=ebunch_undir, latents=["A", "D"])
         assert set(pdag.nodes()) == {"A", "B", "C", "D"}
-        assert sorted(pdag.get_edges(keys=False, data=True)) == [
+        assert sorted(pdag.get_edges(data=True)) == [
             ("A", "B", "--"),
             ("A", "C", "--"),
             ("C", "D", "--"),
@@ -52,27 +52,27 @@ class TestPDAG:
 
         # Only directed
         ebunch_dir = [("A", "B", "->"), ("D", "B", "->"), ("A", "C", "->"), ("D", "C", "->")]
-        pdag = PDAG(ebunch=ebunch_dir)
+        pdag = PDAG(edge_list=ebunch_dir)
         assert set(pdag.nodes()) == {"A", "B", "C", "D"}
-        assert sorted(pdag.get_edges(keys=False, data=True)) == [
+        assert sorted(pdag.get_edges(data=True)) == [
             ("A", "B", "->"),
             ("A", "C", "->"),
-            ("B", "D", "<-"),
+            ("D", "B", "->"),
             ("D", "C", "->"),
         ]
 
-        pdag = PDAG(ebunch=ebunch_dir, latents=["D"])
+        pdag = PDAG(edge_list=ebunch_dir, latents=["D"])
         assert set(pdag.nodes()) == {"A", "B", "C", "D"}
-        assert sorted(pdag.get_edges(keys=False, data=True)) == [
+        assert sorted(pdag.get_edges(data=True)) == [
             ("A", "B", "->"),
             ("A", "C", "->"),
-            ("B", "D", "<-"),
+            ("D", "B", "->"),
             ("D", "C", "->"),
         ]
         assert pdag.latents == {"D"}
 
     def test_all_neighbors(self):
-        pdag = PDAG(ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
+        pdag = PDAG(edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
 
         assert pdag.get_neighbors(node="A") == {"B", "C"}
         assert pdag.get_neighbors(node="B") == {"A", "D"}
@@ -80,21 +80,21 @@ class TestPDAG:
         assert pdag.get_neighbors(node="D") == {"B", "C"}
 
     def test_get_children(self):
-        pdag = PDAG(ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
+        pdag = PDAG(edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
 
         assert pdag.get_children(node="A") == {"C"}
         assert pdag.get_children(node="B") == set()
         assert pdag.get_children(node="C") == set()
 
     def test_get_parents(self):
-        pdag = PDAG(ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
+        pdag = PDAG(edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
 
         assert pdag.get_parents(node="A") == set()
         assert pdag.get_parents(node="B") == set()
         assert pdag.get_parents(node="C") == {"A", "D"}
 
     def test_get_neighbors(self):
-        pdag = PDAG(ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
+        pdag = PDAG(edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
 
         assert pdag.get_neighbors(node="A", edge_types="--") == {"B"}
         assert pdag.get_neighbors(node="B", edge_types="--") == {"A", "D"}
@@ -130,26 +130,26 @@ class TestPDAG:
 
         cpdag = pdag.to_cpdag()
 
-        self.assertEqual(cpdag.directed_edges, set())
-        self.assertEqual(cpdag.undirected_edges, {("A", "B"), ("B", "C")})
+        assert cpdag.directed_edges == set()
+        assert cpdag.undirected_edges == {("A", "B"), ("B", "C")}
 
     def test_orient_undirected_edge(self):
-        pdag = PDAG(ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
+        pdag = PDAG(edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
 
         mod_pdag = pdag.orient_undirected_edge("B", "A", inplace=False)
-        assert sorted(mod_pdag.get_edges(keys=False, data=True)) == [
-            ("A", "B", "<-"),
+        assert sorted(mod_pdag.get_edges(data=True)) == [
             ("A", "C", "->"),
-            ("C", "D", "<-"),
+            ("B", "A", "->"),
             ("D", "B", "--"),
+            ("D", "C", "->"),
         ]
 
         pdag.orient_undirected_edge("B", "A", inplace=True)
-        assert sorted(pdag.get_edges(keys=False, data=True)) == [
-            ("A", "B", "<-"),
+        assert sorted(pdag.get_edges(data=True)) == [
             ("A", "C", "->"),
-            ("C", "D", "<-"),
+            ("B", "A", "->"),
             ("D", "B", "--"),
+            ("D", "C", "->"),
         ]
 
         with pytest.raises(ValueError):
@@ -160,11 +160,11 @@ class TestPDAG:
         pdag_mix = PDAG(ebunch)
         pdag_copy = pdag_mix.copy()
         assert set(pdag_copy.nodes()) == {"A", "B", "C", "D"}
-        assert sorted(pdag_copy.get_edges(keys=False, data=True)) == [
+        assert sorted(pdag_copy.get_edges(data=True)) == [
             ("A", "B", "--"),
             ("A", "C", "->"),
-            ("C", "D", "<-"),
             ("D", "B", "--"),
+            ("D", "C", "->"),
         ]
         assert pdag_copy.latents == set()
 
@@ -175,11 +175,11 @@ class TestPDAG:
         )
         pdag_copy = pdag_latent.copy()
         assert set(pdag_copy.nodes()) == {"A", "B", "C", "D"}
-        assert sorted(pdag_copy.get_edges(keys=False, data=True)) == [
+        assert sorted(pdag_copy.get_edges(data=True)) == [
             ("A", "B", "--"),
             ("A", "C", "->"),
-            ("C", "D", "<-"),
             ("D", "B", "--"),
+            ("D", "C", "->"),
         ]
         assert pdag_copy.latents == {"A", "D"}
 
@@ -190,11 +190,11 @@ class TestPDAG:
         )
         pdag_copy = pdag_role.copy()
         assert set(pdag_copy.nodes()) == {"A", "B", "C", "D"}
-        assert sorted(pdag_copy.get_edges(keys=False, data=True)) == [
+        assert sorted(pdag_copy.get_edges(data=True)) == [
             ("A", "B", "--"),
             ("A", "C", "->"),
-            ("C", "D", "<-"),
             ("D", "B", "--"),
+            ("D", "C", "->"),
         ]
         assert pdag_copy.latents == set()
         assert pdag_copy.get_role("exposures") == ["A"]
@@ -209,11 +209,11 @@ class TestPDAG:
         )
         pdag_copy = pdag_role_set.copy()
         assert set(pdag_copy.nodes()) == {"A", "B", "C", "D"}
-        assert sorted(pdag_copy.get_edges(keys=False, data=True)) == [
+        assert sorted(pdag_copy.get_edges(data=True)) == [
             ("A", "B", "--"),
             ("A", "C", "->"),
-            ("C", "D", "<-"),
             ("D", "B", "--"),
+            ("D", "C", "->"),
         ]
         assert pdag_copy.latents == set()
         assert sorted(pdag_copy.get_role("exposures")) == sorted(["A", "D"])
@@ -227,11 +227,11 @@ class TestPDAG:
         )
         pdag_copy = pdag_role_list.copy()
         assert set(pdag_copy.nodes()) == {"A", "B", "C", "D"}
-        assert sorted(pdag_copy.get_edges(keys=False, data=True)) == [
+        assert sorted(pdag_copy.get_edges(data=True)) == [
             ("A", "B", "--"),
             ("A", "C", "->"),
-            ("C", "D", "<-"),
             ("D", "B", "--"),
+            ("D", "C", "->"),
         ]
         assert pdag_copy.latents == set()
         assert sorted(pdag_copy.get_role("exposures")) == sorted(["A", "D"])
@@ -240,7 +240,7 @@ class TestPDAG:
 
     def test_pdag_to_dag(self):
         # PDAG no: 1  Possibility of creating a v-structure
-        pdag = PDAG(ebunch=[("A", "B", "->"), ("C", "B", "->"), ("C", "D", "--"), ("D", "A", "--")])
+        pdag = PDAG(edge_list=[("A", "B", "->"), ("C", "B", "->"), ("C", "D", "--"), ("D", "A", "--")])
         dag = pdag.to_dag()
         assert ("A", "B") in dag.edges()
         assert ("C", "B") in dag.edges()
@@ -249,7 +249,7 @@ class TestPDAG:
 
         # With latents
         pdag = PDAG(
-            ebunch=[("A", "B", "->"), ("C", "B", "->"), ("C", "D", "--"), ("D", "A", "--")],
+            edge_list=[("A", "B", "->"), ("C", "B", "->"), ("C", "D", "--"), ("D", "A", "--")],
             latents=["A"],
         )
         dag = pdag.to_dag()
@@ -260,7 +260,7 @@ class TestPDAG:
         assert len(dag.edges()) == 4
 
         # PDAG no: 2  No possibility of creation of v-structure.
-        pdag = PDAG(ebunch=[("B", "C", "->"), ("A", "C", "->"), ("A", "D", "--")])
+        pdag = PDAG(edge_list=[("B", "C", "->"), ("A", "C", "->"), ("A", "D", "--")])
         dag = pdag.to_dag()
         assert ("B", "C") in dag.edges()
         assert ("A", "C") in dag.edges()
@@ -268,7 +268,7 @@ class TestPDAG:
 
         # With latents
         pdag = PDAG(
-            ebunch=[("B", "C", "->"), ("A", "C", "->"), ("A", "D", "--")],
+            edge_list=[("B", "C", "->"), ("A", "C", "->"), ("A", "D", "--")],
             latents=["A"],
         )
         dag = pdag.to_dag()
@@ -278,14 +278,14 @@ class TestPDAG:
         assert dag.latents == {"A"}
 
         # PDAG no: 3  Already existing v-structure, possibility to add another
-        pdag = PDAG(ebunch=[("B", "C", "->"), ("A", "C", "->"), ("C", "D", "--")])
+        pdag = PDAG(edge_list=[("B", "C", "->"), ("A", "C", "->"), ("C", "D", "--")])
         dag = pdag.to_dag()
         expected_edges = {("B", "C"), ("C", "D"), ("A", "C")}
         assert expected_edges == set(dag.edges())
 
         # With latents
         pdag = PDAG(
-            ebunch=[("B", "C", "->"), ("A", "C", "->"), ("C", "D", "--")],
+            edge_list=[("B", "C", "->"), ("A", "C", "->"), ("C", "D", "--")],
             latents=["A"],
         )
         dag = pdag.to_dag()
@@ -306,7 +306,7 @@ class TestPDAG:
             (5, 2, "->"),
             (5, 4, "->"),
         ]
-        pdag = PDAG(ebunch=ebunch)
+        pdag = PDAG(edge_list=ebunch)
         dag = pdag.to_dag()
         dag_actual = {
             (0, 2),
@@ -324,68 +324,68 @@ class TestPDAG:
         assert set(dag.edges()) == dag_actual
 
     def test_pdag_to_cpdag(self):
-        pdag = PDAG(ebunch=[("A", "B", "->"), ("B", "C", "--")])
+        pdag = PDAG(edge_list=[("A", "B", "->"), ("B", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.get_edges(keys=False, data=True)) == {
+        assert set(cpdag.get_edges(data=True)) == {
             ("A", "B", "->"),
             ("B", "C", "->"),
         }
 
-        pdag = PDAG(ebunch=[("A", "B", "->"), ("B", "C", "--"), ("C", "D", "--")])
+        pdag = PDAG(edge_list=[("A", "B", "->"), ("B", "C", "--"), ("C", "D", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.get_edges(keys=False, data=True)) == {
+        assert set(cpdag.get_edges(data=True)) == {
             ("A", "B", "->"),
             ("B", "C", "->"),
             ("C", "D", "->"),
         }
 
-        pdag = PDAG(ebunch=[("A", "B", "->"), ("D", "C", "->"), ("B", "C", "--")])
+        pdag = PDAG(edge_list=[("A", "B", "->"), ("D", "C", "->"), ("B", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.get_edges(keys=False, data=True)) == {
+        assert set(cpdag.get_edges(data=True)) == {
             ("A", "B", "->"),
             ("B", "C", "--"),
             ("D", "C", "->"),
         }
 
-        pdag = PDAG(ebunch=[("A", "B", "->"), ("D", "C", "->"), ("D", "B", "->"), ("B", "C", "--")])
+        pdag = PDAG(edge_list=[("A", "B", "->"), ("D", "C", "->"), ("D", "B", "->"), ("B", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.get_edges(keys=False, data=True)) == {
+        assert set(cpdag.get_edges(data=True)) == {
             ("A", "B", "->"),
             ("B", "C", "->"),
-            ("B", "D", "<-"),
+            ("D", "B", "->"),
             ("D", "C", "->"),
         }
 
-        pdag = PDAG(ebunch=[("A", "B", "->"), ("B", "C", "->"), ("A", "C", "--")])
+        pdag = PDAG(edge_list=[("A", "B", "->"), ("B", "C", "->"), ("A", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.get_edges(keys=False, data=True)) == {
+        assert set(cpdag.get_edges(data=True)) == {
             ("A", "B", "->"),
             ("A", "C", "->"),
             ("B", "C", "->"),
         }
 
-        pdag = PDAG(ebunch=[("A", "B", "->"), ("B", "C", "->"), ("D", "C", "->"), ("A", "C", "--")])
+        pdag = PDAG(edge_list=[("A", "B", "->"), ("B", "C", "->"), ("D", "C", "->"), ("A", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.get_edges(keys=False, data=True)) == {
+        assert set(cpdag.get_edges(data=True)) == {
             ("A", "B", "->"),
             ("A", "C", "->"),
             ("B", "C", "->"),
-            ("C", "D", "<-"),
+            ("D", "C", "->"),
         }
 
         # Examples taken from Perković 2017.
-        pdag = PDAG(ebunch=[("V1", "X", "->"), ("X", "V2", "--"), ("V2", "Y", "--"), ("X", "Y", "--")])
+        pdag = PDAG(edge_list=[("V1", "X", "->"), ("X", "V2", "--"), ("V2", "Y", "--"), ("X", "Y", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.get_edges(keys=False, data=True)) == {
+        assert set(cpdag.get_edges(data=True)) == {
             ("V1", "X", "->"),
             ("V2", "Y", "--"),
             ("X", "V2", "->"),
             ("X", "Y", "->"),
         }
 
-        pdag = PDAG(ebunch=[("Y", "X", "->"), ("V1", "X", "--"), ("X", "V2", "--"), ("V2", "Y", "--")])
+        pdag = PDAG(edge_list=[("Y", "X", "->"), ("V1", "X", "--"), ("X", "V2", "--"), ("V2", "Y", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.get_edges(keys=False, data=True)) == {
+        assert set(cpdag.get_edges(data=True)) == {
             ("X", "V1", "->"),
             ("X", "V2", "--"),
             ("Y", "X", "->"),
@@ -393,55 +393,57 @@ class TestPDAG:
         }
 
         # Examples from Bang 2024
-        pdag = PDAG(ebunch=[("B", "D", "->"), ("C", "D", "->"), ("A", "D", "--"), ("A", "C", "--")])
+        pdag = PDAG(edge_list=[("B", "D", "->"), ("C", "D", "->"), ("A", "D", "--"), ("A", "C", "--")])
         cpdag = pdag.apply_meeks_rules(apply_r4=True, debug=True)
-        assert set(cpdag.get_edges(keys=False, data=True)) == {
+        assert set(cpdag.get_edges(data=True)) == {
             ("B", "D", "->"),
             ("C", "A", "->"),
-            ("D", "C", "<-"),
+            ("C", "D", "->"),
             ("D", "A", "->"),
         }
 
-        pdag = PDAG(ebunch=[("A", "B", "->"), ("C", "B", "->"), ("D", "B", "--"), ("D", "A", "--"), ("D", "C", "--")])
+        pdag = PDAG(
+            edge_list=[("A", "B", "->"), ("C", "B", "->"), ("D", "B", "--"), ("D", "A", "--"), ("D", "C", "--")]
+        )
         cpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(cpdag.get_edges(keys=False, data=True)) == {
+        assert set(cpdag.get_edges(data=True)) == {
             ("A", "B", "->"),
             ("A", "D", "--"),
-            ("B", "C", "<-"),
-            ("B", "D", "<-"),
+            ("C", "B", "->"),
             ("C", "D", "--"),
+            ("D", "B", "->"),
         }
 
         ebunch = [("A", "C", "--"), ("B", "C", "--"), ("D", "C", "--"), ("B", "D", "->"), ("D", "A", "->")]
 
-        pdag = PDAG(ebunch=ebunch)
+        pdag = PDAG(edge_list=ebunch)
         mpdag = pdag.apply_meeks_rules(apply_r4=True)
-        assert set(mpdag.get_edges(keys=False, data=True)) == {
+        assert set(mpdag.get_edges(data=True)) == {
             ("C", "B", "--"),
             ("B", "D", "->"),
-            ("A", "C", "<-"),
+            ("C", "A", "->"),
             ("C", "D", "--"),
-            ("A", "D", "<-"),
+            ("D", "A", "->"),
         }
 
-        pdag = PDAG(ebunch=ebunch)
+        pdag = PDAG(edge_list=ebunch)
         pdag = pdag.apply_meeks_rules()
-        assert set(pdag.get_edges(keys=False, data=True)) == {
+        assert set(pdag.get_edges(data=True)) == {
             ("A", "C", "--"),
             ("C", "B", "--"),
             ("B", "D", "->"),
             ("C", "D", "--"),
-            ("A", "D", "<-"),
+            ("D", "A", "->"),
         }
 
-        pdag_inp = PDAG(ebunch=ebunch)
+        pdag_inp = PDAG(edge_list=ebunch)
         pdag_inp.apply_meeks_rules(inplace=True)
-        assert set(pdag_inp.get_edges(keys=False, data=True)) == {
+        assert set(pdag_inp.get_edges(data=True)) == {
             ("A", "C", "--"),
             ("C", "B", "--"),
             ("B", "D", "->"),
             ("C", "D", "--"),
-            ("A", "D", "<-"),
+            ("D", "A", "->"),
         }
 
     def test_pdag_equality(self):
@@ -450,14 +452,14 @@ class TestPDAG:
         which compares both graph structure and variable-role mappings to allow comparison of two models.
         """
         pdag = PDAG(
-            ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
+            edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
             latents=["B"],
             roles={"exposures": ("A", "D"), "outcomes": ["C"]},
         )
 
         # Case1: When the models are the same
         other1 = PDAG(
-            ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
+            edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
             latents=["B"],
             roles={"exposures": ("A", "D"), "outcomes": ["C"]},
         )
@@ -469,31 +471,31 @@ class TestPDAG:
         )
         # Case3: When the directed_ebunch variables differ between models
         other3 = PDAG(
-            ebunch=[("A", "C", "->"), ("D", "C", "->"), ("E", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
+            edge_list=[("A", "C", "->"), ("D", "C", "->"), ("E", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
             latents=["B"],
             roles={"exposures": ("A", "D"), "outcomes": ["C"]},
         )
         # Case4: When the directed_ebunch variables differ between models
         other4 = PDAG(
-            ebunch=[("A", "E", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
+            edge_list=[("A", "E", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
             latents=["B"],
             roles={"exposures": ("A", "D"), "outcomes": ["C"]},
         )
         # Case5: When the undirected_ebunch variables differ between models
         other5 = PDAG(
-            ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "E", "--")],
+            edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "E", "--")],
             latents=["B"],
             roles={"exposures": ("A", "D"), "outcomes": ["C"]},
         )
         # Case6: When the latents variables differ between models
         other6 = PDAG(
-            ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
+            edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
             latents=["D"],
             roles={"exposures": ("A", "D"), "outcomes": ["C"]},
         )
         # Case7: When the roles variables differ between models
         other7 = PDAG(
-            ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
+            edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
             latents=["B"],
             roles={"exposures": ("A"), "adjustment": "D", "outcomes": ["C"]},
         )
@@ -508,7 +510,7 @@ class TestPDAG:
 
     def test_latents_with_role(self):
         pdag1 = PDAG(
-            ebunch=[
+            edge_list=[
                 ("X", "Y", "->"),
                 ("A", "B", "--"),
                 ("B", "C", "--"),
@@ -531,7 +533,7 @@ class TestPDAG:
 
     def test_latents_without_role(self):
         pdag1 = PDAG(
-            ebunch=[
+            edge_list=[
                 ("X", "Y", "->"),
                 ("A", "B", "--"),
                 ("B", "C", "--"),
@@ -553,3 +555,7 @@ class TestPDAG:
 
     def test_is_clique(self):
         """Test code for `is_clique()` method"""
+        pdag = PDAG([("A", "B", "--"), ("B", "C", "--"), ("A", "C", "--"), ("C", "D", "--")])
+        assert pdag.is_clique({"A", "B", "C"}) is True
+        assert pdag.is_clique({"A", "B", "C", "D"}) is False  # A-D not adjacent
+        assert pdag.is_clique({"A"}) is True

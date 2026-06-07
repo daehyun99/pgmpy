@@ -245,7 +245,7 @@ class TestParityGES:
         data = pd.DataFrame(obs_sample, columns=[f"X{i}" for i in range(9)])
         est = GES(scoring_method="bic-g").fit(data)
         assert sorted(est.causal_graph_.nodes()) == ["X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8"]
-        assert sorted(est.causal_graph_.undirected_edges) == [("X3", "X1"), ("X6", "X0"), ("X6", "X3"), ("X7", "X2")]
+        assert sorted(est.causal_graph_.undirected_edges) == [("X0", "X6"), ("X1", "X3"), ("X2", "X7"), ("X3", "X6")]
         assert sorted(est.causal_graph_.directed_edges) == [
             ("X1", "X2"),
             ("X1", "X4"),

@@ -128,9 +128,15 @@ class GES(_ScoreMixin, BaseCausalDiscovery):
         current_model: PDAG,
     ) -> list[tuple[Hashable, Hashable]]:
         """
-        Return all edges that can be considered for deletion.
+        Return all edges that can be considered for deletion. An undirected edge yields both orders
+        ``(u, v)`` and ``(v, u)`` (deletion is order-dependent via the conditioning set).
         """
-        return sorted(current_model.edges())
+        legal_edges = []
+        for u, v, edge_type in current_model.get_edges(data=True):
+            legal_edges.append((u, v))
+            if edge_type == "--":
+                legal_edges.append((v, u))
+        return sorted(legal_edges)
 
     def insert(
         self,
@@ -304,7 +310,7 @@ class GES(_ScoreMixin, BaseCausalDiscovery):
                         # no semi-directed v->u path bypassing it) guarantee the
                         # resulting graph has a consistent extension, so we don't
                         # need to construct the post-insert graph just to verify.
-                        parents_v = current_model.directed_parents(v)
+                        parents_v = current_model.get_parents(v)
                         new_parents = ordered_tuple(na_vuT | parents_v | {u}, current_model)
                         old_parents = ordered_tuple(na_vuT | parents_v, current_model)
                         score_delta = score_fn(v, new_parents) - score_fn(v, old_parents)
@@ -380,8 +386,10 @@ class GES(_ScoreMixin, BaseCausalDiscovery):
         # Step 4: Turning phase. Iteratively reorient edges till score stops improving.
         while True:
             potential_turns = []
-            for u, v in sorted(current_model.edges()):
+            for u, v, edge_type in current_model.get_edges(data=True):
                 potential_turns.append((v, u))
+                if edge_type == "--":
+                    potential_turns.append((u, v))
 
             score_deltas = np.zeros(len(potential_turns))
             turn_ops: list[tuple[float, Any, Any, set[Any]] | None] = []
@@ -389,7 +397,7 @@ class GES(_ScoreMixin, BaseCausalDiscovery):
             for index, (u, v) in enumerate(potential_turns):
                 valid_turn_ops = []
 
-                if current_model.has_edge(u, v) and current_model.has_edge(v, u):
+                if current_model.has_edge(u, v, "--"):
                     non_adjacents = current_model.get_neighbors(v, "--") - current_model.get_neighbors(u) - {u}
 
                     if len(non_adjacents) > 0:

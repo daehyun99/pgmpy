@@ -387,8 +387,8 @@ class _GraphAlgorithms:
         >>> graph = _CoreGraph()
         >>> graph.add_edges_from(edges)
         >>> ancestral_graph = graph.get_ancestral_graph("C")
-        >>> ancestral_graph.get_edges(keys=True, data=True)
-        [("A", "B", 0, "->"), ("B", "C", 0, "->")]
+        >>> sorted(ancestral_graph.get_edges(data=True))
+        [('A', 'B', '->'), ('B', 'C', '->')]
 
         """
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
