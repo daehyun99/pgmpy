@@ -90,7 +90,7 @@ class ADMG(_CoreGraph):
         components = set()
 
         for node in nodes_set:
-            component = self.get_reachable_nodes(node, edge_type="<>")
+            component = self.get_reachable_nodes(node, edge_types="<>")
             components.update(component)
 
         return components

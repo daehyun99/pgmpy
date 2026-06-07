@@ -61,8 +61,8 @@ class _GraphAlgorithms:
         if v in neighbors:
             return False
 
-        parents = self.get_neighbors(w, edge_type="<-")
-        spouses = self.get_neighbors(w, edge_type="<>")
+        parents = self.get_neighbors(w, edge_types="<-")
+        spouses = self.get_neighbors(w, edge_types="<>")
 
         incoming_to_w = parents.union(spouses)
 
@@ -566,6 +566,94 @@ class _GraphAlgorithms:
 
         """
         return v in self.get_descendants(u)
+
+    def has_path(self, source: Hashable, target: Hashable, edge_types: str | Iterable[str] | None = None) -> bool:
+        """
+        Check whether a path from `source` to `target` exists, following only edges of `edge_types`.
+
+        Each step of the path follows an edge whose type (read from the current node's endpoint) is in
+        `edge_types`; e.g. ``edge_types="->"`` checks for a directed path. ``None`` follows any edge
+        type. A node always has a (trivial) path to itself.
+
+        Parameters
+        ----------
+        source, target : Hashable
+            The endpoints of the path. Both must be present in the graph.
+
+        edge_types : str or iterable of str, optional (default: None)
+            The edge type(s) a step may follow; ``None`` allows any type.
+
+        Returns
+        -------
+        bool
+
+        See Also
+        --------
+        get_all_paths : Enumerate the paths themselves.
+        get_reachable_nodes : All nodes reachable under the given edge types.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "->")])
+        >>> graph.has_path("A", "C", edge_types="->")
+        True
+
+        """
+        if target not in self.nodes():
+            raise ValueError(f"Node {target} not in graph.")
+        return target in self.get_reachable_nodes(source, edge_types)
+
+    def get_all_paths(
+        self, source: Hashable, target: Hashable, edge_types: str | Iterable[str] | None = None
+    ) -> list[list[Hashable]]:
+        """
+        Return all simple paths (no repeated nodes) from `source` to `target` following `edge_types`.
+
+        Each step follows an edge whose type (read from the current node's endpoint) is in
+        `edge_types`; e.g. ``edge_types="->"`` enumerates directed paths. ``None`` follows any edge
+        type. If ``source == target`` the single trivial path ``[source]`` is returned.
+
+        Parameters
+        ----------
+        source, target : Hashable
+            The endpoints of the paths. Both must be present in the graph.
+
+        edge_types : str or iterable of str, optional (default: None)
+            The edge type(s) a step may follow; ``None`` allows any type.
+
+        Returns
+        -------
+        paths : list of lists
+            Each inner list is a path given as a sequence of nodes.
+
+        See Also
+        --------
+        has_path : Whether any such path exists.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "->"), ("A", "C", "->")])
+        >>> sorted(graph.get_all_paths("A", "C", edge_types="->"))
+        [['A', 'B', 'C'], ['A', 'C']]
+
+        """
+        for node in (source, target):
+            if node not in self.nodes():
+                raise ValueError(f"Node {node} not in graph.")
+
+        paths = []
+        stack = [(source, [source])]
+        while stack:
+            current, path = stack.pop()
+            if current == target:
+                paths.append(path)
+                continue
+            for neighbor in self.get_neighbors(current, edge_types):
+                if neighbor not in path:
+                    stack.append((neighbor, path + [neighbor]))
+        return paths
 
     def get_topological_order(self) -> list[Hashable]:
         """

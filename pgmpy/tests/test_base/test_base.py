@@ -882,6 +882,8 @@ class TestCoreGraph:
         assert graph.get_reachable_nodes("A", "--") == {"A", "F"}
         assert graph.get_reachable_nodes("A", "o>") == {"A", "I"}
         assert graph.get_reachable_nodes("A", "<o") == {"A", "J"}
+        # a collection of edge types follows any of them
+        assert graph.get_reachable_nodes("A", {"->", "<-"}) == {"A", "B", "C", "X", "Y"}
         check_graph_status(graph, 12, 11, set(), set(), set(), {})
 
         # fails: no nodes / nodes without edges / wrong input values
@@ -1593,3 +1595,27 @@ class TestCoreGraph:
         admg = ADMG(edge_list=[("X", "A", "->"), ("Z", "A", "<>")])
         assert admg.get_roots() == {"X"}
         assert admg.get_leaves() == {"A", "Z"}
+
+    def test_has_path(self):
+        """Test `has_path`: reachability from source to target following only `edge_types` edges."""
+        g = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--"), ("E", "B", "<>")])
+        assert g.has_path("A", "C", edge_types="->") is True
+        assert g.has_path("A", "D", edge_types="->") is False  # C--D is not directed
+        assert g.has_path("A", "D", edge_types={"->", "--"}) is True
+        assert g.has_path("A", "E") is True  # None follows any edge type (E<>B)
+        assert g.has_path("A", "E", edge_types="->") is False
+        assert g.has_path("A", "A", edge_types="->") is True  # reflexive
+        with pytest.raises(ValueError):
+            g.has_path("A", "Z")
+
+    def test_get_all_paths(self):
+        """Test `get_all_paths`: all simple paths from source to target following only `edge_types` edges."""
+        g = _CoreGraph(
+            edge_list=[("A", "B", "->"), ("A", "C", "->"), ("B", "D", "->"), ("C", "D", "->"), ("A", "D", "->")]
+        )
+        paths = g.get_all_paths("A", "D", edge_types="->")
+        assert {tuple(p) for p in paths} == {("A", "B", "D"), ("A", "C", "D"), ("A", "D")}
+        assert g.get_all_paths("A", "A", edge_types="->") == [["A"]]  # trivial path
+        assert g.get_all_paths("B", "C", edge_types="->") == []  # no directed B -> C
+        with pytest.raises(ValueError):
+            g.get_all_paths("A", "Z")

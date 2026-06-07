@@ -96,10 +96,10 @@ class TestPDAG:
     def test_get_neighbors(self):
         pdag = PDAG(ebunch=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
 
-        assert pdag.get_neighbors(node="A", edge_type="--") == {"B"}
-        assert pdag.get_neighbors(node="B", edge_type="--") == {"A", "D"}
-        assert pdag.get_neighbors(node="C", edge_type="--") == set()
-        assert pdag.get_neighbors(node="D", edge_type="--") == {"B"}
+        assert pdag.get_neighbors(node="A", edge_types="--") == {"B"}
+        assert pdag.get_neighbors(node="B", edge_types="--") == {"A", "D"}
+        assert pdag.get_neighbors(node="C", edge_types="--") == set()
+        assert pdag.get_neighbors(node="D", edge_types="--") == {"B"}
 
     def test_chain_component(self):
         pdag = PDAG([("E", "F", "->"), ("A", "B", "--"), ("B", "C", "--"), ("D", "C", "--")])
