@@ -1499,3 +1499,29 @@ class TestCoreGraph:
         for edge_type in ("-o", "o-", "o>", "<o", "oo"):
             with pytest.raises(ValueError, match="circle"):
                 _CoreGraph(edge_list=[("A", "B", "->"), ("X", "Y", edge_type)]).get_topological_order()
+
+    def test_get_skeleton(self):
+        """Test `_CoreGraph.get_skeleton`: an undirected nx.Graph of the adjacency, edge types discarded."""
+        import networkx as nx
+
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>"), ("C", "D", "--"), ("D", "E", "o>")])
+        graph.add_node("Z")  # isolated nodes are preserved
+        skeleton = graph.get_skeleton()
+        assert type(skeleton) is nx.Graph and not skeleton.is_directed()
+        assert set(skeleton.nodes()) == {"A", "B", "C", "D", "E", "Z"}
+        # every edge becomes an undirected adjacency, regardless of its original type
+        assert {frozenset(edge) for edge in skeleton.edges()} == {
+            frozenset({"A", "B"}),
+            frozenset({"B", "C"}),
+            frozenset({"C", "D"}),
+            frozenset({"D", "E"}),
+        }
+
+        # coincident edges collapse to a single undirected edge, and the result is independent
+        multi = _CoreGraph()
+        multi.add_edge("A", "B", "->")
+        multi.add_edge("A", "B", "<>")
+        skeleton = multi.get_skeleton()
+        assert skeleton.number_of_edges() == 1
+        multi.remove_edge("A", "B", "->")
+        assert skeleton.number_of_edges() == 1  # unaffected by later mutation of the original

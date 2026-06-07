@@ -450,6 +450,36 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin, _GraphPl
                 subgraph.with_role(role=role, variables=retained, inplace=True)
         return subgraph
 
+    def get_skeleton(self) -> nx.Graph:
+        """
+        Returns the undirected skeleton of the graph as a ``networkx.Graph``.
+
+        The skeleton keeps the same nodes and has one undirected edge for every adjacent pair of
+        nodes; all edge orientations and types are discarded, and coincident edges between a pair
+        collapse to a single edge.
+
+        Returns
+        -------
+        skeleton : networkx.Graph
+            An undirected graph capturing only the adjacency structure.
+
+        See Also
+        --------
+        get_subgraph : Class-preserving node/edge-type-filtered subgraph.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> G = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>")])
+        >>> sorted(G.get_skeleton().edges())
+        [('A', 'B'), ('B', 'C')]
+
+        """
+        skeleton = nx.Graph()
+        skeleton.add_nodes_from(self.nodes())
+        skeleton.add_edges_from(self.edges())
+        return skeleton
+
     def get_neighbors(self, node: Hashable, edge_type: str | None = None) -> set[Hashable]:
         """
         Returns a set of neighbors nodes in the graph.
