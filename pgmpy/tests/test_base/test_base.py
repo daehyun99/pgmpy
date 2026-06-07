@@ -694,6 +694,11 @@ class TestCoreGraph:
         assert graph.get_neighbors("C", "<-") == {"Y"}
         assert graph.get_neighbors("C", "<>") == set()
 
+        # a collection of edge types unions the matches (list or set); empty collection -> none
+        assert graph.get_neighbors("A", {"->", "<-"}) == {"B", "C"}
+        assert graph.get_neighbors("A", ["->", "<>"]) == {"B", "E"}
+        assert graph.get_neighbors("A", set()) == set()
+
         # fails: no nodes / nodes but no edges / wrong node value / wrong edge_type
         with pytest.raises(ValueError):
             _CoreGraph().get_neighbors("A")
@@ -709,6 +714,8 @@ class TestCoreGraph:
         graph.add_edge("A", "B", "->")
         with pytest.raises(ValueError):
             graph.get_neighbors("A", "wrong_edge")
+        with pytest.raises(ValueError):
+            graph.get_neighbors("A", {"->", "wrong_edge"})
 
     def test_get_parents(self):
         """Test `get_parents` method of the `_CoreGraph` class."""
@@ -1568,3 +1575,21 @@ class TestCoreGraph:
         # node not in the graph raises
         with pytest.raises(ValueError, match="not found"):
             _CoreGraph(edge_list=[("X", "A", "->")]).do("Q")
+
+    def test_get_roots_and_leaves(self):
+        """Test `get_roots`/`get_leaves` (mark-based): root = all tails at node, leaf = all arrowheads at node."""
+        g = _CoreGraph(edge_list=[("X", "A", "->"), ("A", "Y", "->"), ("A", "B", "--"), ("Z", "Y", "<>")])
+        g.add_node("Iso")  # an isolated node is both a root and a leaf
+        # roots = only tails at the node: X (-> out), B (undirected), Iso; A has an incoming arrowhead, Y/Z don't
+        assert g.get_roots() == {"X", "B", "Iso"}
+        # leaves = only arrowheads at the node: Y (incoming -> and <>), Z (bidirected), Iso; X/A/B have tails
+        assert g.get_leaves() == {"Y", "Z", "Iso"}
+
+        # a circle endpoint at a node makes it neither a root nor a leaf
+        c = _CoreGraph(edge_list=[("P", "Q", "o>"), ("Q", "R", "->")])
+        assert "P" not in c.get_roots() and "P" not in c.get_leaves()
+
+        # subclass with restricted edge types (ADMG has no circle/`--`/`<o` types to query)
+        admg = ADMG(edge_list=[("X", "A", "->"), ("Z", "A", "<>")])
+        assert admg.get_roots() == {"X"}
+        assert admg.get_leaves() == {"A", "Z"}

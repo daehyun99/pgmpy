@@ -540,7 +540,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
 
         # A circle endpoint at any do-variable makes the intervention undetermined, so check first.
         for node in nodes:
-            if any(self.get_neighbors(node, edge_type) for edge_type in circle_types):
+            if self.get_neighbors(node, circle_types):
                 raise ValueError(
                     f"do({node!r}) is undetermined: an edge has a circle endpoint at {node!r}, "
                     "so it cannot be classified as incoming or not."
@@ -553,7 +553,67 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
                     graph.remove_edge(node, neighbor, edge_type)
         return graph
 
-    def get_neighbors(self, node: Hashable, edge_type: str | None = None) -> set[Hashable]:
+    def get_roots(self) -> set[Hashable]:
+        """
+        Returns the set of root (source) nodes.
+
+        A node is a root when every incident edge has a **tail** at it, i.e., it has no incoming
+        arrowhead (`->`/`<>` pointing in) and no ambiguous circle endpoint; outgoing directed (`->`)
+        and undirected (`--`) edges are allowed. Isolated nodes are considered as roots.
+        On a purely directed graph this is exactly the set of nodes with in-degree 0.
+
+        Returns
+        -------
+        roots : set
+            The source nodes.
+
+        See Also
+        --------
+        get_leaves : The sink counterpart.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> G = _CoreGraph(edge_list=[("X", "A", "->"), ("A", "Y", "->")])
+        >>> G.get_roots()
+        {'X'}
+
+        """
+        # A root has no arrowhead (`<-`/`<>`/`<o`) and no circle (`o-`/`o>`/`oo`) endpoint at it.
+        incoming_or_ambiguous = {"<-", "<>", "<o", "o-", "o>", "oo"} & self.SUPPORTED_EDGE_TYPES
+        return {node for node in self.nodes() if not self.get_neighbors(node, incoming_or_ambiguous)}
+
+    def get_leaves(self) -> set[Hashable]:
+        """
+        Returns the set of leaf (sink) nodes.
+
+        A node is a leaf when every incident edge has an **arrowhead** at it -- so it has no outgoing
+        tail (`->`/`--` leaving it) and no ambiguous circle endpoint; incoming directed (`->`) and
+        bidirected (`<>`) edges are allowed (a sink may have latent parents). Isolated nodes are
+        leaves. On a purely directed graph this is exactly the set of nodes with out-degree 0.
+
+        Returns
+        -------
+        leaves : set
+            The sink nodes.
+
+        See Also
+        --------
+        get_roots : The source counterpart.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> G = _CoreGraph(edge_list=[("X", "A", "->"), ("A", "Y", "->")])
+        >>> G.get_leaves()
+        {'Y'}
+
+        """
+        # A leaf has no tail (`--`/`->`/`-o`) and no circle (`o-`/`o>`/`oo`) endpoint at it.
+        outgoing_or_ambiguous = {"--", "->", "-o", "o-", "o>", "oo"} & self.SUPPORTED_EDGE_TYPES
+        return {node for node in self.nodes() if not self.get_neighbors(node, outgoing_or_ambiguous)}
+
+    def get_neighbors(self, node: Hashable, edge_type: str | Iterable[str] | None = None) -> set[Hashable]:
         """
         Returns a set of neighbors nodes in the graph.
 
@@ -563,8 +623,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
             Nodes can be, for example, strings or numbers.
             Nodes must be hashable (and not None) Python objects.
 
-        edge_type : str (default=None)
-            The type should be None or a value from SUPPORTED_EDGE_TYPES.
+        edge_type : str or iterable of str, optional (default: None)
+            A single edge type or a collection of them, each from ``SUPPORTED_EDGE_TYPES`` and read
+            from ``node``'s endpoint. A neighbor is returned if connected by an edge of any of these
+            types; ``None`` returns all neighbors. Raises ``ValueError`` on an unsupported type.
 
         Returns
         -------
@@ -589,29 +651,26 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         ['C']
         >>> print(sorted(G.get_neighbors("B", "<-")))
         ['A']
+        >>> print(sorted(G.get_neighbors("B", {"->", "<-"})))
+        ['A', 'C']
 
         """
         if node not in self.nodes():
             raise ValueError(f"Node {node} not in graph.")
 
-        if (edge_type is not None) and (edge_type not in self.SUPPORTED_EDGE_TYPES):
-            raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}. Got {edge_type}.")
-
-        neighboring_nodes = self.neighbors(node)
-
         if edge_type is None:
-            return set(neighboring_nodes)
+            return set(self.neighbors(node))
 
-        filtered_neighbors = set()
-        for neighbor in neighboring_nodes:
-            edge_data = self.get_edge_data(node, neighbor)
-            _markers_dict = self._to_markers(edge=(node, neighbor, edge_type))
-            for _, data in edge_data.items():
-                if data[node] == _markers_dict[node] and data[neighbor] == _markers_dict[neighbor]:
-                    filtered_neighbors.add(neighbor)
-                    break
+        edge_types = {edge_type} if isinstance(edge_type, str) else set(edge_type)
+        if unsupported := (edge_types - self.SUPPORTED_EDGE_TYPES):
+            raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}. Got {unsupported}.")
 
-        return filtered_neighbors
+        return {
+            neighbor
+            for neighbor in self.neighbors(node)
+            for markers in self.get_edge_data(node, neighbor).values()
+            if self._to_edge_type(node, neighbor, markers) in edge_types
+        }
 
     def get_parents(self, node: Hashable) -> set[Hashable]:
         """
