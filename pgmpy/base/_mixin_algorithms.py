@@ -554,7 +554,7 @@ class _GraphAlgorithmMixin:
 
         See Also
         --------
-        `nx.has_path`
+        get_descendants : All nodes reachable from a node via directed edges.
 
         Examples
         --------
@@ -565,32 +565,7 @@ class _GraphAlgorithmMixin:
         True
 
         """
-        dag = self.get_directed_subgraph()
-        return nx.has_path(dag, u, v)
-
-    def get_directed_subgraph(self):
-        """
-        Return a graph with the same nodes as the original graph, but containing only directed edges.
-        """
-        directed_ebunch = []
-        for src, dst, edge_type in self.get_edges(data=True):
-            if edge_type == "->":
-                directed_ebunch.append((src, dst))
-            elif edge_type == "<-":
-                directed_ebunch.append((dst, src))
-
-        # # TODO(@daehyun99): [#2385] Implement code logic and test code When Refactor DAG
-        # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-
-        # from pgmpy.base import DAG
-        # TODO(@daehyun99): [#2385] Refactoring nx.DiGraph -> DAG when Refactor DAG
-
-        dag = nx.DiGraph(directed_ebunch)
-        dag.add_nodes_from(self.nodes())
-        # for role, vars in self.get_role_dict().items():
-        #     dag.with_role(role=role, variables=vars, inplace=True)
-        return dag
+        return v in self.get_descendants(u)
 
     def get_topological_order(self) -> list[Hashable]:
         """
@@ -636,7 +611,10 @@ class _GraphAlgorithmMixin:
                 "Topological order is undefined for graphs with circle endpoints (PAGs), where edge "
                 f"orientation is uncertain. Found circle edge types: {sorted(circle_types)}."
             )
-        return list(nx.topological_sort(self.get_directed_subgraph()))
+        dag = nx.DiGraph()
+        dag.add_nodes_from(self.nodes())
+        dag.add_edges_from((u, v) for u, v, _ in self.get_edges(edge_types={"->"}))
+        return list(nx.topological_sort(dag))
 
     def has_directed_cycle(self):
         """
@@ -678,7 +656,9 @@ class _GraphAlgorithmMixin:
         # if edge[-1] == {edge[0]: "-", edge[1]: ">"}:
         # dag.add_edge(edge[0], edge[1], "->")
 
-        dag = self.get_directed_subgraph()
+        dag = nx.DiGraph()
+        dag.add_nodes_from(self.nodes())
+        dag.add_edges_from((u, v) for u, v, _ in self.get_edges(edge_types={"->"}))
         return not nx.is_directed_acyclic_graph(dag)
 
     def has_almost_directed_cycle(self):

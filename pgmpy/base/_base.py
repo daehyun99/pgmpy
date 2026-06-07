@@ -389,24 +389,29 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin, _GraphPl
         """
         return self.get_subgraph(self.nodes())
 
-    def get_subgraph(self, nodes: Iterable[Hashable]):
+    def get_subgraph(self, nodes: Iterable[Hashable] | None = None, edge_types: Iterable[str] | None = None):
         """
-        Returns the subgraph on `nodes` as an independent copy of the same class.
+        Returns a subgraph as an independent copy of the same class, filtered by nodes and/or edge types.
 
-        The returned graph contains the given `nodes` and every edge of the original graph whose
-        both endpoints are in `nodes`, with their edge types and node roles (exposures, outcomes,
-        latents, ...) preserved. Unlike the inherited ``networkx.Graph.subgraph``, the result is a
-        mutable, deep copy rather than a read-only view of the original graph.
+        The returned graph keeps the requested `nodes` and every edge whose both endpoints are kept and
+        whose type is in `edge_types`, with edge types and node roles (exposures, outcomes, latents, ...)
+        preserved. Unlike the inherited ``networkx.Graph.subgraph``, the result is a mutable, deep copy
+        rather than a read-only view of the original graph.
 
         Parameters
         ----------
-        nodes : Iterable of Hashable
-            An iterable of nodes to induce the subgraph on. All nodes must be present in the graph.
+        nodes : iterable of Hashable, optional (default: all nodes)
+            The nodes to induce the subgraph on; all must be present in the graph. An edge is kept only
+            if both of its endpoints are kept.
+
+        edge_types : iterable of str, optional (default: all edge types)
+            The edge types to keep. Orientation-reversed forms are matched by their canonical type, so
+            ``{"->"}`` keeps both ``"->"`` and ``"<-"`` edges (see ``get_unique_edge_types``).
 
         Returns
         -------
         subgraph : graph object
-            A new graph of the same class as `self`, induced on `nodes`.
+            A new graph of the same class as `self`, restricted to the selected nodes and edge types.
 
         Raises
         ------
@@ -417,25 +422,27 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin, _GraphPl
         --------
         copy : Deep copy of the whole graph.
         get_ancestral_graph : Subgraph induced by a set of nodes and their ancestors.
+        get_unique_edge_types : The distinct (canonical) edge types present in the graph.
 
         Examples
         --------
         >>> from pgmpy.base._base import _CoreGraph
         >>> G = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>"), ("C", "D", "--")])
-        >>> sub = G.get_subgraph(["A", "B", "C"])
-        >>> sorted(sub.get_edges(data=True))
+        >>> sorted(G.get_subgraph(["A", "B", "C"]).get_edges(data=True))
         [('A', 'B', '->'), ('B', 'C', '<>')]
+        >>> sorted(G.get_subgraph(edge_types={"->"}).get_edges(data=True))
+        [('A', 'B', '->')]
 
         """
-        nodes = set(nodes)
+        nodes = set(self.nodes()) if nodes is None else set(nodes)
         if missing := (nodes - set(self.nodes())):
             raise ValueError(f"Nodes {sorted(missing)} not in graph.")
 
         subgraph = self.__class__()
         subgraph.add_nodes_from(node for node in self.nodes() if node in nodes)
-        for u, v, markers in self.edges(data=True):
+        for u, v, edge_type in self.get_edges(data=True, edge_types=edge_types):
             if u in nodes and v in nodes:
-                subgraph.add_edge(u, v, edge_type=self._to_edge_type(u, v, markers=markers))
+                subgraph.add_edge(u, v, edge_type=edge_type)
 
         for role, variables in self.get_role_dict().items():
             retained = [node for node in variables if node in nodes]
@@ -768,45 +775,56 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin, _GraphPl
                 queue.extend(self.get_neighbors(current, edge_type=edge_type))
         return reachable
 
-    def get_edges(self, data: bool = True) -> list[tuple[Any, ...]]:
+    def get_edges(self, data: bool = True, edge_types: Iterable[str] | None = None) -> list[tuple[Any, ...]]:
         """
-        Retrieve edges with optional API-formatted edge types.
+        Retrieve edges with API-formatted, canonically-oriented edge types.
+
+        Every edge is returned in its canonical orientation: orientation-reversed forms are flipped
+        by swapping the node order, so ``"<-"`` is returned as ``"->"``, ``"-o"`` as ``"o-"`` and
+        ``"<o"`` as ``"o>"`` (see ``get_unique_edge_types``). Callers therefore never have to handle
+        the reversed forms.
 
         Parameters
         ----------
         data : bool, optional (default=True)
-            If True, returns the edge type as a string (e.g., '->') instead of
-            the internal dictionary representation. Default is True.
+            If True, each edge is returned as ``(u, v, edge_type)``; if False, as ``(u, v)``.
+
+        edge_types : iterable of str, optional (default: all)
+            If given, only edges whose (canonical) type is in `edge_types` are returned. The filter
+            is matched on the canonical type, so ``{"->"}`` selects both ``"->"`` and ``"<-"`` edges.
 
         Returns
         -------
         list
-            A list of edge tuples. The format varies based on parameters:
-            * (u, v, type)      : data=True
-            * (u, v)            : data=False
+            A list of edge tuples: ``(u, v, edge_type)`` if ``data`` else ``(u, v)``.
 
         See Also
         --------
         get_edge : Edges between a specific pair of nodes.
+        get_unique_edge_types : The distinct (canonical) edge types present in the graph.
 
         Examples
         --------
-        >>> edges = [("A", "B", "->"), ("A", "B", "<>"), ("B", "C", "->")]
+        >>> edges = [("A", "B", "->"), ("A", "B", "<>"), ("C", "B", "<-")]
         >>> G = _CoreGraph(edge_list=edges)
-        >>> G.get_edges(data=True)
+        >>> sorted(G.get_edges(data=True))
         [('A', 'B', '->'), ('A', 'B', '<>'), ('B', 'C', '->')]
-        >>> G.get_edges(data=False)
-        [('A', 'B'), ('A', 'B'), ('B', 'C')]
+        >>> sorted(G.get_edges(data=True, edge_types={"->"}))
+        [('A', 'B', '->'), ('B', 'C', '->')]
 
         """
-        networkx_edge_list = super().edges(data=data)
+        canonical = {"<-": "->", "-o": "o-", "<o": "o>"}
+        if edge_types is not None:
+            edge_types = {canonical.get(edge_type, edge_type) for edge_type in edge_types}
 
-        # (u, v)
-        if data is False:
-            return list(networkx_edge_list)
-
-        # (u, v, edge_type)
-        return [(u, v, self._to_edge_type(u, v, data)) for u, v, data in networkx_edge_list]
+        edges = []
+        for u, v, markers in super().edges(data=True):
+            edge_type = self._to_edge_type(u, v, markers)
+            if edge_type in canonical:
+                u, v, edge_type = v, u, canonical[edge_type]
+            if edge_types is None or edge_type in edge_types:
+                edges.append((u, v, edge_type) if data else (u, v))
+        return edges
 
     def get_unique_edge_types(self) -> set[str]:
         """
@@ -834,8 +852,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin, _GraphPl
         True
 
         """
-        canonical = {"<-": "->", "-o": "o-", "<o": "o>"}
-        return {canonical.get(edge_type, edge_type) for _, _, edge_type in self.get_edges(data=True)}
+        return {edge_type for _, _, edge_type in self.get_edges(data=True)}
 
     def get_edge(self, u: Hashable, v: Hashable, data: bool = True) -> list[tuple[Hashable, ...]]:
         """

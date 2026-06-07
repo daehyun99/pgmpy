@@ -1691,6 +1691,20 @@ class TestCoreGraph:
             ]
         )
 
+        # reversed forms are returned in canonical orientation by flipping the node order:
+        # "<-" -> "->", "-o" -> "o-", "<o" -> "o>"
+        graph = _CoreGraph()
+        graph.add_edge("C", "B", "<-")  # really B -> C
+        graph.add_edge("E", "D", "-o")  # really D o- E
+        graph.add_edge("G", "F", "<o")  # really F o> G
+        assert set(graph.get_edges(data=True)) == {("B", "C", "->"), ("D", "E", "o-"), ("F", "G", "o>")}
+
+        # edge_types filters the edges, matching on the canonical type ("->" also catches "<-")
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("C", "B", "<-"), ("B", "D", "<>"), ("D", "E", "--")])
+        assert set(graph.get_edges(data=True, edge_types={"->"})) == {("A", "B", "->"), ("B", "C", "->")}
+        assert set(graph.get_edges(data=True, edge_types={"<>", "--"})) == {("B", "D", "<>"), ("D", "E", "--")}
+        assert set(graph.get_edges(data=False, edge_types={"->"})) == {("A", "B"), ("B", "C")}
+
     def test_get_edge(self):
         # edge retrieval: directed, bidirected, partially-directed, circle, and reversed lookups
         graph = _CoreGraph()
@@ -2179,6 +2193,20 @@ class TestCoreGraph:
         # requesting a node that is not in the graph raises
         with pytest.raises(ValueError, match="not in graph"):
             admg.get_subgraph(["B", "Z"])
+
+        # edge_types filter: keep only edges of the given (canonical) types; nodes default to all
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>"), ("C", "D", "--"), ("A", "D", "<-")])
+        directed = graph.get_subgraph(edge_types={"->"})
+        assert set(directed.nodes()) == {"A", "B", "C", "D"}  # all nodes retained
+        # "->" matches both "->" and its reverse "<-" (same canonical type); get_edges returns canonical form
+        assert set(directed.get_edges(data=True)) == {("A", "B", "->"), ("D", "A", "->")}
+
+        # node and edge-type filters combine
+        both = graph.get_subgraph(nodes=["A", "B", "C"], edge_types={"->", "<>"})
+        assert set(both.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "<>")}
+
+        # no arguments returns a full independent copy (like copy())
+        assert graph.get_subgraph() == graph
 
         # get_ancestral_graph (which is built on get_subgraph) still returns the correct independent graph
         graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "->"), ("C", "D", "<>"), ("C", "E", "--")])
