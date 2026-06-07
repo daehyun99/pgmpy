@@ -386,17 +386,61 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin):
         <class 'pgmpy.base._base._CoreGraph'>
 
         """
-        edge_list = [(u, v, markers) for u, v, markers in self.edges(data=True)]
+        return self.get_subgraph(self.nodes())
 
-        graph_copy = self.__class__()
-        graph_copy.add_nodes_from(self.nodes(data=True))
-        for u, v, markers in edge_list:
-            edge_type = self._to_edge_type(u, v, markers=markers)
-            graph_copy.add_edge(u, v, edge_type=edge_type)
-        for role, vars in self.get_role_dict().items():
-            graph_copy.with_role(role=role, variables=vars, inplace=True)
+    def get_subgraph(self, nodes: Iterable[Hashable]):
+        """
+        Returns the subgraph on `nodes` as an independent copy of the same class.
 
-        return graph_copy
+        The returned graph contains the given `nodes` and every edge of the original graph whose
+        both endpoints are in `nodes`, with their edge types and node roles (exposures, outcomes,
+        latents, ...) preserved. Unlike the inherited ``networkx.Graph.subgraph``, the result is a
+        mutable, deep copy rather than a read-only view of the original graph.
+
+        Parameters
+        ----------
+        nodes : Iterable of Hashable
+            An iterable of nodes to induce the subgraph on. All nodes must be present in the graph.
+
+        Returns
+        -------
+        subgraph : graph object
+            A new graph of the same class as `self`, induced on `nodes`.
+
+        Raises
+        ------
+        ValueError
+            If any of the requested nodes is not in the graph.
+
+        See Also
+        --------
+        copy : Deep copy of the whole graph.
+        get_ancestral_graph : Subgraph induced by a set of nodes and their ancestors.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> G = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>"), ("C", "D", "--")])
+        >>> sub = G.get_subgraph(["A", "B", "C"])
+        >>> sorted(sub.get_edges(data=True))
+        [('A', 'B', '->'), ('B', 'C', '<>')]
+
+        """
+        nodes = set(nodes)
+        if missing := (nodes - set(self.nodes())):
+            raise ValueError(f"Nodes {sorted(missing)} not in graph.")
+
+        subgraph = self.__class__()
+        subgraph.add_nodes_from(node for node in self.nodes() if node in nodes)
+        for u, v, markers in self.edges(data=True):
+            if u in nodes and v in nodes:
+                subgraph.add_edge(u, v, edge_type=self._to_edge_type(u, v, markers=markers))
+
+        for role, variables in self.get_role_dict().items():
+            retained = [node for node in variables if node in nodes]
+            if retained:
+                subgraph.with_role(role=role, variables=retained, inplace=True)
+        return subgraph
 
     def get_neighbors(self, node: Hashable, edge_type: str | None = None) -> set[Hashable]:
         """
