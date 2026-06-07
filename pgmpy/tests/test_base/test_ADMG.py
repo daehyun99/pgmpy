@@ -410,7 +410,7 @@ class TestADMGSeparation:
         self.admg.add_edges_from([("A", "C", "->"), ("B", "C", "->"), ("C", "D", "->"), ("A", "B", "<>")])
 
     @pytest.mark.skip(
-        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"
+        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithms class. (Related: #2384, #2385)"
     )
     def test_is_m_separated(self):
         """Test m-separation check."""
@@ -422,7 +422,7 @@ class TestADMGSeparation:
         assert self.admg.is_mseparated("A", "D", conditional_set=set()) is False
 
     @pytest.mark.skip(
-        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"
+        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithms class. (Related: #2384, #2385)"
     )
     def test_is_m_connected(self):
         """Test m-connection check."""

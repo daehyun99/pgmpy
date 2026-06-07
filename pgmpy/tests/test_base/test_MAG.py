@@ -96,7 +96,7 @@ class TestMAG:
         assert m1 != m5
 
     @pytest.mark.skip(
-        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"
+        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithms class. (Related: #2384, #2385)"
     )
     def test_from_dagitty(self):
         model_str = "mag { E [latent] A [e] J [o] {B, E} -> A; A -- J ; A -- M}"
@@ -115,7 +115,7 @@ class TestMAG:
         assert model_from_file.get_role_dict() == expected_roles
 
     @pytest.mark.skip(
-        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithmMixin class. (Related: #2384, #2385)"
+        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithms class. (Related: #2384, #2385)"
     )
     def test_from_dagitty_disconnected_graphs(self):
         model_str = """

@@ -5,12 +5,12 @@ from typing import Any
 import networkx as nx
 import pandas as pd
 
-from pgmpy.base._mixin_algorithms import _GraphAlgorithmMixin
-from pgmpy.base._mixin_plotting import _GraphPlottingMixin
+from pgmpy.base._algorithms import _GraphAlgorithms
 from pgmpy.base._mixin_roles import _GraphRolesMixin
+from pgmpy.base._plotting import _GraphPlotting
 
 
-class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin, _GraphPlottingMixin):
+class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotting):
     """
     Base class for all graph types in pgmpy.
 
@@ -479,6 +479,79 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin, _GraphPl
         skeleton.add_nodes_from(self.nodes())
         skeleton.add_edges_from(self.edges())
         return skeleton
+
+    def do(self, nodes: Hashable | Iterable[Hashable], inplace: bool = False):
+        """
+        Returns the graph after applying the do-operator to `nodes` (Pearl's intervention).
+
+        Intervening on a variable severs it from all of its causes, so **every edge with an arrowhead
+        at a do-variable is removed** -- both directed edges ``Y -> X`` and bidirected edges
+        ``X <> Y`` (which encode a latent common cause pointing into ``X``). This is the standard
+        "mutilated graph" that deletes all edges incoming to ``X``. An edge whose endpoint at the
+        do-variable is a *tail* (an outgoing or undirected edge) is kept.
+
+        Tail and arrowhead marks are invariant, so the intervention is determined for them. A
+        **circle** endpoint at a do-variable is *not* invariant -- across the Markov-equivalent models
+        it may be either a tail or an arrowhead -- so whether that edge is incoming cannot be
+        determined, and a ``ValueError`` is raised.
+
+        Parameters
+        ----------
+        nodes : Hashable or iterable of Hashable
+            The variable(s) to intervene on. All must be present in the graph.
+
+        inplace : bool (default: False)
+            If True, modify and return this graph; otherwise return a modified copy.
+
+        Returns
+        -------
+        graph : graph object
+            The post-intervention graph (same class as `self`).
+
+        Raises
+        ------
+        ValueError
+            If any node is not present in the graph, or an edge has a circle endpoint at a
+            do-variable (so the intervention is undetermined).
+
+        References
+        ----------
+        - :cite:p:`pearl_2009` (page 70).
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> G = _CoreGraph(edge_list=[("X", "A", "->"), ("A", "Y", "->")])
+        >>> sorted(G.do("A").get_edges(data=True))
+        [('A', 'Y', '->')]
+
+        """
+        graph = self if inplace else self.copy()
+        nodes = [nodes] if isinstance(nodes, (str, int)) else list(nodes)
+        if missing := (set(nodes) - set(self.nodes())):
+            raise ValueError(f"Nodes not found in the model: {missing}")
+
+        # `get_neighbors(node, edge_type)` reads `edge_type` from `node`'s endpoint, so its leading mark
+        # classifies the edge w.r.t. the do-variable: an arrowhead is incoming (remove), a circle is
+        # ambiguous (raise); tails ("--"/"->"/"-o") are outgoing/undirected and kept. Restrict to the
+        # types this class supports so `get_neighbors` is never queried with an unsupported code.
+        arrowhead_types = {"<-", "<>", "<o"} & self.SUPPORTED_EDGE_TYPES
+        circle_types = {"o-", "o>", "oo"} & self.SUPPORTED_EDGE_TYPES
+
+        # A circle endpoint at any do-variable makes the intervention undetermined, so check first.
+        for node in nodes:
+            if any(self.get_neighbors(node, edge_type) for edge_type in circle_types):
+                raise ValueError(
+                    f"do({node!r}) is undetermined: an edge has a circle endpoint at {node!r}, "
+                    "so it cannot be classified as incoming or not."
+                )
+
+        # Remove every incoming (arrowhead-at-`node`) edge.
+        for node in nodes:
+            for edge_type in arrowhead_types:
+                for neighbor in self.get_neighbors(node, edge_type):
+                    graph.remove_edge(node, neighbor, edge_type)
+        return graph
 
     def get_neighbors(self, node: Hashable, edge_type: str | None = None) -> set[Hashable]:
         """

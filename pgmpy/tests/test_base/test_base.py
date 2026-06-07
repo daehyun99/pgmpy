@@ -1525,3 +1525,46 @@ class TestCoreGraph:
         assert skeleton.number_of_edges() == 1
         multi.remove_edge("A", "B", "->")
         assert skeleton.number_of_edges() == 1  # unaffected by later mutation of the original
+
+    def test_do(self):
+        """Test `_CoreGraph.do`: removes every edge with an arrowhead at the do-variable (its causes)."""
+        # directed AND bidirected edges into A are removed; outgoing/undirected edges kept; original intact
+        graph = _CoreGraph(edge_list=[("X", "A", "->"), ("Z", "A", "<>"), ("A", "Y", "->"), ("A", "B", "--")])
+        result = graph.do("A")
+        assert type(result) is _CoreGraph
+        # compared via `==` (adjacency-based) so symmetric-edge node order doesn't matter; X/Z are kept isolated
+        expected = _CoreGraph(edge_list=[("A", "Y", "->"), ("A", "B", "--")])
+        expected.add_nodes_from(["X", "Z"])
+        assert result == expected
+        # not inplace: the original is unchanged
+        assert graph == _CoreGraph(edge_list=[("X", "A", "->"), ("Z", "A", "<>"), ("A", "Y", "->"), ("A", "B", "--")])
+
+        # an arrowhead at A is incoming and removed regardless of the other endpoint (here Z o> A)
+        assert _CoreGraph(edge_list=[("Z", "A", "o>")]).do("A").get_edges(data=True) == []
+        # a circle endpoint AT the do-variable is non-invariant (could be tail or arrowhead) -> raise
+        with pytest.raises(ValueError, match="circle"):
+            _CoreGraph(edge_list=[("A", "B", "o>")]).do("A")  # circle at A
+        with pytest.raises(ValueError, match="circle"):
+            _CoreGraph(edge_list=[("A", "B", "oo")]).do("A")  # circle at A
+
+        # multiple do-variables remove all edges with an arrowhead at A or B (incl. A->B and Y<>B)
+        graph = _CoreGraph(edge_list=[("X", "A", "->"), ("A", "B", "->"), ("Y", "B", "<>")])
+        result = graph.do(["A", "B"])
+        assert result.get_edges(data=True) == []
+        assert set(result.nodes()) == {"X", "A", "B", "Y"}
+
+        # works on a subclass with restricted edge types (ADMG has no circle/`<o` types to query)
+        admg = ADMG(edge_list=[("X", "A", "->"), ("Z", "A", "<>"), ("A", "Y", "->")])
+        result = admg.do("A")
+        assert type(result) is ADMG
+        assert set(result.get_edges(data=True)) == {("A", "Y", "->")}
+
+        # inplace=True returns and mutates the same graph
+        graph = _CoreGraph(edge_list=[("X", "A", "->"), ("A", "Y", "->")])
+        same = graph.do("A", inplace=True)
+        assert same is graph
+        assert set(graph.get_edges(data=True)) == {("A", "Y", "->")}
+
+        # node not in the graph raises
+        with pytest.raises(ValueError, match="not found"):
+            _CoreGraph(edge_list=[("X", "A", "->")]).do("Q")

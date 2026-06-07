@@ -7,8 +7,8 @@ import networkx as nx
 from pgmpy.utils.types import Self
 
 
-class _GraphAlgorithmMixin:
-    """Mixin class for causal graph's algorithms."""
+class _GraphAlgorithms:
+    """Graph-algorithm methods for ``_CoreGraph``-based classes (inherited, not instantiated alone)."""
 
     # ----------------------------------------------------------------------
     # Public API (or Public Methods)
