@@ -1153,6 +1153,42 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin, _GraphPl
             return False
         return nx.utils.graphs_equal(self, other) and self.get_role_dict() == other.get_role_dict()
 
+    def __hash__(self):
+        """
+        Returns a hash derived from the same things ``__eq__`` compares: the class, the nodes, the
+        edges, and the variable roles. Equal graphs therefore hash equally, and graphs of different
+        types (e.g. an ``ADMG`` and a ``MAG``) with the same structure get distinct hashes. Each edge
+        is represented by the unordered set of its ``(node, marker)`` endpoints, so the hash does not
+        depend on which way round a symmetric edge (``"<>"``, ``"--"``, ``"oo"``) happened to be stored.
+
+        As with any value-based hash of a mutable object, mutating the graph (adding or removing
+        edges, nodes, or roles) changes its hash, so a graph must not be modified while it is held
+        in a ``set`` or used as a ``dict`` key.
+
+        Returns
+        -------
+        int
+            The hash value of the graph.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> G1 = _CoreGraph(edge_list=[("A", "B", "->")])
+        >>> G2 = _CoreGraph(edge_list=[("B", "A", "<-")])
+        >>> hash(G1) == hash(G2)
+        True
+
+        """
+        edges = frozenset(frozenset({(u, markers[u]), (v, markers[v])}) for u, v, markers in self.edges(data=True))
+        return hash(
+            (
+                type(self),
+                frozenset(self.nodes()),
+                edges,
+                frozenset((role, frozenset(nodes)) for role, nodes in self.get_role_dict().items()),
+            )
+        )
+
     def _validate_edges(
         self,
         edge_list,

@@ -3,7 +3,7 @@
 import pytest
 from skbase.utils.dependencies import _check_soft_dependencies
 
-from pgmpy.base import ADMG, DAG, PDAG
+from pgmpy.base import ADMG, DAG, MAG, PDAG
 from pgmpy.base._base import _CoreGraph
 
 
@@ -1212,6 +1212,25 @@ class TestCoreGraph:
         # Not a graph class
         other_str = "not a graph"
         assert graph.__eq__(other_str) == False
+
+    def test_hash(self):
+        """Test `__hash__`: equal graphs hash equally and are usable in sets / as dict keys."""
+        # equal graphs hash equally -- even when built with reversed edge orientations
+        g1 = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>")], latents=["A"])
+        g2 = _CoreGraph(edge_list=[("C", "B", "<>"), ("B", "A", "<-")], latents=["A"])
+        assert g1 == g2
+        assert hash(g1) == hash(g2)
+
+        # usable as set members / dict keys: equal graphs collapse, distinct graphs stay separate
+        g3 = _CoreGraph(edge_list=[("A", "B", "->")])  # different structure
+        g4 = _CoreGraph(edge_list=[("A", "B", "->")], latents=["A"])  # same edges, different roles
+        assert g3 != g4
+        assert len({g1, g2, g3, g4}) == 3  # g1 == g2 collapse to one; g3 and g4 are distinct
+        assert {g1: "x"}[g2] == "x"  # an equal graph retrieves the stored value
+
+        # the class is part of the hash: identical structure but a different graph type hashes differently
+        assert hash(ADMG(edge_list=[("A", "B", "->")])) != hash(MAG(edge_list=[("A", "B", "->")]))
+        assert hash(_CoreGraph(edge_list=[("A", "B", "->")])) != hash(ADMG(edge_list=[("A", "B", "->")]))
 
     def test_to_markers(self):
         graph = _CoreGraph()
