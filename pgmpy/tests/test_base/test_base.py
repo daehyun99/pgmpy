@@ -58,8 +58,6 @@ def sample_graph3():
 
     Notes
     -----
-    Used `base_graph` from test_AncestralBase.py.
-    Expected to be same as tests in test_AncestralBase.py.
     Used in `test_get_*_with_multiedges` method of `_CoreGraph` class.
     """
     edges = [

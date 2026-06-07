@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from pgmpy.base import MAG
@@ -94,44 +92,6 @@ class TestMAG:
 
         m5 = MAG(edge_list=e, latents={"L", "U"}, roles=roles)
         assert m1 != m5
-
-    @pytest.mark.skip(
-        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithms class. (Related: #2384, #2385)"
-    )
-    def test_from_dagitty(self):
-        model_str = "mag { E [latent] A [e] J [o] {B, E} -> A; A -- J ; A -- M}"
-        model_from_str = MAG.from_dagitty(model_str)
-        with open("test_model.dagitty", "w") as f:
-            f.write(model_str)
-        model_from_file = MAG.from_dagitty(filename="test_model.dagitty")
-        os.remove("test_model.dagitty")
-
-        expected_edges = {("B", "A"), ("A", "E"), ("A", "J"), ("A", "M")}
-        expected_roles = {"outcomes": ["J"], "latents": ["E"], "exposures": ["A"]}
-
-        assert model_from_str.edges() == expected_edges
-        assert model_from_str.get_role_dict() == expected_roles
-        assert model_from_file.edges() == expected_edges
-        assert model_from_file.get_role_dict() == expected_roles
-
-    @pytest.mark.skip(
-        reason="Refactoring: Skip for evaluation integration into _GraphAlgorithms class. (Related: #2384, #2385)"
-    )
-    def test_from_dagitty_disconnected_graphs(self):
-        model_str = """
-            mag {
-                "Wet grass" [exposure]
-                'Large Name' <-> Node ; Rain -> "Wet grass"
-                Node [outcome]
-            }"""
-
-        model_from_str = MAG.from_dagitty(model_str)
-
-        expected_nodes = {"Large Name", "Node", "Rain", "Wet grass"}
-        expected_roles = {"outcomes": ["Node"], "exposures": ["Wet grass"]}
-
-        assert set(model_from_str.nodes()) == expected_nodes
-        assert model_from_str.get_role_dict() == expected_roles
 
     @pytest.mark.skip(reason="Refactoring: Skip now. I implement this When Refactoring DAG(Related: #2384, #2385)")
     def test_is_valid_mag(self):
