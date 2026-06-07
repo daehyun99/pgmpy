@@ -808,6 +808,35 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithmMixin, _GraphRolesMixin, _GraphPl
         # (u, v, edge_type)
         return [(u, v, self._to_edge_type(u, v, data)) for u, v, data in networkx_edge_list]
 
+    def get_unique_edge_types(self) -> set[str]:
+        """
+        Returns the set of distinct edge types present in the graph.
+
+        Orientation-reversed views of the same edge type are treated as one: ``"<-"`` is reported as
+        ``"->"``, ``"-o"`` as ``"o-"``, and ``"<o"`` as ``"o>"`` (they differ only in which endpoint
+        is listed first). The result is therefore a subset of the six edge types
+        ``{"--", "->", "<>", "o-", "o>", "oo"}``.
+
+        Returns
+        -------
+        edge_types : set of str
+            The distinct edge types currently in the graph, each in its canonical orientation.
+
+        See Also
+        --------
+        get_edges : All edges in the graph.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> G = _CoreGraph(edge_list=[("A", "B", "->"), ("C", "B", "<-"), ("C", "D", "<>")])
+        >>> G.get_unique_edge_types() == {"->", "<>"}
+        True
+
+        """
+        canonical = {"<-": "->", "-o": "o-", "<o": "o>"}
+        return {canonical.get(edge_type, edge_type) for _, _, edge_type in self.get_edges(data=True)}
+
     def get_edge(self, u: Hashable, v: Hashable, data: bool = True) -> list[tuple[Hashable, ...]]:
         """
         Retrieve edge with optional API-formatted edge types.

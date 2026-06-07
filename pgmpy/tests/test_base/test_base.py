@@ -1732,6 +1732,30 @@ class TestCoreGraph:
         with pytest.raises(ValueError):
             graph.get_edge("A", "B")
 
+    def test_get_unique_edge_types(self):
+        """Test `_CoreGraph.get_unique_edge_types`: distinct types, orientation-reversed forms collapsed."""
+        assert _CoreGraph().get_unique_edge_types() == set()
+
+        # ->/<-, o-/-o and o>/<o are orientation-reversed views of one edge type -> a single canonical form
+        graph = _CoreGraph(
+            edge_list=[
+                ("A", "B", "->"),
+                ("D", "C", "<-"),  # both directed -> "->"
+                ("E", "F", "o-"),
+                ("H", "G", "-o"),  # both circle-tail -> "o-"
+                ("I", "J", "o>"),
+                ("L", "K", "<o"),  # both circle-arrow -> "o>"
+            ]
+        )
+        assert graph.get_unique_edge_types() == {"->", "o-", "o>"}
+
+        # symmetric types and coincident edges contribute their (canonical) types
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("A", "B", "<>")
+        graph.add_edge("C", "D", "--")
+        assert graph.get_unique_edge_types() == {"->", "<>", "--"}
+
     def test_has_edge(self):
         # has_edge: directed, undirected, bidirected, reversed forms, and missing edges
         graph = _CoreGraph()
@@ -2220,3 +2244,31 @@ class TestCoreGraph:
             assert edge.attr["dir"] == "both"
             assert edge.attr["arrowtail"] == tail
             assert edge.attr["arrowhead"] == head
+
+    def test_get_topological_order(self):
+        """Test `_CoreGraph.get_topological_order`: orders the directed part; raises only on circle marks."""
+        # fully directed (including a `<-` edge, which is directed) -> a valid topological order
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("A", "C", "->"), ("B", "C", "->"), ("C", "D", "<-")])
+        order = graph.get_topological_order()
+        assert set(order) == set(graph.nodes())
+        position = {node: i for i, node in enumerate(order)}
+        for u, v, edge_type in graph.get_edges(data=True):
+            source, target = (u, v) if edge_type == "->" else (v, u)
+            assert position[source] < position[target]
+
+        # isolated nodes are included
+        graph.add_node("Z")
+        assert "Z" in graph.get_topological_order()
+
+        # bidirected (ADMG) and undirected (PDAG / chain graph) edges impose no ordering constraint:
+        # they are ignored and the directed part is still ordered correctly.
+        mixed = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>"), ("C", "D", "--"), ("D", "E", "->")])
+        order = mixed.get_topological_order()
+        position = {node: i for i, node in enumerate(order)}
+        assert set(order) == set(mixed.nodes())
+        assert position["A"] < position["B"] and position["D"] < position["E"]
+
+        # circle endpoints (PAGs) leave ancestrality undetermined -> raise, naming the offending edge
+        for edge_type in ("-o", "o-", "o>", "<o", "oo"):
+            with pytest.raises(ValueError, match="circle"):
+                _CoreGraph(edge_list=[("A", "B", "->"), ("X", "Y", edge_type)]).get_topological_order()

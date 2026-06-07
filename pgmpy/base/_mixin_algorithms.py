@@ -592,6 +592,52 @@ class _GraphAlgorithmMixin:
         #     dag.with_role(role=role, variables=vars, inplace=True)
         return dag
 
+    def get_topological_order(self) -> list[Hashable]:
+        """
+        Return a topological ordering of the nodes consistent with the directed edges.
+
+        A topological order is an ordering of the nodes in which every directed edge ``u -> v`` has
+        ``u`` before ``v``. Following the standard definition for mixed graphs [1]_, bidirected
+        (``"<>"``) and undirected (``"--"``) edges impose *no* ordering constraint: a bidirected
+        edge encodes latent confounding (no ancestral relation), and undirected edges form chain
+        components that are ordered only through their directed edges. The order is therefore well
+        defined for DAGs, ADMGs, and (C)PDAGs/MAGs, and is computed on the directed sub-graph.
+
+        Circle endpoints (``"o"``, as used in PAGs) leave the orientation -- and hence the ancestral
+        order -- genuinely uncertain, so a ``ValueError`` is raised if the graph contains any circle
+        mark.
+
+        Returns
+        -------
+        order : list
+            The nodes in a topological order.
+
+        Raises
+        ------
+        ValueError
+            If the graph contains any edge with a circle endpoint (i.e. a PAG).
+
+        References
+        ----------
+        .. [1] Richardson, T. S. (2003). Markov Properties for Acyclic Directed Mixed Graphs.
+               Scandinavian Journal of Statistics, 30(1), 145-157.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "->")])
+        >>> graph.get_topological_order()
+        ['A', 'B', 'C']
+        """
+        # Circle endpoints (PAGs) survive canonicalization only as "o-", "o>" and "oo".
+        circle_types = self.get_unique_edge_types() & {"o-", "o>", "oo"}
+        if circle_types:
+            raise ValueError(
+                "Topological order is undefined for graphs with circle endpoints (PAGs), where edge "
+                f"orientation is uncertain. Found circle edge types: {sorted(circle_types)}."
+            )
+        return list(nx.topological_sort(self.get_directed_subgraph()))
+
     def has_directed_cycle(self):
         """
 
