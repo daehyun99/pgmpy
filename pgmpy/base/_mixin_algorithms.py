@@ -398,7 +398,7 @@ class _GraphAlgorithmMixin:
             ancestor = self.get_ancestors(node)
             ancestors.update(ancestor)
 
-        return self.subgraph(ancestors).copy()
+        return self.get_subgraph(ancestors)
 
     def get_markov_blanket(self, nodes: str | Iterable[str]) -> str | Iterable[str]:
         """

@@ -852,6 +852,12 @@ class TestCoreGraph:
             },
         )
 
+        # roles are deep-copied: adding a role to a node that already has one does not leak to the original
+        graph = _CoreGraph(edge_list=[("A", "B", "->")], exposures=["A"])
+        graph_copy = graph.copy()
+        graph_copy.with_role("outcomes", ["A"], inplace=True)
+        assert graph_copy.outcomes == {"A"} and graph.outcomes == set()
+
         # fails: invalid copy argument type
         graph = _CoreGraph()
         with pytest.raises(TypeError):
@@ -2099,3 +2105,60 @@ class TestCoreGraph:
         # fails: unknown encoding
         with pytest.raises(ValueError, match="encoding"):
             _CoreGraph(edge_list=[("A", "B", "->")]).to_adjacency(encoding="nonsense")
+
+    def test_get_subgraph(self):
+        """Test the `_CoreGraph.get_subgraph` method (class-preserving, node-induced, independent copy)."""
+        # node-induced subgraph keeps only edges among the requested nodes, with their edge types preserved
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>"), ("C", "D", "--"), ("D", "E", "o>")])
+        sub = graph.get_subgraph(["A", "B", "C"])
+        assert type(sub) is _CoreGraph
+        assert set(sub.nodes()) == {"A", "B", "C"}
+        assert set(sub.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "<>")}
+
+        # the result is an independent copy, not a networkx view: mutating one does not affect the other
+        sub.add_edge("A", "C", "->")
+        assert not graph.has_edge("A", "C")
+        graph.remove_edge("A", "B", "->")
+        assert sub.has_edge("A", "B", "->")
+
+        # roles (exposures/outcomes/latents/custom) are carried over, restricted to the retained nodes
+        edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "->")]
+        graph = _CoreGraph(edge_list=edges, exposures=["A"], outcomes=["C"], latents=["D"])
+        sub = graph.get_subgraph(["A", "B", "C"])
+        check_graph_status(sub, 3, 2, {"A"}, {"C"}, set(), {"exposures": ["A"], "outcomes": ["C"]})
+
+        # roles are deep-copied: adding a role to a node that already has one does not leak to the original
+        sub.with_role("outcomes", ["A"], inplace=True)
+        assert sub.outcomes == {"A", "C"} and graph.outcomes == {"C"}
+
+        # a single-node list yields a one-node subgraph with no edges
+        sub = graph.get_subgraph(["A"])
+        assert set(sub.nodes()) == {"A"}
+        assert sub.get_edges(data=True) == []
+
+        # coincident edges (a directed and a bidirected edge between the same pair) are both preserved
+        graph = _CoreGraph()
+        graph.add_edge("A", "B", "->")
+        graph.add_edge("A", "B", "<>")
+        graph.add_edge("B", "C", "->")
+        sub = graph.get_subgraph(["A", "B"])
+        assert set(sub.get_edge("A", "B")) == {("A", "B", "->"), ("A", "B", "<>")}
+        assert not sub.has_edge("B", "C")
+
+        # the subclass is preserved (here ADMG)
+        admg = ADMG(edge_list=[("A", "B", "->"), ("B", "C", "<>"), ("C", "D", "->")])
+        sub = admg.get_subgraph(["B", "C", "D"])
+        assert type(sub) is ADMG
+        assert set(sub.get_edges(data=True)) == {("B", "C", "<>"), ("C", "D", "->")}
+
+        # requesting a node that is not in the graph raises
+        with pytest.raises(ValueError, match="not in graph"):
+            admg.get_subgraph(["B", "Z"])
+
+        # get_ancestral_graph (which is built on get_subgraph) still returns the correct independent graph
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "->"), ("C", "D", "<>"), ("C", "E", "--")])
+        ancestral = graph.get_ancestral_graph("C")
+        assert type(ancestral) is _CoreGraph
+        assert set(ancestral.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "->")}
+        ancestral.add_edge("A", "C", "->")
+        assert not graph.has_edge("A", "C")
