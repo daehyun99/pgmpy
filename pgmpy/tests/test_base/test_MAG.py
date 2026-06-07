@@ -197,3 +197,36 @@ class TestMAG:
             assert mag.has_edge(u, v)
 
         assert set(mag.get_edges(data=True)) == set(edges)
+
+    # MAG-specific algorithm methods (migrated to the _CoreGraph marker API)
+
+    def test_is_collider(self):
+        m = MAG(edge_list=[("X", "Z", "->"), ("Y", "Z", "->")])
+        assert m._is_collider("X", "Z", "Y") is True
+        # Z is not a collider when an edge has its tail at Z
+        m2 = MAG(edge_list=[("X", "Z", "->"), ("Z", "Y", "->")])
+        assert m2._is_collider("X", "Z", "Y") is False
+
+    def test_has_inducing_path(self):
+        m = MAG(edge_list=[("X", "L", "->"), ("Y", "L", "->")], latents={"L"})
+        assert m.has_inducing_path("X", "Y", {"L"}) is True
+
+    def test_is_visible_edge(self):
+        m = MAG(edge_list=[("A", "D", "->"), ("B", "C", "->"), ("X", "A", "->")])
+        assert m.is_visible_edge("A", "D") is True
+        assert m.is_visible_edge("B", "C") is False
+
+    def test_lower_manipulation(self):
+        m = MAG(edge_list=[("A", "B", "->"), ("C", "B", "->")])
+        new = m.lower_manipulation({"A"})
+        assert new.has_edge("B", "C", "<>")
+        assert len(new.get_edges(data=False)) == 1
+        assert m.has_edge("A", "B", "->")  # original is unchanged
+
+    def test_upper_manipulation(self):
+        m = MAG(edge_list=[("Y", "X", "->"), ("X", "Z", "->"), ("A", "X", "->")])
+        new = m.upper_manipulation({"X"})
+        assert new.has_edge("X", "Z")
+        assert not new.has_edge("A", "X")
+        assert not new.has_edge("X", "Y")
+        assert m.has_edge("A", "X")  # original is unchanged

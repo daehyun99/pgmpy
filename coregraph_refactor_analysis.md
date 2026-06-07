@@ -1,106 +1,40 @@
-# `_CoreGraph` Refactor Analysis — Shared Methods & Raw-Operation Audit
+# `_CoreGraph` Refactor — Status
 
-**Branch:** `Refactor/2385/PDAG-1`
-**Date:** 2026-06-05
-**Scope:** `pgmpy/base/_base.py` (`_CoreGraph`), `pgmpy/base/_mixin_algorithms.py` (`_GraphAlgorithmMixin`), and the graph classes `DAG`, `PDAG`, `ADMG`, `MAG` (+ `AncestralBase`), plus a codebase-wide audit of raw networkx operations on graph instances.
+**Branch:** `Refactor/2385/PDAG-1` · **Re-evaluated:** 2026-06-07 (PDAG/ADMG/MAG reverted to standalone dev classes)
 
-This document answers two questions:
+`_CoreGraph` (marker-based; `_base.py` / `_algorithms.py` / `_plotting.py`) is the **target** unified base. It is currently **inherited by no production class** — `DAG`, `PDAG`, `ADMG`, `MAG` each keep their own dev representation and only share `_GraphRolesMixin`. The refactor goal is to migrate them onto `_CoreGraph`.
 
-1. Which methods should be **added** to `_CoreGraph` / `_GraphAlgorithmMixin` so they are shared across all graph classes?
-2. Where in the codebase are we performing **raw networkx operations** on `DAG`/`MAG`/`ADMG`/`PDAG` instances that should instead go through encapsulated methods?
+## 1. Done — `_CoreGraph` base built (not yet adopted)
 
----
+- **Edges / structure:** `add_edge`, `add_edges_from`, `remove_edge`, `remove_edges_from`, `replace_edge`, `has_edge`, `get_edge`, `get_edges` (`edge_types` filter + canonical orientation), `get_unique_edge_types`.
+- **Traversal:** `get_neighbors` / `get_reachable_nodes` (single type or collection of `edge_types`), `get_parents` / `get_children` / `get_spouses` / `get_ancestors` / `get_descendants`, `get_roots` / `get_leaves`, `has_path` / `get_all_paths` / `has_direct_path`, `is_collider` / `has_inducing_path`, `has_directed_cycle` / `has_almost_directed_cycle`, `get_topological_order`, `get_markov_blanket` / `get_ancestral_graph`.
+- **Transforms / export:** `get_subgraph`, `get_skeleton`, `do`, `copy`, `to_adjacency`, `to_graphviz` / `to_daft`, `__eq__` / `__hash__`.
 
-## Part 1 — Methods to add to the shared layer
+Only a test fixture (`_DirectedGraph(_CoreGraph)`) subclasses it today.
 
-**Framing:** most "candidates" surfaced by the analysis *already exist* on `_CoreGraph`/`_GraphAlgorithmMixin` — they are merely re-implemented in `DAG` (not yet migrated to `_CoreGraph`) and in `AncestralBase` (orphaned legacy). So the genuinely **new** shared methods are a smaller set. The lists below separate "already exists → migrate/route to it" from "actually add".
+## 2. Production classes to migrate onto `_CoreGraph`
 
-### 1a. Already shared — reconcile & route to them (do **not** re-add)
+Each has its own representation; the third column is bespoke code that an `_CoreGraph` migration would **replace** with the shared method, the fourth is class-specific algorithms with **no** `_CoreGraph` equivalent yet.
 
-These exist on `_CoreGraph` / `_GraphAlgorithmMixin` and are duplicated by `DAG` and `AncestralBase`:
+| Class | Base / representation | Maps to existing `_CoreGraph` method | Class-specific (no equivalent) |
+|---|---|---|---|
+| **DAG** | `_GraphRolesMixin, nx.DiGraph` | get_parents/children/ancestors/descendants (list→set), copy, `__eq__` | moralize, get_immoralities, to_pdag, edge_strength, get_stats |
+| **PDAG** | `_GraphRolesMixin, nx.DiGraph`; `directed_edges` / `undirected_edges` sets (undirected stored both ways) | directed_parents/children→get_parents/children, undirected_neighbors→`get_neighbors("--")`, all_neighbors→get_neighbors, has_directed/undirected_edge & is_adjacent→has_edge, copy, to_graphviz, `__eq__` | chain_component, is_clique, has_semidirected_path (≈ `has_path` over `->`+`--`), orient_undirected_edge, apply_meeks_rules, has_acyclic_extension, calibrate_directed_undirected_edges, to_dag, to_cpdag |
+| **ADMG** | `_GraphRolesMixin, MultiDiGraph`; edge `type="directed"/"bidirected"` | get_directed_parents→get_parents, get_bidirected_parents & get_spouses→get_spouses, get_children/ancestors/descendants, get_ancestral_graph, get_markov_blanket, `__eq__`; add_directed/bidirected_edges→`add_edge(edge_type)` | get_district (≈ reachable via `<>`), to_dag (latent projection), is_mseparated / is_mconnected / mconnected_nodes |
+| **MAG** | `AncestralBase(nx.Graph, _GraphRolesMixin)`; edge `marks` attr, 4-tuple ebunch | _is_collider→is_collider, has_inducing_path, AncestralBase get_neighbors(u_type/v_type) / get_reachable_nodes / get_ancestors → `get_*(edge_types)` | is_visible_edge, lower_manipulation, upper_manipulation |
 
-`get_parents`, `get_children`, `get_spouses`, `get_neighbors`, `get_ancestors`, `get_descendants`, `get_reachable_nodes`, `get_markov_blanket`, `get_ancestral_graph`, `copy`, `__eq__`, `has_direct_path`, `has_directed_cycle`, `is_collider`, `get_directed_subgraph`.
+## 3. Gaps — what `_CoreGraph` still lacks
 
-- **Central caveat:** `DAG`'s versions return **lists** (and accept node-or-iterable); `_CoreGraph`'s return **sets** (single node, includes the node itself for ancestor/descendant). Reconciling **list → set** is the main migration hazard.
-- **`AncestralBase` is fully orphaned legacy** — its 11 traversal/copy/eq methods all duplicate `_CoreGraph`. It is exported and tested but inherited by nothing (`MAG`/`ADMG` subclass `_CoreGraph`, not `AncestralBase`). Recommend deletion once `MAG`/`ADMG` independence is confirmed.
+- **Generic, worth centralizing:** `is_clique`, `chain_component`, `get_simple_cycles`, the m-separation family (`is_m_separator`, … — commented-out stubs in `_algorithms.py`), `moralize`, `get_immoralities`.
+- **Class-specific algorithms** (decide per class: move onto `_CoreGraph` vs. keep as a subclass override): Meek's rules + `to_dag` / `to_cpdag` (PDAG); latent-projection `to_dag`, districts, m-separation (ADMG); inducing/visible-path + lower/upper manipulation (MAG).
+- **Then:** the ~30 external raw-`nx` call sites (`.predecessors`, `.neighbors`, `nx.topological_sort`, `.subgraph`, `nx.has_path`, … — full counts in git history of this file) can be routed to `_CoreGraph` methods only **after** the classes actually inherit `_CoreGraph`.
 
-### 1b. NEW methods to add to `_CoreGraph` (structural / data-level)
+## Corrections vs. the previous version
 
-| Method | Why | Evidence |
-|---|---|---|
-| `get_topological_order()` | wraps `nx.topological_sort` | 10 raw-op sites (LinearGaussian / Functional BN) |
-| `to_pandas_adjacency()` (or `adjacency_matrix`) | every score-based learner rebuilds this | 11 sites: ChowLiu, TAN, PC, GES, HillClimb, TOPIC |
-| `subgraph(nodes)` / `get_induced_subgraph(nodes)` | class-preserving node-induced subgraph (raw `.subgraph` drops type/CPDs) | 6 sites + `DAG.get_stats` / `get_ancestral_graph` |
-| `get_leaves()` / `get_roots()` | sink / source nodes (currently DAG-only via `in/out_degree`) | `DAG.py:491/510` |
-| `to_undirected()` / `get_skeleton()` | undirected skeleton | used by `moralize`, `is_iequivalent` |
-| `to_graphviz()` | identical implementation in `DAG` and `PDAG` | hoist the duplicate |
-| `__hash__` | `_CoreGraph` defines `__eq__` but no `__hash__` (DAG has one) | hashability |
-
-### 1c. NEW methods to add to `_GraphAlgorithmMixin` (algorithm-level)
-
-| Method | Why | Evidence |
-|---|---|---|
-| `moralize()` | moral graph (skeleton + marry parents) — generic | DAG-only today |
-| `get_immoralities()` (v-structures) | generic for PDAG/ADMG too; mixin has `is_collider` but no enumerator | DAG-only |
-| `has_semidirected_path()` | hoist from PDAG (its body is currently dead-code trapped in a docstring) | PDAG |
-| `chain_component()` | undirected reachability; built on `get_reachable_nodes('--')` | PDAG |
-| `is_clique()` | **duplicated verbatim** in PDAG and `UndirectedGraph` | PDAG / UndirectedGraph |
-| `get_simple_paths(u, v)` | wraps `nx.all_simple_paths` | 6 sites: HillClimb, CausalInference, frontdoor, adjustment |
-| `get_simple_cycles()` / `find_cycles()` | wraps `nx.simple_cycles` | ExpertInLoop, expert |
-| m-separation family | `is_m_separator`, `is_m_connected`, `get_m_separator(s)`, … are **commented-out stubs** in the mixin | `_mixin_algorithms.py` |
-| `do(nodes)` (borderline) | intervention edge-surgery; generic | DAG-only |
+- `_CoreGraph` is inherited by **no** production class (previously stated "inherited by MAG/ADMG/PDAG").
+- `AncestralBase` is **not** orphaned — it is `MAG`'s base, so "delete AncestralBase" no longer applies.
+- `chain_component` / `is_clique` / `has_semidirected_path` live on the **standalone dev PDAG** (a `nx.DiGraph`), not on the `_CoreGraph` layer.
 
 ---
 
-## Part 2 — Raw networkx operations on graph classes
-
-**Yes — extensively. 108 confirmed sites.** The dominant root cause is that **`DAG` is not migrated to `_CoreGraph`**, so callers reach for raw `nx` (and `DAG.get_parents` etc. are themselves raw `nx` wrappers returning lists). The findings split into three buckets.
-
-### 2a. Route to a method that already exists (~38 sites)
-
-| Raw op | Count | → existing method |
-|---|---|---|
-| `g.predecessors(x)` | 18 | `g.get_parents(x)` |
-| `g.neighbors(x)` | 11 | `g.get_neighbors(x)` |
-| `g.successors(x)` | 6 | `g.get_children(x)` |
-| `nx.descendants(g, x)` | 4 | `g.get_descendants(x)` |
-| `nx.ancestors(g, x)` | 2 | `g.get_ancestors(x)` |
-| `nx.is_directed_acyclic_graph(g)` / `nx.find_cycle(g)` | 4 | `g.has_directed_cycle()` |
-| `nx.has_path(g, u, v)` (directed) | 5 | `g.has_direct_path(u, v)` |
-
-Hotspots: `inference/CausalInference.py` (~12 sites), `estimators/EM.py`, `estimators/StructureScore.py`, `models/DiscreteBayesianNetwork.py`, `causal_discovery/_base.py`.
-
-### 2b. Need a NEW shared method (the Part 1 list) (~36 sites)
-
-| Raw op | Count | → new method |
-|---|---|---|
-| `nx.to_pandas_adjacency(g)` | 11 | `g.to_pandas_adjacency()` |
-| `nx.topological_sort(g)` | 10 | `g.get_topological_order()` |
-| `nx.all_simple_paths(g, …)` | 6 | `g.get_simple_paths(u, v)` |
-| `g.subgraph(nodes)` / `nx.DiGraph(g.subgraph(...))` | 6 | `g.subgraph(nodes)` (class-preserving) |
-| `g.in_degree` / `g.out_degree` | 6 | `get_roots()` / `get_leaves()` |
-| `g.to_undirected()` | 3 | `g.to_undirected()` / reuse `moralize()` |
-| `nx.simple_cycles(g)` | 2 | `g.get_simple_cycles()` |
-| `nx.DiGraph(g.edges())` (`shd.py`), `g.to_directed()`, `g.edges[u, v]` strength | 3 | `get_directed_subgraph()` / edge-attr accessors |
-
-### 2c. Out of strict DAG-family scope (~10 sites)
-
-Raw `.neighbors` / `.subgraph` / BFS on **`JunctionTree`** (`inference/ExactInference.py`) and **`UndirectedGraph`** (`inference/EliminationOrder.py`) — these subclass `nx.Graph` directly, not `_CoreGraph`. Worth encapsulating, but separate from the `_CoreGraph` family.
-
-### 2d. Raw ops *inside* the graph classes themselves
-
-- `DAG.py`: ~15 internal raw-`nx` sites — `get_stats`, `active_trail_nodes`, `get_leaves`/`get_roots`, `moralize`, `_check_cycles`, `is_iequivalent`, `edge_strength`.
-- `PDAG.has_acyclic_extension`: builds `nx.DiGraph(self.edges())`.
-
-These are precisely the methods that should *become* the shared abstractions in Part 1.
-
----
-
-## Bottom line / recommended sequencing
-
-1. **Migrate `DAG` onto `_CoreGraph`** — the single biggest lever. Instantly resolves ~38 "route-to-existing" raw-op sites and removes the list-vs-set fork.
-2. **Add the ~7 new `_CoreGraph` methods** (`get_topological_order`, `to_pandas_adjacency`, `subgraph`, `get_leaves`/`get_roots`, `to_undirected`/`get_skeleton`, `to_graphviz`, `__hash__`).
-3. **Add the ~8 new `_GraphAlgorithmMixin` methods** (`moralize`, `get_immoralities`, `has_semidirected_path`, `chain_component`, `is_clique`, `get_simple_paths`, `get_simple_cycles`, m-separation family).
-4. **Delete `AncestralBase`** (orphaned; 11 duplicate methods) once `MAG`/`ADMG` independence is confirmed.
-
-A good first increment that does **not** depend on the DAG migration: add the high-traffic `_CoreGraph` methods `get_topological_order`, `to_pandas_adjacency`, and `subgraph` (with tests) — they unblock the most call sites.
+*Deferred: should `__eq__` be structural-only (ignore edge/node attrs like `weight`/`strength`) so it + `__hash__` share one key? Today `__eq__` = full `graphs_equal`.*
