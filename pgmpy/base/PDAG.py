@@ -89,6 +89,10 @@ class PDAG(_GraphRolesMixin, nx.DiGraph):
         for role, vars in roles.items():
             self.with_role(role=role, variables=vars, inplace=True)
 
+    def bind(self, model):
+        self._model = model
+        return self
+
     def all_neighbors(self, node):
         """
         Returns a set of all neighbors of a node in the PDAG. This includes both directed and undirected edges.

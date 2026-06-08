@@ -142,3 +142,7 @@ class FunctionalCPD(BaseFactor):
 
     def __repr__(self):
         return f"<FunctionalCPD: {self.__str__()}> at {hex(id(self))}"
+
+    def bind(self, model):
+        self._model = model
+        return self

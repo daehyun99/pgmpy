@@ -208,6 +208,10 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
             out_str += "".join([f"({u},{v}) " for (u, v) in cycles])
             raise ValueError(out_str)
 
+    def bind(self, model):
+        self._model = model
+        return self
+
     @classmethod
     def from_lavaan(
         cls,

@@ -184,6 +184,10 @@ class TabularCPD(DiscreteFactor):
 
         return var_str + evidence_str + f") at {hex(id(self))}>"
 
+    def bind(self, model):
+        self._model = model
+        return self
+
     def get_values(self):
         """
         Returns the values of the CPD as a 2-D array. The order of the

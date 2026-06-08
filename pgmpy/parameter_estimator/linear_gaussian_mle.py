@@ -57,6 +57,10 @@ class LinearGaussianMLE(GaussianParameterEstimator):
         self.std_estimator = std_estimator
         super().__init__()
 
+    def bind(self, model):
+        self._model = model
+        return self
+
     def fit(self, model: LinearGaussianBayesianNetwork, data, sample_weight=None) -> LinearGaussianMLE:
         """
         Estimate model parameters using Maximum Likelihood Estimation.

@@ -59,8 +59,21 @@ class DiscreteMLE(DiscreteParameterEstimator):
         state_names: dict | None = None,
         n_jobs: int = 1,
     ) -> None:
+        self._cpds = {}
+        self._model = None
         self.n_jobs = n_jobs
         super().__init__(state_names=state_names)
+
+    def bind(self, model):
+        self._model = model
+        return self
+
+    def add(self, variable, cpd):
+        if self._model is not None:
+            if variable not in self._model.graph.nodes:
+                raise ValueError(f"{variable} is not in the graph.")
+
+        self._cpds[variable] = cpd
 
     @staticmethod
     def _estimate_cpd(model, data, state_names: dict, node, sample_weight=None) -> TabularCPD:

@@ -106,6 +106,10 @@ class LinearGaussianCPD(BaseFactor):
 
         return copy_cpd
 
+    def bind(self, model):
+        self._model = model
+        return self
+
     def __str__(self):
         mean = self.beta.round(3)
         std = round(self.std, 3)

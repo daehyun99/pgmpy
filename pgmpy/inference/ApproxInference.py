@@ -26,7 +26,11 @@ class ApproxInference:
                 f"model should either be a Bayesian Network or Dynamic Bayesian Network. Got {type(model)}."
             )
         model.check_model()
-        self.model = model
+        self._model = model
+
+    def bind(self, model):
+        self._model = model
+        return self
 
     @staticmethod
     def _get_factor_from_df(df, state_names):
@@ -155,15 +159,15 @@ class ApproxInference:
         """
         # Step 1: If samples are not provided, generate samples for the query
         if samples is None:
-            if isinstance(self.model, DiscreteBayesianNetwork):
-                samples = self.model.simulate(
+            if isinstance(self._model, DiscreteBayesianNetwork):
+                samples = self._model.simulate(
                     n_samples=n_samples,
                     evidence=evidence,
                     virtual_evidence=virtual_evidence,
                     seed=seed,
                     show_progress=show_progress,
                 )
-            elif isinstance(self.model, DynamicBayesianNetwork):
+            elif isinstance(self._model, DynamicBayesianNetwork):
                 if evidence is None:
                     evidence = dict()
                 if virtual_evidence is None:
@@ -179,7 +183,7 @@ class ApproxInference:
                 for cpd in virtual_evidence:
                     if cpd.variable[1] > max_time_slices:
                         max_time_slices = cpd.variable[1]
-                samples = self.model.simulate(
+                samples = self._model.simulate(
                     n_samples=n_samples,
                     n_time_slices=max_time_slices + 1,
                     evidence=evidence,
@@ -190,9 +194,9 @@ class ApproxInference:
 
         # Step 2: If state_names is None, infer it from samples.
         if state_names is None:
-            if isinstance(self.model, DiscreteBayesianNetwork):
+            if isinstance(self._model, DiscreteBayesianNetwork):
                 state_names = {var: list(samples.loc[:, var].unique()) for var in variables}
-            elif isinstance(self.model, DynamicBayesianNetwork):
+            elif isinstance(self._model, DynamicBayesianNetwork):
                 state_names = {var: list(samples.loc[:, [var]].iloc[:, 0].unique()) for var in variables}
 
         # Step 3: Compute the distributions and return it.
