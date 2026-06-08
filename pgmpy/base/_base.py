@@ -1050,10 +1050,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         >>> graph.add_edge("A", "B", "->")
         >>> graph.add_edge("A", "B", "<>")
         >>> graph.add_edge("B", "C", "--")
-        >>> set(graph.get_edge("A", "B"))
-        {('A', 'B', '->'), ('A', 'B', '<>')}
-        >>> set(graph.get_edge("B", "C"))
-        {('B', 'C', '--')}
+        >>> sorted(graph.get_edge("A", "B"))
+        [('A', 'B', '->'), ('A', 'B', '<>')]
+        >>> sorted(graph.get_edge("B", "C"))
+        [('B', 'C', '--')]
 
         """
         result: list[tuple[Hashable, ...]] = []
@@ -1312,7 +1312,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         --------
         >>> from pgmpy.base._base import _CoreGraph
         >>> graph = _CoreGraph(edge_list=[("T", "M", "->"), ("M", "O", "->"), ("M", "I", "<-"),
-        ...                               ("M", "B", "<>"), ("M", "U", "--")]
+        ...                               ("M", "B", "<>"), ("M", "U", "--")])
         >>> graph.is_collider("T", "O", "M")
         False
         >>> graph.is_collider("T", "I", "M")

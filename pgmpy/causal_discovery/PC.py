@@ -323,7 +323,7 @@ class PC(_ConstraintMixin, BaseCausalDiscovery):
         >>> df = load_model("bnlearn/cancer").simulate(int(1e3), seed=42)
         >>> est = PC(ci_test='chi_square').fit(df)
         >>> pdag = est._orient_colliders()
-        >>> sorted(pdag.edges())
+        >>> sorted(pdag.get_edges(data=False))
         [('Pollution', 'Cancer'), ('Xray', 'Cancer')]
         """
 

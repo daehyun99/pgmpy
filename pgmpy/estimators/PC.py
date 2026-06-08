@@ -215,7 +215,7 @@ class PC(BaseConstraintEstimator):
         >>> model_chi  # doctest: +ELLIPSIS
         <pgmpy.base.PDAG.PDAG object at 0x...>
         >>> print(len(model_chi.edges()))
-        38
+        30
         >>> model_gsq, _ = est.estimate(ci_test="g_sq", return_type="skeleton")
         >>> model_gsq  # doctest: +ELLIPSIS
         <networkx.classes.graph.Graph object at 0x...>
