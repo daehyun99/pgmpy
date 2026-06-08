@@ -322,7 +322,7 @@ class PC(BaseConstraintEstimator):
         >>> skel, sep_sets = c.estimate(return_type="skeleton")
         >>> pdag = PC.orient_colliders(skel, sep_sets)
         >>> sorted(pdag.edges())
-        [('A', 'C'), ('A', 'D'), ('B', 'C'), ('D', 'A'), ('D', 'C')]
+        [('A', 'C'), ('A', 'D'), ('C', 'B'), ('C', 'D')]
         """
 
         pdag = skeleton.to_directed()
