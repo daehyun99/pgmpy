@@ -1494,6 +1494,18 @@ class TestCoreGraph:
             with pytest.raises(ValueError, match="circle"):
                 _CoreGraph(edge_list=[("A", "B", "->"), ("X", "Y", edge_type)]).get_topological_order()
 
+    def test_get_directed_graph(self):
+        """Test `_CoreGraph.get_directed_graph`: an nx.DiGraph of the "->" edges only (canonical)."""
+        import networkx as nx
+
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("C", "D", "--"), ("E", "F", "<>"), ("G", "H", "<-")])
+        graph.add_node("I")  # isolated nodes are preserved
+        dg = graph.get_directed_graph()
+        assert type(dg) is nx.DiGraph
+        assert set(dg.nodes()) == {"A", "B", "C", "D", "E", "F", "G", "H", "I"}
+        # only "->" edges, taken canonically ("<-" -> H->G); "--" and "<>" are dropped
+        assert set(dg.edges()) == {("A", "B"), ("H", "G")}
+
     def test_get_skeleton(self):
         """Test `_CoreGraph.get_skeleton`: an undirected nx.Graph of the adjacency, edge types discarded."""
         import networkx as nx

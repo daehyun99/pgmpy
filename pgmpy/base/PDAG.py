@@ -122,14 +122,8 @@ class PDAG(_CoreGraph):
     def has_acyclic_extension(self) -> bool:
         """Returns True if the PDAG admits an acyclic DAG extension."""
         if not self.undirected_edges:
-            return nx.is_directed_acyclic_graph(self._directed_graph())
+            return not self.has_directed_cycle()
         return nx.is_directed_acyclic_graph(self.to_dag())
-
-    def _directed_graph(self) -> nx.DiGraph:
-        """An ``nx.DiGraph`` of the directed (``"->"``) edges only, including all nodes."""
-        dag = nx.DiGraph((u, v) for u, v, edge_type in self.get_edges(data=True) if edge_type == "->")
-        dag.add_nodes_from(self.nodes())
-        return dag
 
     def _check_new_unshielded_collider(self, u, v) -> bool:
         """Whether orienting ``u - v`` as ``u -> v`` would create a new unshielded collider at `v`."""
@@ -172,7 +166,7 @@ class PDAG(_CoreGraph):
                         if (
                             (not pdag.has_edge(x, z))
                             and (not pdag._check_new_unshielded_collider(y, z))
-                            and (not nx.has_path(pdag._directed_graph(), z, y))
+                            and (not nx.has_path(pdag.get_directed_graph(), z, y))
                         ):
                             pdag.orient_undirected_edge(y, z, inplace=True)
                             changed = True

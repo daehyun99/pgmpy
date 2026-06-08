@@ -666,6 +666,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
 
         See Also
         --------
+        get_directed_graph : The directed counterpart (``"->"`` edges only).
         get_subgraph : Class-preserving node/edge-type-filtered subgraph.
 
         Examples
@@ -680,6 +681,37 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         skeleton.add_nodes_from(self.nodes())
         skeleton.add_edges_from(self.edges())
         return skeleton
+
+    def get_directed_graph(self) -> nx.DiGraph:
+        """
+        Returns the directed projection of the graph as a ``networkx.DiGraph``.
+
+        Keeps the same nodes and one arc ``u -> v`` for every directed (``"->"``) edge, taken in its
+        canonical orientation; undirected, bidirected, and circle edges are dropped. This is the
+        directed counterpart of ``get_skeleton``, meant for feeding networkx's directed algorithms
+        (e.g. ``topological_sort``, ``is_directed_acyclic_graph``, ``has_path``).
+
+        Returns
+        -------
+        directed_graph : networkx.DiGraph
+            A directed graph over all nodes, containing only the ``"->"`` edges.
+
+        See Also
+        --------
+        get_skeleton : The undirected counterpart (adjacency only).
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> G = _CoreGraph(edge_list=[("A", "B", "->"), ("C", "B", "<-"), ("C", "D", "--")])
+        >>> sorted(G.get_directed_graph().edges())
+        [('A', 'B'), ('B', 'C')]
+
+        """
+        directed_graph = nx.DiGraph()
+        directed_graph.add_nodes_from(self.nodes())
+        directed_graph.add_edges_from((u, v) for u, v, _ in self.get_edges(edge_types={"->"}))
+        return directed_graph
 
     def do(self, nodes: Hashable | Iterable[Hashable], inplace: bool = False):
         """

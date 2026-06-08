@@ -323,10 +323,7 @@ class _GraphAlgorithms:
                 "Topological order is undefined for graphs with circle endpoints (PAGs), where edge "
                 f"orientation is uncertain. Found circle edge types: {sorted(circle_types)}."
             )
-        dag = nx.DiGraph()
-        dag.add_nodes_from(self.nodes())
-        dag.add_edges_from((u, v) for u, v, _ in self.get_edges(edge_types={"->"}))
-        return list(nx.topological_sort(dag))
+        return list(nx.topological_sort(self.get_directed_graph()))
 
     def has_directed_cycle(self):
         """
@@ -368,10 +365,7 @@ class _GraphAlgorithms:
         # if edge[-1] == {edge[0]: "-", edge[1]: ">"}:
         # dag.add_edge(edge[0], edge[1], "->")
 
-        dag = nx.DiGraph()
-        dag.add_nodes_from(self.nodes())
-        dag.add_edges_from((u, v) for u, v, _ in self.get_edges(edge_types={"->"}))
-        return not nx.is_directed_acyclic_graph(dag)
+        return not nx.is_directed_acyclic_graph(self.get_directed_graph())
 
     def _check_new_unshielded_collider(self, u: Hashable, v: Hashable) -> bool:
         """
