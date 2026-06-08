@@ -232,9 +232,9 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
             raise ValueError(f"Edge ({u}, {v}) of type '{edge_type}' already exists in {self.__class__.__name__}.")
 
         # Directed edges must not close a directed cycle.
-        if edge_type == "->" and self.has_node(u) and self.has_node(v) and self.has_direct_path(v, u):
+        if edge_type == "->" and self.has_node(u) and self.has_node(v) and self.has_path(v, u, edge_types="->"):
             raise ValueError(f"Adding edge ({u}, {v}, '{edge_type}') would create a directed cycle.")
-        if edge_type == "<-" and self.has_node(u) and self.has_node(v) and self.has_direct_path(u, v):
+        if edge_type == "<-" and self.has_node(u) and self.has_node(v) and self.has_path(u, v, edge_types="->"):
             raise ValueError(f"Adding edge ({u}, {v}, '{edge_type}') would create a directed cycle.")
 
         markers = self._to_markers(edge=(u, v, edge_type))
@@ -1287,6 +1287,55 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
 
         # Step 3: Return the dataframe.
         return adj
+
+    def is_collider(self, u: Hashable, v: Hashable, w: Hashable) -> bool:
+        """
+        Check whether `w` is a collider between `u` and `v`.
+
+        The method returns True if `w` has an arrowhead at it for both the edges from  `u` and `v` and there is no edge
+        between `u` and `v`.
+
+        Parameters
+        ----------
+        u : Hashable
+            The first endpoint node.
+        v : Hashable
+            The second endpoint node.
+        w : Hashable
+            The middle node to test as a collider.
+
+        Returns
+        -------
+        bool
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph(edge_list=[("T", "M", "->"), ("M", "O", "->"), ("M", "I", "<-"),
+        ...                               ("M", "B", "<>"), ("M", "U", "--")]
+        >>> graph.is_collider("T", "O", "M")
+        False
+        >>> graph.is_collider("T", "I", "M")
+        True
+
+        References
+        ----------
+        .. [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs." Journal of Machine Learning Research 9 (2008):
+        1437-1474.
+        """
+        if not {u, v, w}.issubset(self.nodes):
+            raise ValueError(f"{u}, {v}, {w} must be present in the graph.")
+
+        neighbors = self.neighbors(u)
+        if v in neighbors:
+            return False
+
+        parents = self.get_neighbors(w, edge_types="<-")
+        spouses = self.get_neighbors(w, edge_types="<>")
+
+        incoming_to_w = parents.union(spouses)
+
+        return (u in incoming_to_w) and (v in incoming_to_w)
 
     def __eq__(self, other):
         """
