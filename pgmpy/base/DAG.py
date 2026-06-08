@@ -548,6 +548,41 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         """
         return list(self.successors(node))
 
+    def get_spouses(self, node: Hashable) -> set[Hashable]:
+        """
+        Returns the set of spouses (co-parents) of `node`.
+
+        In a Bayesian network the spouses of a node are its children's *other* parents -- the nodes
+        that share a child with `node`. This is the directed-graph counterpart of
+        ``_CoreGraph.get_spouses`` (which returns bidirected-edge neighbours): a DAG has no bidirected
+        edges, so the co-parent definition is the meaningful one. Throws an error if the node is not
+        present in the graph.
+
+        Parameters
+        ----------
+        node: string, int or any hashable python object.
+            The node whose spouses (co-parents) would be returned.
+
+        Returns
+        -------
+        spouses: set
+            The co-parents of `node`, excluding `node` itself.
+
+        Examples
+        --------
+        >>> from pgmpy.base import DAG
+        >>> g = DAG(ebunch=[("x", "y"), ("z", "y"), ("y", "w"), ("u", "w")])
+        >>> sorted(g.get_spouses(node="x"))
+        ['z']
+        >>> sorted(g.get_spouses(node="y"))
+        ['u']
+        """
+        spouses = set()
+        for child in self.get_children(node):
+            spouses.update(self.get_parents(child))
+        spouses.discard(node)
+        return spouses
+
     def get_independencies(self, latex=False, include_latents=False) -> Independencies | list[str]:
         """
         Computes independencies in the DAG, by checking minimal d-seperation.
@@ -798,9 +833,8 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
 
     def get_markov_blanket(self, node: Hashable) -> list[Hashable]:
         """
-        Returns a markov blanket for a random variable. In the case
-        of Bayesian Networks, the markov blanket is the set of
-        node's parents, its children and its children's other parents.
+        Returns a markov blanket for a random variable. In the case of Bayesian Networks, the markov blanket is the set
+        of node's parents, its children and its children's other parents.
 
         Returns
         -------
@@ -833,13 +867,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         >>> sorted(G.get_markov_blanket("y"))
         ['s', 'u', 'v', 'w', 'x', 'z']
         """
-        children = self.get_children(node)
-        parents = self.get_parents(node)
-        blanket_nodes = children + parents
-        for child_node in children:
-            blanket_nodes.extend(self.get_parents(child_node))
-        blanket_nodes = set(blanket_nodes)
-        blanket_nodes.discard(node)
+        blanket_nodes = set(self.get_parents(node)) | set(self.get_children(node)) | self.get_spouses(node)
         return list(blanket_nodes)
 
     def active_trail_nodes(

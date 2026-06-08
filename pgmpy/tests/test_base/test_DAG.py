@@ -827,6 +827,14 @@ class TestDAGMoralization(unittest.TestCase):
     def test_get_children(self):
         self.assertListEqual(sorted(self.graph.get_children("diff")), ["grade"])
 
+    def test_get_spouses(self):
+        # Spouses in a DAG are co-parents: the other parents of one's children.
+        dag = DAG([("x", "y"), ("z", "y"), ("y", "w"), ("y", "v"), ("u", "w"), ("s", "v")])
+        self.assertEqual(dag.get_spouses("x"), {"z"})  # x and z co-parent y
+        self.assertEqual(dag.get_spouses("y"), {"u", "s"})  # via children w (parent u) and v (parent s)
+        self.assertEqual(dag.get_spouses("u"), {"y"})  # u and y co-parent w
+        self.assertEqual(dag.get_spouses("w"), set())  # w has no children -> no co-parents
+
     def tearDown(self):
         del self.graph
 
