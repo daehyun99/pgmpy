@@ -68,10 +68,12 @@ class SHD(BaseSupervisedMetric):
 
     def _evaluate(self, true_causal_graph, est_causal_graph):
         # Both DAG and PDAG expose ``to_adjacency``; the binary encoding gives a 0/1 directed
-        # adjacency (directed edges asymmetric, undirected edges symmetric).
+        # adjacency (directed edges asymmetric, undirected edges symmetric). ``copy=True`` keeps the
+        # arrays writable -- under pandas copy-on-write ``to_numpy()`` returns a read-only view, and
+        # the SHD computation mutates ``m1`` in place.
         nodes_list = list(true_causal_graph.nodes())
-        m1 = true_causal_graph.to_adjacency(encoding="binary", nodelist=nodes_list).to_numpy()
-        m2 = est_causal_graph.to_adjacency(encoding="binary", nodelist=nodes_list).to_numpy()
+        m1 = true_causal_graph.to_adjacency(encoding="binary", nodelist=nodes_list).to_numpy(copy=True)
+        m2 = est_causal_graph.to_adjacency(encoding="binary", nodelist=nodes_list).to_numpy(copy=True)
 
         shd = 0
 
