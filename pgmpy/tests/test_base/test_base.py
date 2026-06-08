@@ -99,6 +99,20 @@ EDGE_TYPES = ["--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"]
 NON_DIRECTED = ["--", "-o", "o-", "o>", "<o", "<>", "oo"]
 
 
+def assert_node_query_fails(method_name, empty_value):
+    """Shared failure modes for the single-node `get_*` query methods of `_CoreGraph`."""
+    with pytest.raises(ValueError):  # querying a node of an empty graph
+        getattr(_CoreGraph(), method_name)("A")
+    no_edges = _CoreGraph()
+    no_edges.add_nodes_from(["A", "B"])
+    assert getattr(no_edges, method_name)("A") == empty_value  # nodes but no edges
+    check_graph_status(no_edges, 2, 0, set(), set(), set(), {})
+    with pytest.raises(TypeError):  # missing required `node` argument
+        getattr(_CoreGraph(), method_name)()
+    with pytest.raises(ValueError):  # node not present in the graph
+        getattr(_CoreGraph(), method_name)(1)
+
+
 class TestCoreGraph:
     def test_init(self):
         """Test the initialization of a `_CoreGraph`."""
@@ -334,74 +348,61 @@ class TestCoreGraph:
 
     def test_add_edges_from(self):
         """Test the `_CoreGraph.add_edges_from` method."""
-        # directed edges
-        edges = [("A", "B", "->"), ("B", "C", "->")]
-        graph = _CoreGraph()
-        graph.add_edges_from(edge_list=edges)
-
-        assert sorted(graph.edges(keys=True, data=True)) == [
-            ("A", "B", 0, {"A": "-", "B": ">"}),
-            ("B", "C", 0, {"B": "-", "C": ">"}),
-        ]
-        check_graph_status(graph, 3, 2, set(), set(), set(), {})
-
-        # undirected edges
-        edges = [("A", "B", "--"), ("B", "C", "--")]
-        graph = _CoreGraph()
-        graph.add_edges_from(edge_list=edges)
-
-        assert sorted(graph.edges(keys=True, data=True)) == [
-            ("A", "B", 0, {"A": "-", "B": "-"}),
-            ("B", "C", 0, {"B": "-", "C": "-"}),
-        ]
-        check_graph_status(graph, 3, 2, set(), set(), set(), {})
-
-        # bidirected edges
-        edges = [("A", "B", "<>"), ("B", "C", "<>")]
-        graph = _CoreGraph()
-        graph.add_edges_from(edge_list=edges)
-
-        assert sorted(graph.edges(keys=True, data=True)) == [
-            ("A", "B", 0, {"A": ">", "B": ">"}),
-            ("B", "C", 0, {"B": ">", "C": ">"}),
-        ]
-        check_graph_status(graph, 3, 2, set(), set(), set(), {})
-
-        # unknown (circle) edges
-        edges = [("A", "B", "-o"), ("B", "C", "o-"), ("C", "D", "oo")]
-        graph = _CoreGraph()
-        graph.add_edges_from(edge_list=edges)
-
-        assert sorted(graph.edges(keys=True, data=True)) == [
-            ("A", "B", 0, {"A": "-", "B": "o"}),
-            ("B", "C", 0, {"B": "o", "C": "-"}),
-            ("C", "D", 0, {"C": "o", "D": "o"}),
-        ]
-        check_graph_status(graph, 4, 3, set(), set(), set(), {})
-
-        # various edge types
-        edges = [("A", "B", "->"), ("B", "C", "--"), ("C", "D", "<>")]
-        graph = _CoreGraph()
-        graph.add_edges_from(edge_list=edges)
-
-        assert sorted(graph.edges(keys=True, data=True)) == [
-            ("A", "B", 0, {"A": "-", "B": ">"}),
-            ("B", "C", 0, {"B": "-", "C": "-"}),
-            ("C", "D", 0, {"C": ">", "D": ">"}),
-        ]
-        check_graph_status(graph, 4, 3, set(), set(), set(), {})
-
-        # multiedges
-        edges = [("A", "B", "->"), ("A", "B", "--"), ("A", "B", "oo")]
-        graph = _CoreGraph()
-        graph.add_edges_from(edge_list=edges)
-
-        assert sorted(graph.edges(keys=True, data=True)) == [
-            ("A", "B", 0, {"A": "-", "B": ">"}),
-            ("A", "B", 1, {"A": "-", "B": "-"}),
-            ("A", "B", 2, {"A": "o", "B": "o"}),
-        ]
-        check_graph_status(graph, 2, 3, set(), set(), set(), {})
+        # building a graph from an edge list, across edge types / mixes / multiedges
+        for edges, expected, node_count, edge_count in [
+            (
+                [("A", "B", "->"), ("B", "C", "->")],
+                [("A", "B", 0, {"A": "-", "B": ">"}), ("B", "C", 0, {"B": "-", "C": ">"})],
+                3,
+                2,
+            ),
+            (
+                [("A", "B", "--"), ("B", "C", "--")],
+                [("A", "B", 0, {"A": "-", "B": "-"}), ("B", "C", 0, {"B": "-", "C": "-"})],
+                3,
+                2,
+            ),
+            (
+                [("A", "B", "<>"), ("B", "C", "<>")],
+                [("A", "B", 0, {"A": ">", "B": ">"}), ("B", "C", 0, {"B": ">", "C": ">"})],
+                3,
+                2,
+            ),
+            (
+                [("A", "B", "-o"), ("B", "C", "o-"), ("C", "D", "oo")],
+                [
+                    ("A", "B", 0, {"A": "-", "B": "o"}),
+                    ("B", "C", 0, {"B": "o", "C": "-"}),
+                    ("C", "D", 0, {"C": "o", "D": "o"}),
+                ],
+                4,
+                3,
+            ),
+            (
+                [("A", "B", "->"), ("B", "C", "--"), ("C", "D", "<>")],
+                [
+                    ("A", "B", 0, {"A": "-", "B": ">"}),
+                    ("B", "C", 0, {"B": "-", "C": "-"}),
+                    ("C", "D", 0, {"C": ">", "D": ">"}),
+                ],
+                4,
+                3,
+            ),
+            (
+                [("A", "B", "->"), ("A", "B", "--"), ("A", "B", "oo")],
+                [
+                    ("A", "B", 0, {"A": "-", "B": ">"}),
+                    ("A", "B", 1, {"A": "-", "B": "-"}),
+                    ("A", "B", 2, {"A": "o", "B": "o"}),
+                ],
+                2,
+                3,
+            ),
+        ]:
+            graph = _CoreGraph()
+            graph.add_edges_from(edge_list=edges)
+            assert sorted(graph.edges(keys=True, data=True)) == expected
+            check_graph_status(graph, node_count, edge_count, set(), set(), set(), {})
 
         # fails: None node / same node / invalid edge_type each raise and leave the graph empty
         bad_edge_lists = [
@@ -495,123 +496,43 @@ class TestCoreGraph:
 
     def test_remove_edges_from(self):
         """Test removing edges of a `_CoreGraph`."""
-        # directed edges
-        edges = [("A", "B", "->"), ("B", "C", "<-")]
-        graph = _CoreGraph(edge_list=edges)
+        # removing every edge of a chain leaves the graph edge-free, across all edge types
+        for edges, node_count in [
+            ([("A", "B", "->"), ("B", "C", "<-")], 3),
+            ([("A", "B", "--"), ("B", "C", "--")], 3),
+            ([("A", "B", "<>"), ("B", "C", "<>")], 3),
+            ([("A", "B", "-o"), ("B", "C", "o-"), ("C", "D", "oo")], 4),
+            ([("A", "B", "->"), ("B", "C", "--"), ("C", "D", "<o")], 4),
+        ]:
+            graph = _CoreGraph(edge_list=edges)
+            graph.remove_edges_from(edge_list=edges)
+            assert sorted(graph.edges(keys=True, data=True)) == []
+            check_graph_status(graph, node_count, 0, set(), set(), set(), {})
 
-        graph.remove_edges_from(edge_list=edges)
-
-        assert not graph.has_edge("A", "B")
-        assert not graph.has_edge("B", "C")
-
-        assert sorted(graph.edges(keys=True, data=True)) == []
-
-        check_graph_status(graph, 3, 0, set(), set(), set(), {})
-
-        # undirected edges
-        edges = [("A", "B", "--"), ("B", "C", "--")]
-        graph = _CoreGraph(edge_list=edges)
-
-        graph.remove_edges_from(edge_list=edges)
-
-        assert not graph.has_edge("A", "B")
-        assert not graph.has_edge("B", "C")
-
-        assert sorted(graph.edges(keys=True, data=True)) == []
-
-        check_graph_status(graph, 3, 0, set(), set(), set(), {})
-
-        # bidirected edges
-        edges = [("A", "B", "<>"), ("B", "C", "<>")]
-        graph = _CoreGraph(edge_list=edges)
-
-        graph.remove_edges_from(edge_list=edges)
-
-        assert not graph.has_edge("A", "B")
-        assert not graph.has_edge("B", "C")
-
-        assert sorted(graph.edges(keys=True, data=True)) == []
-
-        check_graph_status(graph, 3, 0, set(), set(), set(), {})
-
-        # unknown edges
-        edges = [("A", "B", "-o"), ("B", "C", "o-"), ("C", "D", "oo")]
-        graph = _CoreGraph(edge_list=edges)
-
-        graph.remove_edges_from(edge_list=edges)
-
-        assert not graph.has_edge("A", "B")
-        assert not graph.has_edge("B", "C")
-        assert not graph.has_edge("C", "D")
-
-        assert sorted(graph.edges(keys=True, data=True)) == []
-
-        check_graph_status(graph, 4, 0, set(), set(), set(), {})
-
-        # various edge types
-        edges = [("A", "B", "->"), ("B", "C", "--"), ("C", "D", "<o")]
-        graph = _CoreGraph(edge_list=edges)
-
-        graph.remove_edges_from(edge_list=edges)
-
-        assert not graph.has_edge("A", "B")
-        assert not graph.has_edge("B", "C")
-        assert not graph.has_edge("C", "D")
-
-        assert sorted(graph.edges(keys=True, data=True)) == []
-
-        check_graph_status(graph, 4, 0, set(), set(), set(), {})
-
-        # multiedges
-        edges = [("A", "B", "->"), ("A", "B", "<>"), ("A", "B", "--")]
-        graph = _CoreGraph(edge_list=edges)
-
-        del_edges = [("A", "B", "->"), ("A", "B", "--")]
-        graph.remove_edges_from(edge_list=del_edges)
-
+        # multiedges: only the listed types are removed, the rest stay
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("A", "B", "<>"), ("A", "B", "--")])
+        graph.remove_edges_from(edge_list=[("A", "B", "->"), ("A", "B", "--")])
         assert graph.has_edge("A", "B")
         assert not graph.has_edge("A", "B", "->")
         assert graph.has_edge("A", "B", "<>")
         assert not graph.has_edge("A", "B", "--")
-
-        assert sorted(graph.edges(keys=True, data=True)) == [
-            ("A", "B", 1, {"A": ">", "B": ">"}),
-        ]
-
+        assert sorted(graph.edges(keys=True, data=True)) == [("A", "B", 1, {"A": ">", "B": ">"})]
         check_graph_status(graph, 2, 1, set(), set(), set(), {})
 
-        # fails: None node / 2-tuple / 4-tuple / same node / unsupported edge_type
+        # fails: None node / 2-tuple / 4-tuple / same node / unsupported edge_type each raise, graph unchanged
         edges = [("A", "B", "->"), ("B", "C", "->")]
-
-        graph = _CoreGraph(edge_list=edges)
-        with pytest.raises(ValueError):  # invalid `u`, `v` value
-            graph.remove_edges_from([("A", "B", "->"), (None, "C", "->")])
-        check_graph_status(graph, 3, 2, set(), set(), set(), {})
-
-        graph = _CoreGraph(edge_list=edges)
-        with pytest.raises(ValueError):  # invalid `u`, `v` value
-            graph.remove_edges_from([("A", "B", "->"), ("B", None, "->")])
-        check_graph_status(graph, 3, 2, set(), set(), set(), {})
-
-        graph = _CoreGraph(edge_list=edges)
-        with pytest.raises(ValueError, match="3 elements"):  # 2-tuple edge (missing `edge_type`)
-            graph.remove_edges_from([("A", "B", "->"), ("B", "C")])
-        check_graph_status(graph, 3, 2, set(), set(), set(), {})
-
-        graph = _CoreGraph(edge_list=edges)
-        with pytest.raises(ValueError, match="3 elements"):  # 4-tuple edge
-            graph.remove_edges_from([("A", "B", "->"), ("B", "C", "key", "->")])
-        check_graph_status(graph, 3, 2, set(), set(), set(), {})
-
-        graph = _CoreGraph(edge_list=edges)
-        with pytest.raises(ValueError):  # same node error
-            graph.remove_edges_from([("A", "B", "->"), ("B", "B", "->")])
-        check_graph_status(graph, 3, 2, set(), set(), set(), {})
-
-        graph = _CoreGraph(edge_list=edges)
-        with pytest.raises(ValueError):  # invalid `edge_type` value
-            graph.remove_edges_from([("A", "B", "->"), ("B", "C", "invalid_value")])
-        check_graph_status(graph, 3, 2, set(), set(), set(), {})
+        for bad_edges, match in [
+            ([("A", "B", "->"), (None, "C", "->")], None),
+            ([("A", "B", "->"), ("B", None, "->")], None),
+            ([("A", "B", "->"), ("B", "C")], "3 elements"),
+            ([("A", "B", "->"), ("B", "C", "key", "->")], "3 elements"),
+            ([("A", "B", "->"), ("B", "B", "->")], None),
+            ([("A", "B", "->"), ("B", "C", "invalid_value")], None),
+        ]:
+            graph = _CoreGraph(edge_list=edges)
+            with pytest.raises(ValueError, match=match):
+                graph.remove_edges_from(bad_edges)
+            check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
     def test_copy(self):
         """Test the `copy` method of the `_CoreGraph` class."""
@@ -733,17 +654,8 @@ class TestCoreGraph:
         assert graph.get_parents("C") == {"Y"}
         check_graph_status(graph, 12, 11, set(), set(), set(), {})
 
-        # fails: no nodes / nodes but no edges / missing arg / unsupported type
-        with pytest.raises(ValueError):
-            _CoreGraph().get_parents("A")
-        no_edges = _CoreGraph()
-        no_edges.add_nodes_from(["A", "B"])
-        assert no_edges.get_parents("A") == set()
-        check_graph_status(no_edges, 2, 0, set(), set(), set(), {})
-        with pytest.raises(TypeError):
-            _CoreGraph().get_parents()
-        with pytest.raises(ValueError):
-            _CoreGraph().get_parents(1)
+        # fails: empty graph / nodes but no edges / missing arg / node not in graph
+        assert_node_query_fails("get_parents", set())
 
     def test_get_children(self):
         """Test `get_children` method of the `_CoreGraph` class."""
@@ -763,17 +675,8 @@ class TestCoreGraph:
         assert graph.get_children("Y") == {"C"}
         check_graph_status(graph, 12, 11, set(), set(), set(), {})
 
-        # fails: no nodes / nodes but no edges / unsupported input
-        with pytest.raises(ValueError):
-            _CoreGraph().get_children("A")
-        no_edges = _CoreGraph()
-        no_edges.add_nodes_from(["A", "B"])
-        assert no_edges.get_children("A") == set()
-        check_graph_status(no_edges, 2, 0, set(), set(), set(), {})
-        with pytest.raises(TypeError):
-            _CoreGraph().get_children()
-        with pytest.raises(ValueError):
-            _CoreGraph().get_children(1)
+        # fails: empty graph / nodes but no edges / missing arg / node not in graph
+        assert_node_query_fails("get_children", set())
 
     def test_get_spouses(self):
         """Test `get_spouses` method of the `_CoreGraph` class."""
@@ -791,17 +694,8 @@ class TestCoreGraph:
         assert graph.get_spouses("B") == set()
         check_graph_status(graph, 12, 11, set(), set(), set(), {})
 
-        # fails: no nodes / nodes but no edges / unsupported input values
-        with pytest.raises(ValueError):
-            _CoreGraph().get_spouses("A")
-        no_edges = _CoreGraph()
-        no_edges.add_nodes_from(["A", "B"])
-        assert no_edges.get_spouses("A") == set()
-        check_graph_status(no_edges, 2, 0, set(), set(), set(), {})
-        with pytest.raises(TypeError):
-            _CoreGraph().get_spouses()
-        with pytest.raises(ValueError):
-            _CoreGraph().get_spouses(1)
+        # fails: empty graph / nodes but no edges / missing arg / node not in graph
+        assert_node_query_fails("get_spouses", set())
 
     def test_get_parents_children_ancestors_iterable(self):
         """`get_parents`/`get_children`/`get_ancestors` accept a single node or an iterable (union)."""
@@ -833,17 +727,8 @@ class TestCoreGraph:
         assert graph.get_ancestors("X") == {"X", "B", "A", "C", "Y"}
         check_graph_status(graph, 12, 11, set(), set(), set(), {})
 
-        # fails: no nodes / nodes without edges / unsupported input
-        with pytest.raises(ValueError):
-            _CoreGraph().get_ancestors("A")
-        no_edges = _CoreGraph()
-        no_edges.add_nodes_from(["A", "B"])
-        assert no_edges.get_ancestors("A") == {"A"}
-        check_graph_status(no_edges, 2, 0, set(), set(), set(), {})
-        with pytest.raises(TypeError):
-            _CoreGraph().get_ancestors()
-        with pytest.raises(ValueError):
-            _CoreGraph().get_ancestors("1")
+        # fails: empty graph / nodes but no edges / missing arg / node not in graph
+        assert_node_query_fails("get_ancestors", {"A"})
 
     def test_get_descendants(self):
         """Test `get_descendants` method of the `_CoreGraph` class."""
@@ -862,17 +747,8 @@ class TestCoreGraph:
         assert graph.get_descendants("Y") == {"Y", "C", "A", "B", "X"}
         check_graph_status(graph, 12, 11, set(), set(), set(), {})
 
-        # fails: empty graph / nodes without edges / no-arg and unknown node
-        with pytest.raises(ValueError):
-            _CoreGraph().get_descendants("A")
-        no_edges = _CoreGraph()
-        no_edges.add_nodes_from(["A", "B"])
-        assert no_edges.get_descendants("A") == {"A"}
-        check_graph_status(no_edges, 2, 0, set(), set(), set(), {})
-        with pytest.raises(TypeError):
-            _CoreGraph().get_descendants()
-        with pytest.raises(ValueError):
-            _CoreGraph().get_descendants("1")
+        # fails: empty graph / nodes but no edges / missing arg / node not in graph
+        assert_node_query_fails("get_descendants", {"A"})
 
     def test_get_reachable_nodes(self):
         """Test `get_reachable_nodes` method of the `_CoreGraph` class."""
@@ -945,7 +821,7 @@ class TestCoreGraph:
         assert set(graph.get_edges(data=True, edge_types={"<>", "--"})) == {("B", "D", "<>"), ("D", "E", "--")}
         assert set(graph.get_edges(data=False, edge_types={"->"})) == {("A", "B"), ("B", "C")}
 
-    def test_get_edge(self):
+    def test_get_edge_type(self):
         # edge retrieval: directed, bidirected, partially-directed, circle, and reversed lookups
         graph = _CoreGraph()
 
@@ -1144,17 +1020,10 @@ class TestCoreGraph:
             roles=roles,
         )
 
-        # Different class
-        other_dag = DAG()
-        other_admg = ADMG()
-        other_pdag = PDAG()
-
-        assert graph.__eq__(other_dag) == False
-        assert other_dag.__eq__(graph) == False
-        assert graph.__eq__(other_admg) == False
-        assert other_admg.__eq__(graph) == False
-        assert graph.__eq__(other_pdag) == False
-        assert other_pdag.__eq__(graph) == False
+        # a different graph class is never equal (compared both directions)
+        for other in [DAG(), ADMG(), PDAG()]:
+            assert graph.__eq__(other) == False
+            assert other.__eq__(graph) == False
 
         # Different edge_list
         other_edge_list = _CoreGraph(
@@ -1172,49 +1041,17 @@ class TestCoreGraph:
         assert graph.__eq__(other_edge_list) == False
         assert other_edge_list.__eq__(graph) == False
 
-        # Different exposures
-        other_exp = _CoreGraph(
-            edge_list=edges,
-            exposures=["B"],
-            outcomes=outcomes,
-            latents=latents,
-            roles=roles,
-        )
-        assert graph.__eq__(other_exp) == False
-        assert other_exp.__eq__(graph) == False
-
-        # Different outcomes
-        other_out = _CoreGraph(
-            edge_list=edges,
-            exposures=exposures,
-            outcomes=["A"],
-            latents=latents,
-            roles=roles,
-        )
-        assert graph.__eq__(other_out) == False
-        assert other_out.__eq__(graph) == False
-
-        # Different latents
-        other_lat = _CoreGraph(
-            edge_list=edges,
-            exposures=exposures,
-            outcomes=outcomes,
-            latents=["B"],
-            roles=roles,
-        )
-        assert graph.__eq__(other_lat) == False
-        assert other_lat.__eq__(graph) == False
-
-        # Different roles
-        other_roles = _CoreGraph(
-            edge_list=edges,
-            exposures=exposures,
-            outcomes=outcomes,
-            latents=latents,
-            roles={"new_role": ["A"]},
-        )
-        assert graph.__eq__(other_roles) == False
-        assert other_roles.__eq__(graph) == False
+        # changing any single field (exposures/outcomes/latents/roles) breaks equality
+        base = dict(edge_list=edges, exposures=exposures, outcomes=outcomes, latents=latents, roles=roles)
+        for override in [
+            {"exposures": ["B"]},
+            {"outcomes": ["A"]},
+            {"latents": ["B"]},
+            {"roles": {"new_role": ["A"]}},
+        ]:
+            other = _CoreGraph(**{**base, **override})
+            assert graph.__eq__(other) == False
+            assert other.__eq__(graph) == False
 
         # Not a graph class
         other_str = "not a graph"
