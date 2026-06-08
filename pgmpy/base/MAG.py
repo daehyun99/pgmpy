@@ -199,8 +199,8 @@ class MAG(_CoreGraph):
                 if neighbor != other and neighbor not in X:
                     # A MAG holds at most one edge per pair, so replace any existing edge with `<>`.
                     if new_mag.has_edge(other, neighbor):
-                        for a, b, edge_type in new_mag.get_edge(other, neighbor):
-                            new_mag.remove_edge(a, b, edge_type)
+                        for edge_type in new_mag.get_edge_type(other, neighbor):
+                            new_mag.remove_edge(other, neighbor, edge_type)
                     new_mag.add_edge(other, neighbor, "<>")
         return new_mag
 

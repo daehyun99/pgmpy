@@ -945,25 +945,12 @@ class TestCoreGraph:
         graph.add_edge("F", "G", "o-")
         graph.add_node("H")
 
-        assert set(graph.get_edge("A", "B", data=True)) == {
-            ("A", "B", "->"),
-            ("A", "B", "--"),
-        }
-        assert set(graph.get_edge("B", "C", data=True)) == {
-            ("B", "C", "<>"),
-        }
-        assert set(graph.get_edge("D", "E")) == {
-            ("D", "E", "<-"),
-        }
-        assert set(graph.get_edge("E", "D")) == {
-            ("E", "D", "->"),
-        }
-        assert set(graph.get_edge("E", "F")) == {
-            ("E", "F", "oo"),
-        }
-        assert set(graph.get_edge("F", "G")) == {
-            ("F", "G", "o-"),
-        }
+        assert graph.get_edge_type("A", "B") == {"->", "--"}
+        assert graph.get_edge_type("B", "C") == {"<>"}
+        assert graph.get_edge_type("D", "E") == {"<-"}
+        assert graph.get_edge_type("E", "D") == {"->"}
+        assert graph.get_edge_type("E", "F") == {"oo"}
+        assert graph.get_edge_type("F", "G") == {"o-"}
 
         # fails: no edge exists between the two nodes
         graph = _CoreGraph()
@@ -971,7 +958,7 @@ class TestCoreGraph:
         graph.add_node("B")
 
         with pytest.raises(ValueError):
-            graph.get_edge("A", "B")
+            graph.get_edge_type("A", "B")
 
     def test_get_unique_edge_types(self):
         """Test `_CoreGraph.get_unique_edge_types`: distinct types, orientation-reversed forms collapsed."""
@@ -1387,7 +1374,7 @@ class TestCoreGraph:
         graph.add_edge("A", "B", "<>")
         graph.add_edge("B", "C", "->")
         sub = graph.get_subgraph(["A", "B"])
-        assert set(sub.get_edge("A", "B")) == {("A", "B", "->"), ("A", "B", "<>")}
+        assert sub.get_edge_type("A", "B") == {"->", "<>"}
         assert not sub.has_edge("B", "C")
 
         # the subclass is preserved (here ADMG)

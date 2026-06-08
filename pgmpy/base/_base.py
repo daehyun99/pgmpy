@@ -62,7 +62,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         o>  : {u: "o", v: ">"}      <o  : {u: ">", v: "o"}      oo  : {u: "o", v: "o"}
 
     ``_to_markers`` performs the ``edge_type`` to marker-dict conversion and ``_to_edge_type`` the inverse;
-    ``get_edges`` / ``get_edge`` use the latter to present edges back as string codes.
+    ``get_edges`` / ``get_edge_type`` use the latter to present edges back as string codes.
 
     Examples
     --------
@@ -349,6 +349,222 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         self._validate_edges(edge_list=edge_list)
         for u, v, edge_type in edge_list:
             self.remove_edge(u, v, edge_type)
+
+    def get_edges(self, data: bool = True, edge_types: Iterable[str] | None = None) -> list[tuple[Any, ...]]:
+        """
+        Retrieve all edges of the specified edge types.
+
+        Parameters
+        ----------
+        data : bool, optional (default=True)
+            If True, each edge is returned as ``(u, v, edge_type)``; if False, as ``(u, v)``.
+
+        edge_types : iterable of str, optional (default: all)
+            If given, only edges whose (canonical) type is in `edge_types` are returned. The filter is matched on the
+            canonical type, so ``{"->"}`` selects both ``"->"`` and ``"<-"`` edges.
+
+        Returns
+        -------
+        list
+            A list of edge tuples: ``(u, v, edge_type)`` if ``data`` else ``(u, v)``.
+
+        See Also
+        --------
+        get_edge_type : Edge type(s) between a specific pair of nodes.
+        get_unique_edge_types : The distinct (canonical) edge types present in the graph.
+
+        Examples
+        --------
+        >>> edges = [("A", "B", "->"), ("A", "B", "<>"), ("C", "B", "<-")]
+        >>> G = _CoreGraph(edge_list=edges)
+        >>> sorted(G.get_edges(data=True))
+        [('A', 'B', '->'), ('A', 'B', '<>'), ('B', 'C', '->')]
+        >>> sorted(G.get_edges(data=True, edge_types={"->"}))
+        [('A', 'B', '->'), ('B', 'C', '->')]
+
+        """
+        canonical = {"<-": "->", "-o": "o-", "<o": "o>"}
+        if edge_types is not None:
+            edge_types = {canonical.get(edge_type, edge_type) for edge_type in edge_types}
+
+        edges = []
+        for u, v, markers in super().edges(data=True):
+            edge_type = self._to_edge_type(u, v, markers)
+            if edge_type in canonical:
+                u, v, edge_type = v, u, canonical[edge_type]
+            if edge_types is None or edge_type in edge_types:
+                edges.append((u, v, edge_type) if data else (u, v))
+        return edges
+
+    def get_unique_edge_types(self) -> set[str]:
+        """
+        Returns the set of distinct edge types present in the graph.
+
+        Orientation-reversed views of the same edge type are treated as one: ``"<-"`` is reported as
+        ``"->"``, ``"-o"`` as ``"o-"``, and ``"<o"`` as ``"o>"`` (they differ only in which endpoint
+        is listed first). The result is therefore a subset of the six edge types
+        ``{"--", "->", "<>", "o-", "o>", "oo"}``.
+
+        Returns
+        -------
+        edge_types : set of str
+            The distinct edge types currently in the graph, each in its canonical orientation.
+
+        See Also
+        --------
+        get_edges : All edges in the graph.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> G = _CoreGraph(edge_list=[("A", "B", "->"), ("C", "B", "<-"), ("C", "D", "<>")])
+        >>> G.get_unique_edge_types() == {"->", "<>"}
+        True
+
+        """
+        return {edge_type for _, _, edge_type in self.get_edges(data=True)}
+
+    def get_edge_type(self, u: Hashable, v: Hashable) -> set[str]:
+        """
+        Return the set of edge types connecting `u` and `v`.
+
+        Each type is read from ``u``'s endpoint, so it is *not* canonicalized: a stored ``v -> u`` edge
+        is reported as ``"<-"`` (call ``get_edge_type(v, u)`` for the mirror orientation). A multigraph
+        may join a pair by several edges at once (e.g. an ADMG holding both ``"->"`` and ``"<>"``), so
+        the result is a set.
+
+        Parameters
+        ----------
+        u : Hashable
+            The first endpoint of the edge.
+        v : Hashable
+            The second endpoint of the edge.
+
+        Returns
+        -------
+        edge_types : set of str
+            The edge type(s) between `u` and `v`, each oriented from `u` to `v`.
+
+        Raises
+        ------
+        ValueError
+            If there is no edge between `u` and `v`.
+
+        See Also
+        --------
+        get_edges : All edges in the graph.
+        has_edge : Whether a (typed) edge exists between two nodes.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph()
+        >>> graph.add_edge("A", "B", "->")
+        >>> graph.add_edge("A", "B", "<>")
+        >>> graph.add_edge("B", "C", "--")
+        >>> graph.get_edge_type("A", "B") == {"->", "<>"}
+        True
+        >>> graph.get_edge_type("B", "C")
+        {'--'}
+
+        """
+        if not self.has_edge(u, v):
+            raise ValueError(f"Edge ({u}, {v}) not in graph.")
+
+        # `self[u][v]` maps each parallel edge's key to its markers dict; read each type from `u`.
+        return {self._to_edge_type(u, v, markers) for markers in self[u][v].values()}
+
+    def has_edge(self, u, v, edge_type=None):
+        """
+        Returns True if the graph has an edge between nodes u and v.
+
+        Parameters
+        ----------
+        u : Hashable
+            The source node of the edge.
+        v : Hashable
+            The target node of the edge.
+        edge_type : str
+            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
+
+        Returns
+        -------
+        bool
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph()
+        >>> graph.add_edge("A", "B", "->")
+        >>> graph.has_edge("A", "B")
+        True
+        >>> graph.has_edge("A", "B", "->")
+        True
+        >>> graph.has_edge("A", "B", "--")
+        False
+
+        """
+        if not super().has_edge(u, v):
+            return False
+
+        if edge_type is None:
+            return True
+
+        if edge_type not in self.SUPPORTED_EDGE_TYPES:
+            raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
+        return edge_type in self.get_edge_type(u, v)
+
+    def replace_edge(
+        self,
+        u: Hashable,
+        v: Hashable,
+        old_type: str = "--",
+        new_type: str = "->",
+    ) -> None:
+        """
+        Replaces the type of an existing edge between two nodes with a new type.
+
+        Parameters
+        ----------
+        u : Hashable
+            The source node of the edge.
+        v : Hashable
+            The target node of the edge.
+        old_type : str, optional (default="--")
+            The current type of the edge that needs to be replaced.
+        new_type : str, optional (default="->")
+            The new edge type to be assigned.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph()
+        >>> graph.add_edge("A", "B", "--")
+        >>> graph.replace_edge("A", "B", old_type="--", new_type="->")
+        >>> graph.has_edge("A", "B", "->")
+        True
+        >>> graph.has_edge("A", "B", "--")
+        False
+
+        """
+        if (old_type not in self.SUPPORTED_EDGE_TYPES) or (new_type not in self.SUPPORTED_EDGE_TYPES):
+            raise ValueError(
+                f"Unsupported edge type(s) provided. "
+                f"Got old_type='{old_type}', new_type='{new_type}'. "
+                f"Supported types are: {self.SUPPORTED_EDGE_TYPES}."
+            )
+        if not self.has_edge(u, v):
+            raise ValueError(f"Edge ({u}, {v}) not in graph.")
+
+        # TODO: Add logic of maintain edge's attr data
+        #       Currently, we treat `edge_type` as an attribute,
+        #       so additional logic will need to be developed to handle this in the future.
+        self.remove_edge(u, v, old_type)
+        self.add_edge(u, v, new_type)
 
     def copy(self):
         """
@@ -922,232 +1138,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
                 reachable.add(current)
                 queue.extend(self.get_neighbors(current, edge_types))
         return reachable
-
-    def get_edges(self, data: bool = True, edge_types: Iterable[str] | None = None) -> list[tuple[Any, ...]]:
-        """
-        Retrieve edges with API-formatted, canonically-oriented edge types.
-
-        Every edge is returned in its canonical orientation: orientation-reversed forms are flipped
-        by swapping the node order, so ``"<-"`` is returned as ``"->"``, ``"-o"`` as ``"o-"`` and
-        ``"<o"`` as ``"o>"`` (see ``get_unique_edge_types``). Callers therefore never have to handle
-        the reversed forms.
-
-        Parameters
-        ----------
-        data : bool, optional (default=True)
-            If True, each edge is returned as ``(u, v, edge_type)``; if False, as ``(u, v)``.
-
-        edge_types : iterable of str, optional (default: all)
-            If given, only edges whose (canonical) type is in `edge_types` are returned. The filter
-            is matched on the canonical type, so ``{"->"}`` selects both ``"->"`` and ``"<-"`` edges.
-
-        Returns
-        -------
-        list
-            A list of edge tuples: ``(u, v, edge_type)`` if ``data`` else ``(u, v)``.
-
-        See Also
-        --------
-        get_edge : Edges between a specific pair of nodes.
-        get_unique_edge_types : The distinct (canonical) edge types present in the graph.
-
-        Examples
-        --------
-        >>> edges = [("A", "B", "->"), ("A", "B", "<>"), ("C", "B", "<-")]
-        >>> G = _CoreGraph(edge_list=edges)
-        >>> sorted(G.get_edges(data=True))
-        [('A', 'B', '->'), ('A', 'B', '<>'), ('B', 'C', '->')]
-        >>> sorted(G.get_edges(data=True, edge_types={"->"}))
-        [('A', 'B', '->'), ('B', 'C', '->')]
-
-        """
-        canonical = {"<-": "->", "-o": "o-", "<o": "o>"}
-        if edge_types is not None:
-            edge_types = {canonical.get(edge_type, edge_type) for edge_type in edge_types}
-
-        edges = []
-        for u, v, markers in super().edges(data=True):
-            edge_type = self._to_edge_type(u, v, markers)
-            if edge_type in canonical:
-                u, v, edge_type = v, u, canonical[edge_type]
-            if edge_types is None or edge_type in edge_types:
-                edges.append((u, v, edge_type) if data else (u, v))
-        return edges
-
-    def get_unique_edge_types(self) -> set[str]:
-        """
-        Returns the set of distinct edge types present in the graph.
-
-        Orientation-reversed views of the same edge type are treated as one: ``"<-"`` is reported as
-        ``"->"``, ``"-o"`` as ``"o-"``, and ``"<o"`` as ``"o>"`` (they differ only in which endpoint
-        is listed first). The result is therefore a subset of the six edge types
-        ``{"--", "->", "<>", "o-", "o>", "oo"}``.
-
-        Returns
-        -------
-        edge_types : set of str
-            The distinct edge types currently in the graph, each in its canonical orientation.
-
-        See Also
-        --------
-        get_edges : All edges in the graph.
-
-        Examples
-        --------
-        >>> from pgmpy.base._base import _CoreGraph
-        >>> G = _CoreGraph(edge_list=[("A", "B", "->"), ("C", "B", "<-"), ("C", "D", "<>")])
-        >>> G.get_unique_edge_types() == {"->", "<>"}
-        True
-
-        """
-        return {edge_type for _, _, edge_type in self.get_edges(data=True)}
-
-    def get_edge(self, u: Hashable, v: Hashable, data: bool = True) -> list[tuple[Hashable, ...]]:
-        """
-        Retrieve edge with optional API-formatted edge types.
-
-        Parameters
-        ----------
-        u : Hashable
-            The source node of the edge.
-        v : Hashable
-            The target node of the edge.
-        data : bool, (default=True)
-            If True, returns a tuple of size 3 along with the edge type.
-
-        Returns
-        -------
-        edge : tuple
-            edge tuples.
-            * (u, v, type)      : data=True
-            * (u, v)            : data=False
-
-        See Also
-        --------
-        get_edges : All edges in the graph.
-
-        Examples
-        --------
-        >>> from pgmpy.base._base import _CoreGraph
-        >>> graph = _CoreGraph()
-        >>> graph.add_edge("A", "B", "->")
-        >>> graph.add_edge("A", "B", "<>")
-        >>> graph.add_edge("B", "C", "--")
-        >>> sorted(graph.get_edge("A", "B"))
-        [('A', 'B', '->'), ('A', 'B', '<>')]
-        >>> sorted(graph.get_edge("B", "C"))
-        [('B', 'C', '--')]
-
-        """
-        result: list[tuple[Hashable, ...]] = []
-        if not self.has_edge(u, v):
-            raise ValueError(f"Edge ({u}, {v}) not in graph.")
-
-        keys = self[u][v]
-        for key_val, marker in keys.items():
-            if data:
-                edge_type = self._to_edge_type(u, v, marker)
-                result.append((u, v, edge_type))
-            else:
-                result.append((u, v))
-        return result
-
-    def has_edge(self, u, v, edge_type=None):
-        """
-        Returns True if the graph has an edge between nodes u and v.
-
-        Parameters
-        ----------
-        u : Hashable
-            The source node of the edge.
-        v : Hashable
-            The target node of the edge.
-        edge_type : str
-            Type must be str (and not None) and one of the values in `SUPPORTED_EDGE_TYPES`.
-
-        Returns
-        -------
-        bool
-
-        Examples
-        --------
-        >>> from pgmpy.base._base import _CoreGraph
-        >>> graph = _CoreGraph()
-        >>> graph.add_edge("A", "B", "->")
-        >>> graph.has_edge("A", "B")
-        True
-        >>> graph.has_edge("A", "B", "->")
-        True
-        >>> graph.has_edge("A", "B", "--")
-        False
-
-        """
-        if not super().has_edge(u, v):
-            return False
-
-        if edge_type is None:
-            return True
-
-        if edge_type not in self.SUPPORTED_EDGE_TYPES:
-            raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}.")
-        edge_list = self.get_edge(u, v)
-
-        for edge in edge_list:
-            if edge[2] == edge_type:
-                return True
-        return False
-
-    def replace_edge(
-        self,
-        u: Hashable,
-        v: Hashable,
-        old_type: str = "--",
-        new_type: str = "->",
-    ) -> None:
-        """
-        Replaces the type of an existing edge between two nodes with a new type.
-
-        Parameters
-        ----------
-        u : Hashable
-            The source node of the edge.
-        v : Hashable
-            The target node of the edge.
-        old_type : str, optional (default="--")
-            The current type of the edge that needs to be replaced.
-        new_type : str, optional (default="->")
-            The new edge type to be assigned.
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-        >>> from pgmpy.base._base import _CoreGraph
-        >>> graph = _CoreGraph()
-        >>> graph.add_edge("A", "B", "--")
-        >>> graph.replace_edge("A", "B", old_type="--", new_type="->")
-        >>> graph.has_edge("A", "B", "->")
-        True
-        >>> graph.has_edge("A", "B", "--")
-        False
-
-        """
-        if (old_type not in self.SUPPORTED_EDGE_TYPES) or (new_type not in self.SUPPORTED_EDGE_TYPES):
-            raise ValueError(
-                f"Unsupported edge type(s) provided. "
-                f"Got old_type='{old_type}', new_type='{new_type}'. "
-                f"Supported types are: {self.SUPPORTED_EDGE_TYPES}."
-            )
-        if not self.has_edge(u, v):
-            raise ValueError(f"Edge ({u}, {v}) not in graph.")
-
-        # TODO: Add logic of maintain edge's attr data
-        #       Currently, we treat `edge_type` as an attribute,
-        #       so additional logic will need to be developed to handle this in the future.
-        self.remove_edge(u, v, old_type)
-        self.add_edge(u, v, new_type)
 
     def to_adjacency(self, encoding: str = "edge_type", nodelist=None) -> pd.DataFrame:
         """
