@@ -23,10 +23,8 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
     ----------
     edge_list : iterable of tuples, optional
         A list or iterable of edges of the form [(variable1, variable2, edge_type), ... ] to add at initialization.
-        The edge type must be one of the following: "--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"
-
-    latents : set of nodes, (default=set())
-        A set of latent variables in the graph. These represent the variables for which we do not have any data.
+        The edge type must be one of the following: ``"--"``, ``"-o"``, ``"o-"``, ``"->"``, ``"<-"``, ``"o>"``,
+        ``"<o"``, ``"<>"``, ``"oo"``.
 
     exposures : set, (default=set())
         Set of exposure variables in the graph. These are the variables that represent the treatment or intervention
@@ -35,6 +33,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
     outcomes : set, (default=set())
         Set of outcome variables in the graph. These are the variables that represent the response or dependent
         variables being studied in a causal analysis. Default is an empty set.
+
+    latents : set of nodes, (default=set())
+        A set of latent variables in the graph. These represent the unobserved variables in the model, i.e., variables
+        that we don't have data for.
 
     roles : dict, optional (default=None)
         A dictionary mapping roles to node names.
@@ -62,17 +64,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
     ``_to_markers`` performs the ``edge_type`` to marker-dict conversion and ``_to_edge_type`` the inverse;
     ``get_edges`` / ``get_edge`` use the latter to present edges back as string codes.
 
-    **Why this scheme.**
-
-    The obvious choice, a ``networkx.DiGraph``, can only express a single directed orientation per ordered pair and
-    cannot record undirected (``"--"``), bidirected (``"<>"``), or circle (``"o"``) endpoints. Encoding orientation as
-    endpoint markers on an undirected graph instead lets a single structure represent every edge type used across
-    pgmpy's ``_CoreGraph``-based classes (``PDAG``, ``ADMG``, ``MAG``, ...), each of which restricts itself to a subset
-    via ``SUPPORTED_EDGE_TYPES``. Using a *multi*-graph additionally allows a pair of nodes to be joined by more than
-    one edge of different types at once (for example a directed ``"A->B"`` together with a bidirected ``"A<>B"``, as
-    needed by ADMGs), which a simple graph could not hold. A second edge of the *same* type between a pair is still
-    rejected (see ``add_edge``), so the multigraph capacity is used only for genuinely distinct edge types.
-
     Examples
     --------
     Create an empty `_CoreGraph` with no nodes and no edges.
@@ -86,6 +77,8 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
     >>> G = _CoreGraph(edge_list=edges)
     >>> G.get_edges(data=True)
     [('A', 'B', '->'), ('B', 'C', '->')]
+    >>> G.get_edges(data=False)
+    [('A', 'B'), ('B', 'C')]
 
     **Nodes:**
 
@@ -178,7 +171,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         elif not isinstance(roles, dict):
             raise TypeError("Roles must be provided as a dictionary.")
 
-        # set the roles to the vertices as networkx attributes
         for role, vars in roles.items():
             self.with_role(role=role, variables=vars, inplace=True)
 
@@ -192,21 +184,18 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         """
         Add an edge between u and v.
 
-        The nodes u and v will be automatically added if they are
-        not already in the graph.
+        The nodes u and v will be automatically added if they are not already in the graph.
 
         Parameters
         ----------
         u, v : Hashable
-            Nodes can be, for example, strings or numbers.
-            Nodes must be hashable (and not None) Python objects.
+            Nodes can be, for example, strings or numbers. Nodes must be hashable (and not None) Python objects.
 
         edge_type : str
             Must be one of the values in `SUPPORTED_EDGE_TYPES`. This argument is required.
 
-        kwargs : keyword arguments, optional
-            Edge data (or labels or objects) can be assigned using
-            keyword arguments.
+        **kwargs : keyword arguments, optional
+            Edge data (or labels or objects) can be assigned using keyword arguments.
 
         Returns
         -------
@@ -252,9 +241,9 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         Parameters
         ----------
         edge_list : list of tuples
-            [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...]
+            [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...].
 
-        kwargs : keyword arguments, optional
+        **kwargs : keyword arguments, optional
             Edge data (or labels or objects) can be assigned using
             keyword arguments.
 
@@ -299,10 +288,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
             One of the values in `SUPPORTED_EDGE_TYPES`. The edge of this type
             between `u` and `v` is removed. This argument is required.
 
-        kwargs : keyword arguments, optional
-            Edge data (or labels or objects) can be assigned using
-            keyword arguments.
-
         Returns
         -------
         None
@@ -340,7 +325,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         Parameters
         ----------
         edge_list : list of tuples
-            [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...]
+            [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...].
 
         Returns
         -------
@@ -355,7 +340,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "--")]
         >>> G = _CoreGraph(edge_list=edges)
-        >>> remove_edges = [("B", "C", "->"), ("C", "D", "--")]
+        >>> remove_edges = [("C", "B", "<-"), ("C", "D", "--")]
         >>> G.remove_edges_from(edge_list=remove_edges)
         >>> G.get_edges(data=True)
         [('A', 'B', '->')]
@@ -369,10 +354,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         """
         Returns a deep copy of the graph object.
 
-        Parameters
-        ----------
-        None
-
         Returns
         -------
         graph: graph object
@@ -381,10 +362,17 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         Examples
         --------
         >>> from pgmpy.base._base import _CoreGraph
-        >>> G1 = _CoreGraph()
-        >>> G2 = G1.copy()
-        >>> G2.__class__
-        <class 'pgmpy.base._base._CoreGraph'>
+        >>> G = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "<>")], latents={"B"})
+        >>> G_copy = G.copy()
+        >>> G_copy == G
+        True
+        >>> sorted(G_copy.get_edges(data=True))
+        [('A', 'B', '->'), ('B', 'C', '<>')]
+        >>> G_copy.latents
+        {'B'}
+        >>> G_copy.add_edge("C", "D", "->")
+        >>> G.has_edge("C", "D")
+        False
 
         """
         return self.get_subgraph(self.nodes())
@@ -393,10 +381,8 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         """
         Returns a subgraph as an independent copy of the same class, filtered by nodes and/or edge types.
 
-        The returned graph keeps the requested `nodes` and every edge whose both endpoints are kept and
-        whose type is in `edge_types`, with edge types and node roles (exposures, outcomes, latents, ...)
-        preserved. Unlike the inherited ``networkx.Graph.subgraph``, the result is a mutable, deep copy
-        rather than a read-only view of the original graph.
+        The returned graph keeps the requested `nodes` and every edge of edge type specified in `edge_types`. The edge
+        types and node roles (exposures, outcomes, latents, ...) are preserved in the subgraph.
 
         Parameters
         ----------
@@ -432,7 +418,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         [('A', 'B', '->'), ('B', 'C', '<>')]
         >>> sorted(G.get_subgraph(edge_types={"->"}).get_edges(data=True))
         [('A', 'B', '->')]
-
         """
         nodes = set(self.nodes()) if nodes is None else set(nodes)
         if missing := (nodes - set(self.nodes())):
@@ -482,18 +467,24 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
 
     def do(self, nodes: Hashable | Iterable[Hashable], inplace: bool = False):
         """
-        Returns the graph after applying the do-operator to `nodes` (Pearl's intervention).
+        Returns the graph after applying the do-operator to `nodes`.
 
-        Intervening on a variable severs it from all of its causes, so **every edge with an arrowhead
-        at a do-variable is removed** -- both directed edges ``Y -> X`` and bidirected edges
-        ``X <> Y`` (which encode a latent common cause pointing into ``X``). This is the standard
-        "mutilated graph" that deletes all edges incoming to ``X``. An edge whose endpoint at the
-        do-variable is a *tail* (an outgoing or undirected edge) is kept.
+        Intervening on a variable severs it from all of its causes, so every edge with an arrowhead
+        at a do-variable is removed. Assuming a node `X` in `nodes`, the following types of edges
+        will be removed:
+            - ``Y -> X``
+            - ``Y <-> X``
+            - ``Y o> X``
 
-        Tail and arrowhead marks are invariant, so the intervention is determined for them. A
-        **circle** endpoint at a do-variable is *not* invariant -- across the Markov-equivalent models
-        it may be either a tail or an arrowhead -- so whether that edge is incoming cannot be
-        determined, and a ``ValueError`` is raised.
+        And the following edge types are kept:
+            - ``X -> Y``
+            - ``X -- Y``
+            - ``X -o Y``
+
+        The following throw a `ValueError` as the edge mark at `X` is ambiguous.
+            - ``X o- Y``
+            - ``X o> Y``
+            - ``X oo Y``
 
         Parameters
         ----------
@@ -531,14 +522,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         if missing := (set(nodes) - set(self.nodes())):
             raise ValueError(f"Nodes not found in the model: {missing}")
 
-        # `get_neighbors(node, edge_types)` reads each type from `node`'s endpoint, so its leading mark
-        # classifies the edge w.r.t. the do-variable: an arrowhead is incoming (remove), a circle is
-        # ambiguous (raise); tails ("--"/"->"/"-o") are outgoing/undirected and kept. Restrict to the
-        # types this class supports so `get_neighbors` is never queried with an unsupported code.
         arrowhead_types = {"<-", "<>", "<o"} & self.SUPPORTED_EDGE_TYPES
         circle_types = {"o-", "o>", "oo"} & self.SUPPORTED_EDGE_TYPES
 
-        # A circle endpoint at any do-variable makes the intervention undetermined, so check first.
+        # Step 1: Check if any of the edges has `o` marker on `node`.
         for node in nodes:
             if self.get_neighbors(node, circle_types):
                 raise ValueError(
@@ -546,7 +533,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
                     "so it cannot be classified as incoming or not."
                 )
 
-        # Remove every incoming (arrowhead-at-`node`) edge.
+        # Step 2: Remove every incoming (arrowhead-at-`node`) edge.
         for node in nodes:
             for edge_type in arrowhead_types:
                 for neighbor in self.get_neighbors(node, edge_type):
@@ -1027,6 +1014,8 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
             The source node of the edge.
         v : Hashable
             The target node of the edge.
+        data : bool, (default=True)
+            If True, returns a tuple of size 3 along with the edge type.
 
         Returns
         -------
@@ -1034,10 +1023,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
             edge tuples.
             * (u, v, type)      : data=True
             * (u, v)            : data=False
-
-        data : bool, optional (default=True)
-            If True, returns the edge type as a string (e.g., '->') instead of
-            the internal dictionary representation. Default is True.
 
         See Also
         --------
@@ -1317,11 +1302,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         False
         >>> graph.is_collider("T", "I", "M")
         True
-
-        References
-        ----------
-        .. [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs." Journal of Machine Learning Research 9 (2008):
-        1437-1474.
         """
         if not {u, v, w}.issubset(self.nodes):
             raise ValueError(f"{u}, {v}, {w} must be present in the graph.")
@@ -1344,12 +1324,12 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
 
         Parameters
         ----------
-        other: graph object
+        other : graph object
             The other graph to compare with.
 
         Returns
         -------
-        bool:
+        bool :
             True if the graphs are equal, False otherwise.
 
         Examples
@@ -1411,7 +1391,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         Parameters
         ----------
         edge_list : list of tuples
-            [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...]
+            [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...].
         """
         for edge in edge_list:
             if len(edge) != 3:
