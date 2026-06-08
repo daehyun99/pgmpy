@@ -1621,6 +1621,15 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         else:
             return "dag {\n}"
 
+    def _variable_name_contains_non_string(self):
+        """
+        Checks if the variable names contain any non-string values. Used only for CausalInference class.
+        """
+        for node in list(self.nodes()):
+            if not isinstance(node, str):
+                return (node, type(node))
+        return False
+
     def copy(self):
         """Returns a copy of the DAG object."""
         dag = DAG(ebunch=self.edges())
