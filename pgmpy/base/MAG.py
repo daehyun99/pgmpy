@@ -97,7 +97,7 @@ class MAG(_CoreGraph):
                 if not self._is_collider(prev_node, curr_node, next_node):
                     is_inducing = False
                     break
-                ancestors_uv = self.get_ancestors(u).union(self.get_ancestors(v))
+                ancestors_uv = self.get_ancestors([u, v])
                 if curr_node not in W and curr_node not in ancestors_uv:
                     is_inducing = False
                     break

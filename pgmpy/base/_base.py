@@ -906,19 +906,20 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
                 neighbors.add(neighbor)
         return neighbors
 
-    def get_parents(self, node: Hashable) -> set[Hashable]:
+    def get_parents(self, nodes: Hashable | Iterable[Hashable]) -> set[Hashable]:
         """
-        Returns a set of parents nodes in the graph.
+        Returns the parents of a node, or the union of parents over an iterable of nodes.
 
         Parameters
         ----------
-        node : Hashable
-            Nodes can be, for example, strings or numbers. Nodes must be hashable (and not None) Python objects.
+        nodes : Hashable or iterable of Hashable
+            A single node, or a list/set of nodes whose parents are unioned. A ``str``, ``int`` or
+            ``tuple`` is treated as one node; a list, set or frozenset is treated as a collection.
 
         Returns
         -------
         nodes : set
-            Set of parents nodes.
+            Set of parent nodes.
 
         See Also
         --------
@@ -932,30 +933,30 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         Examples
         --------
         >>> from pgmpy.base._base import _CoreGraph
-        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
-        >>> G = _CoreGraph(edge_list=edges)
-        >>> print(sorted(G.get_parents("B")))
-        ['A']
-        >>> print(sorted(G.get_parents("C")))
-        ['B']
+        >>> G = _CoreGraph(edge_list=[("A", "C", "->"), ("B", "C", "->"), ("C", "D", "->")])
+        >>> sorted(G.get_parents("C"))
+        ['A', 'B']
+        >>> sorted(G.get_parents(["C", "D"]))
+        ['A', 'B', 'C']
 
         """
-        return self.get_neighbors(node=node, edge_types="<-")
+        nodes = list(nodes) if isinstance(nodes, (list, set, frozenset)) else [nodes]
+        return set().union(*(self.get_neighbors(node=n, edge_types="<-") for n in nodes))
 
-    def get_children(self, node: Hashable) -> set[Hashable]:
+    def get_children(self, nodes: Hashable | Iterable[Hashable]) -> set[Hashable]:
         """
-        Returns a set of children nodes in the graph.
+        Returns the children of a node, or the union of children over an iterable of nodes.
 
         Parameters
         ----------
-        node : Hashable
-            Nodes can be, for example, strings or numbers.
-            Nodes must be hashable (and not None) Python objects.
+        nodes : Hashable or iterable of Hashable
+            A single node, or a list/set of nodes whose children are unioned. A ``str``, ``int`` or
+            ``tuple`` is treated as one node; a list, set or frozenset is treated as a collection.
 
         Returns
         -------
         nodes : set
-            Set of children nodes.
+            Set of child nodes.
 
         See Also
         --------
@@ -969,15 +970,15 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         Examples
         --------
         >>> from pgmpy.base._base import _CoreGraph
-        >>> edges = [("A", "B", "->"), ("B", "C", "->")]
-        >>> G = _CoreGraph(edge_list=edges)
-        >>> print(sorted(G.get_children("A")))
-        ['B']
-        >>> print(sorted(G.get_children("B")))
-        ['C']
+        >>> G = _CoreGraph(edge_list=[("A", "B", "->"), ("A", "C", "->"), ("C", "D", "->")])
+        >>> sorted(G.get_children("A"))
+        ['B', 'C']
+        >>> sorted(G.get_children(["A", "C"]))
+        ['B', 'C', 'D']
 
         """
-        return self.get_neighbors(node=node, edge_types="->")
+        nodes = list(nodes) if isinstance(nodes, (list, set, frozenset)) else [nodes]
+        return set().union(*(self.get_neighbors(node=n, edge_types="->") for n in nodes))
 
     def get_spouses(self, node: Hashable) -> set[Hashable]:
         """
@@ -1016,20 +1017,20 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         """
         return self.get_neighbors(node=node, edge_types="<>")
 
-    def get_ancestors(self, node: Hashable) -> set[Hashable]:
+    def get_ancestors(self, nodes: Hashable | Iterable[Hashable]) -> set[Hashable]:
         """
         Returns a set of ancestors nodes in the graph.
 
         Parameters
         ----------
-        node : Hashable
-            Nodes can be, for example, strings or numbers.
-            Nodes must be hashable (and not None) Python objects.
+        nodes : Hashable or iterable of Hashable
+            A single node, or a list/set of nodes; ancestors are unioned over the collection. A
+            ``str``, ``int`` or ``tuple`` is one node; a list, set or frozenset is a collection.
 
         Returns
         -------
         nodes : set
-            Set of ancestors nodes.
+            Set of ancestor nodes (including the input node(s)).
 
         See Also
         --------
@@ -1051,11 +1052,13 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         ['A', 'B']
 
         """
-        if node not in self.nodes():
-            raise ValueError(f"Node {node} not in graph.")
+        nodes = list(nodes) if isinstance(nodes, (list, set, frozenset)) else [nodes]
+        for n in nodes:
+            if n not in self.nodes():
+                raise ValueError(f"Node {n} not in graph.")
 
         ancestors = set()
-        queue = deque([node])
+        queue = deque(nodes)
 
         while queue:
             current = queue.popleft()

@@ -82,16 +82,16 @@ class TestPDAG:
     def test_get_children(self):
         pdag = PDAG(edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
 
-        assert pdag.get_children(node="A") == {"C"}
-        assert pdag.get_children(node="B") == set()
-        assert pdag.get_children(node="C") == set()
+        assert pdag.get_children("A") == {"C"}
+        assert pdag.get_children("B") == set()
+        assert pdag.get_children("C") == set()
 
     def test_get_parents(self):
         pdag = PDAG(edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])
 
-        assert pdag.get_parents(node="A") == set()
-        assert pdag.get_parents(node="B") == set()
-        assert pdag.get_parents(node="C") == {"A", "D"}
+        assert pdag.get_parents("A") == set()
+        assert pdag.get_parents("B") == set()
+        assert pdag.get_parents("C") == {"A", "D"}
 
     def test_get_neighbors(self):
         pdag = PDAG(edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")])

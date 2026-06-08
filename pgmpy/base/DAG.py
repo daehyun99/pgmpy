@@ -441,25 +441,31 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
                 else:
                     self.add_edge(edge[0], edge[1], edge[2])
 
-    def get_parents(self, node: Hashable):
+    def get_parents(self, nodes: Hashable | Iterable[Hashable]):
         """
-        Returns a list of parents of node.
+        Returns the parents of a node, or the union of parents over an iterable of nodes.
 
-        Throws an error if the node is not present in the graph.
+        A single node (``str``/``int``/``tuple``) returns a ``list`` of its parents (backward
+        compatible); a list or set of nodes returns the ``set`` union of their parents. Throws an
+        error if the node is not present in the graph.
 
         Parameters
         ----------
-        node: string, int or any hashable python object.
-            The node whose parents would be returned.
+        nodes: hashable, or iterable of hashable
+            The node (or collection of nodes) whose parents would be returned.
 
         Examples
         --------
         >>> from pgmpy.base import DAG
         >>> G = DAG(ebunch=[("diff", "grade"), ("intel", "grade")])
-        >>> G.get_parents(node="grade")
+        >>> G.get_parents("grade")
         ['diff', 'intel']
+        >>> G.get_parents(["grade", "intel"]) == {"diff", "intel"}
+        True
         """
-        return list(self.predecessors(node))
+        if isinstance(nodes, (list, set, frozenset)):
+            return set().union(*(set(self.predecessors(n)) for n in nodes))
+        return list(self.predecessors(nodes))
 
     def moralize(self):
         """
@@ -520,15 +526,18 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         """
         return [node for node, in_degree in dict(self.in_degree()).items() if in_degree == 0]
 
-    def get_children(self, node: Hashable):
+    def get_children(self, nodes: Hashable | Iterable[Hashable]):
         """
-        Returns a list of children of node.
-        Throws an error if the node is not present in the graph.
+        Returns the children of a node, or the union of children over an iterable of nodes.
+
+        A single node (``str``/``int``/``tuple``) returns a ``list`` of its children (backward
+        compatible); a list or set of nodes returns the ``set`` union of their children. Throws an
+        error if the node is not present in the graph.
 
         Parameters
         ----------
-        node: string, int or any hashable python object.
-            The node whose children would be returned.
+        nodes: hashable, or iterable of hashable
+            The node (or collection of nodes) whose children would be returned.
 
         Examples
         --------
@@ -543,10 +552,14 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         ...         ("E", "G"),
         ...     ]
         ... )
-        >>> g.get_children(node="B")
+        >>> g.get_children("B")
         ['D', 'E', 'F']
+        >>> g.get_children(["B", "E"]) == {"D", "E", "F", "G"}
+        True
         """
-        return list(self.successors(node))
+        if isinstance(nodes, (list, set, frozenset)):
+            return set().union(*(set(self.successors(n)) for n in nodes))
+        return list(self.successors(nodes))
 
     def get_spouses(self, node: Hashable) -> set[Hashable]:
         """
@@ -802,7 +815,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         if (end in self.neighbors(start)) or (start in self.neighbors(end)):
             raise ValueError("No possible separators because start and end are adjacent")
         an_graph = self.get_ancestral_graph([start, end])
-        separator = set(itertools.chain(self.predecessors(start), self.predecessors(end)))
+        separator = self.get_parents([start, end])
 
         if not include_latents:
             # If any of the parents were latents, take the latent's parent

@@ -835,6 +835,19 @@ class TestDAGMoralization(unittest.TestCase):
         self.assertEqual(dag.get_spouses("u"), {"y"})  # u and y co-parent w
         self.assertEqual(dag.get_spouses("w"), set())  # w has no children -> no co-parents
 
+    def test_get_parents_children_iterable(self):
+        dag = DAG([("A", "C"), ("B", "C"), ("C", "D")])
+        # single node -> list (backward-compatible)
+        self.assertIsInstance(dag.get_parents("C"), list)
+        self.assertListEqual(sorted(dag.get_parents("C")), ["A", "B"])
+        self.assertListEqual(sorted(dag.get_children("C")), ["D"])
+        # an iterable of nodes -> union (set)
+        self.assertEqual(dag.get_parents(["C", "D"]), {"A", "B", "C"})
+        self.assertEqual(dag.get_children({"A", "B"}), {"C"})  # set input is a collection
+        # a tuple is a single node (DBN-style nodes), not a collection
+        tdag = DAG([(("A", 0), ("B", 1))])
+        self.assertListEqual(tdag.get_parents(("B", 1)), [("A", 0)])
+
     def tearDown(self):
         del self.graph
 

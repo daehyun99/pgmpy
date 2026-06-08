@@ -1008,7 +1008,7 @@ class CausalInference:
         # Step 2: Check if adjustment set is provided, otherwise try calculating it.
         if adjustment_set is None:
             do_vars = [var for var, state in do.items()]
-            adjustment_set = set(chain(*[self.model.predecessors(var) for var in do_vars]))
+            adjustment_set = self.model.get_parents(do_vars)
             if len(adjustment_set.intersection(self.model.latents)) != 0:
                 raise ValueError("Not all parents of do variables are observed. Please specify an adjustment set.")
 

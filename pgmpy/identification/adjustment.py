@@ -199,9 +199,7 @@ class Adjustment(BaseIdentification):
 
         conditional_vars = exposure + adjustment_vars
 
-        predecessors = set()
-        for exposure_var in exposure:
-            predecessors.update(causal_graph.predecessors(exposure_var))
+        predecessors = causal_graph.get_parents(exposure)
 
         parents_d_sep = []
         for pred_var in predecessors:

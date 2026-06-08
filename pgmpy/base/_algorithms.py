@@ -42,9 +42,7 @@ class _GraphAlgorithms:
             raise ValueError(f"`nodes` must be a collection of nodes, not a single node. Got {nodes!r}.")
         nodes_set = set(nodes)
 
-        ancestors = set(nodes_set)
-        for node in nodes_set:
-            ancestors.update(self.get_ancestors(node))
+        ancestors = self.get_ancestors(nodes_set)
 
         return self.get_subgraph(ancestors)
 
@@ -167,8 +165,7 @@ class _GraphAlgorithms:
         """
         has_inducing = False
 
-        ancestors = self.get_ancestors(u)
-        ancestors.update(self.get_ancestors(v))
+        ancestors = self.get_ancestors([u, v])
 
         for path in nx.all_simple_paths(self, source=u, target=v):
             if len(path) <= 2:

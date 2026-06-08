@@ -803,6 +803,19 @@ class TestCoreGraph:
         with pytest.raises(ValueError):
             _CoreGraph().get_spouses(1)
 
+    def test_get_parents_children_ancestors_iterable(self):
+        """`get_parents`/`get_children`/`get_ancestors` accept a single node or an iterable (union)."""
+        g = _CoreGraph(edge_list=[("A", "C", "->"), ("B", "C", "->"), ("C", "D", "->"), ("X", "Y", "->")])
+        # single node -> set (unchanged)
+        assert g.get_parents("C") == {"A", "B"}
+        assert g.get_children("C") == {"D"}
+        assert g.get_ancestors("C") == {"A", "B", "C"}
+        # an iterable of nodes -> union (set)
+        assert g.get_parents(["C", "D"]) == {"A", "B", "C"}
+        assert g.get_children(["A", "B"]) == {"C"}
+        assert g.get_ancestors(["C", "Y"]) == {"A", "B", "C", "X", "Y"}
+        assert g.get_ancestors({"D"}) == {"A", "B", "C", "D"}  # a set is a collection too
+
     def test_get_ancestors(self):
         """Test `get_ancestors` method of the `_CoreGraph` class."""
         # ancestors follow incoming directed edges and include the node itself
