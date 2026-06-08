@@ -469,19 +469,19 @@ class TestPDAG:
             latents=["B"],
             roles={"exposures": "A", "adjustment": "D", "outcomes": "C"},
         )
-        # Case3: When the directed_ebunch variables differ between models
+        # Case3: When the directed edges differ between models
         other3 = PDAG(
             edge_list=[("A", "C", "->"), ("D", "C", "->"), ("E", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
             latents=["B"],
             roles={"exposures": ("A", "D"), "outcomes": ["C"]},
         )
-        # Case4: When the directed_ebunch variables differ between models
+        # Case4: When the directed edges differ between models
         other4 = PDAG(
             edge_list=[("A", "E", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "D", "--")],
             latents=["B"],
             roles={"exposures": ("A", "D"), "outcomes": ["C"]},
         )
-        # Case5: When the undirected_ebunch variables differ between models
+        # Case5: When the undirected edges differ between models
         other5 = PDAG(
             edge_list=[("A", "C", "->"), ("D", "C", "->"), ("B", "A", "--"), ("B", "E", "--")],
             latents=["B"],

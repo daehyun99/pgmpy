@@ -1063,6 +1063,42 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         pdag.add_nodes_from(self.nodes())
         return pdag
 
+    def to_adjacency(self, encoding: str = "edge_type", nodelist: list | None = None) -> pd.DataFrame:
+        """
+        Return the adjacency matrix of the DAG as a ``pandas.DataFrame``.
+
+        Temporary shim mirroring :meth:`pgmpy.base._base._CoreGraph.to_adjacency` until ``DAG`` itself
+        inherits ``_CoreGraph``. Every edge of a DAG is a directed ``u -> v`` edge, so only the
+        ``"edge_type"`` and ``"binary"`` (alias ``"bnlearn"``) encodings are supported.
+
+        Parameters
+        ----------
+        encoding : str (default="edge_type")
+            - ``"edge_type"`` : ``M.loc[u, v]`` is ``"->"`` and ``M.loc[v, u]`` is ``"<-"`` for an edge
+              ``u -> v`` (else ``0``).
+            - ``"binary"`` / ``"bnlearn"`` : ``M.loc[u, v] = 1`` iff ``u -> v`` (directed, asymmetric).
+
+        nodelist : list, optional (default=None)
+            Row/column ordering. If ``None``, the sorted node list is used.
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        nodes = sorted(self.nodes()) if nodelist is None else list(nodelist)
+        if encoding in ("binary", "bnlearn"):
+            return nx.to_pandas_adjacency(self, nodelist=nodes, dtype=int, weight=None)
+        if encoding == "edge_type":
+            adj = pd.DataFrame(0, index=nodes, columns=nodes, dtype=object)
+            for u, v in self.edges():
+                adj.at[u, v] = "->"
+                adj.at[v, u] = "<-"
+            return adj
+        raise ValueError(
+            f"DAG.to_adjacency is a temporary shim supporting encoding in {{'edge_type', 'binary'}}; "
+            f"got {encoding!r}. Other encodings become available once DAG inherits _CoreGraph."
+        )
+
     def do(
         self,
         nodes: Hashable | Iterable[Hashable] | tuple[Hashable, Hashable],

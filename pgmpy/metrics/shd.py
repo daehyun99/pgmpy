@@ -1,4 +1,3 @@
-import networkx as nx
 import numpy as np
 
 from pgmpy.base import DAG, PDAG
@@ -67,24 +66,12 @@ class SHD(BaseSupervisedMetric):
         self.edge_reverse_penalty = edge_reverse_penalty
         super().__init__()
 
-    @staticmethod
-    def _binary_adjacency(graph, nodes_list):
-        """
-        0/1 directed adjacency matrix ordered by `nodes_list`: directed edges are asymmetric and
-        undirected edges symmetric. Marker-based graphs provide this directly via
-        ``to_adjacency(encoding="binary")``; a legacy ``DiGraph``-based graph (the current ``DAG``,
-        which does not yet inherit ``_CoreGraph``) is converted through networkx.
-        """
-        if hasattr(graph, "to_adjacency"):
-            return graph.to_adjacency(encoding="binary", nodelist=nodes_list).to_numpy()
-        dag = nx.DiGraph(graph.edges())
-        dag.add_nodes_from(list(nx.isolates(graph)))
-        return np.asarray(nx.adjacency_matrix(dag, nodelist=nodes_list).todense())
-
     def _evaluate(self, true_causal_graph, est_causal_graph):
+        # Both DAG and PDAG expose ``to_adjacency``; the binary encoding gives a 0/1 directed
+        # adjacency (directed edges asymmetric, undirected edges symmetric).
         nodes_list = list(true_causal_graph.nodes())
-        m1 = self._binary_adjacency(true_causal_graph, nodes_list)
-        m2 = self._binary_adjacency(est_causal_graph, nodes_list)
+        m1 = true_causal_graph.to_adjacency(encoding="binary", nodelist=nodes_list).to_numpy()
+        m2 = est_causal_graph.to_adjacency(encoding="binary", nodelist=nodes_list).to_numpy()
 
         shd = 0
 

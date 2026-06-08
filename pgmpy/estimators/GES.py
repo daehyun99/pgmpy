@@ -219,7 +219,9 @@ class GES(StructureEstimator):
         for c in C:
             if new_model.has_edge(c, v, "--"):
                 new_model.replace_edge(c, v, "--", "->")
-            else:
+            elif not new_model.has_edge(c, v, "->"):
+                if new_model.has_edge(v, c, "->"):
+                    new_model.remove_edge(v, c, "->")
                 new_model.add_edge(c, v, "->")
 
         return new_model

@@ -1,7 +1,6 @@
 from collections.abc import Callable, Hashable
 from itertools import combinations
 
-import networkx as nx
 import pandas as pd
 
 from pgmpy.base import PDAG
@@ -276,7 +275,9 @@ class PC(_ConstraintMixin, BaseCausalDiscovery):
         else:
             raise ValueError(f"return_type must be one of: dag, pdag, or cpdag. Got: {self.return_type}")
 
-        self.adjacency_matrix_ = nx.to_pandas_adjacency(self.causal_graph_, weight=1, dtype="int")
+        self.adjacency_matrix_ = self.causal_graph_.to_adjacency(
+            encoding="binary", nodelist=list(self.causal_graph_.nodes())
+        )
 
         return self
 

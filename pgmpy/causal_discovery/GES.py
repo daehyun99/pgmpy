@@ -233,7 +233,9 @@ class GES(_ScoreMixin, BaseCausalDiscovery):
         for c in C:
             if new_model.has_edge(c, v, "--"):
                 new_model.replace_edge(c, v, "--", "->")
-            else:
+            elif not new_model.has_edge(c, v, "->"):
+                if new_model.has_edge(v, c, "->"):
+                    new_model.remove_edge(v, c, "->")
                 new_model.add_edge(c, v, "->")
 
         return new_model
@@ -502,6 +504,8 @@ class GES(_ScoreMixin, BaseCausalDiscovery):
         else:
             raise ValueError(f"return_type must be one of: dag, pdag. Got: {self.return_type}")
 
-        self.adjacency_matrix_ = nx.to_pandas_adjacency(self.causal_graph_, weight=1, dtype="int")
+        self.adjacency_matrix_ = self.causal_graph_.to_adjacency(
+            encoding="binary", nodelist=list(self.causal_graph_.nodes())
+        )
 
         return self
