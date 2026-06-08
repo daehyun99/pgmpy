@@ -150,7 +150,7 @@ class GES(_ScoreMixin, BaseCausalDiscovery):
         """
         T = set(T)
 
-        if current_model.has_edge(u, v) or current_model.has_edge(v, u):
+        if current_model.has_edge(u, v):
             raise ValueError(f"Nodes u={u} and v={v} are already connected.")
 
         if T:

@@ -322,46 +322,23 @@ class _GraphAlgorithms:
             )
         return list(nx.topological_sort(self.get_directed_graph()))
 
-    def has_directed_cycle(self):
+    def has_directed_cycle(self) -> bool:
         """
+        Returns whether the directed (``"->"``) edges of the graph contain a cycle.
 
-
-        Parameters
-        ----------
+        Only the directed sub-graph is considered (see ``get_directed_graph``); undirected,
+        bidirected and circle edges are ignored.
 
         Returns
         -------
         bool
+            True if the directed edges form at least one cycle, otherwise False.
 
         See Also
         --------
-        `DAG`
-        `ADMG`
-        `PDAG`
-        `MAG`
-
-        Notes
-        -----
-
-
-        Examples
-        --------
-
-        References
-        ----------
-        [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
-        Journal of Machine Learning Research 9 (2008): 1437-1474.
+        get_directed_graph : The directed projection used for the check.
+        get_topological_order : A topological order (only exists when there is no directed cycle).
         """
-        # # TODO(@daehyun99): [#2385] Fix Docs (Unify Docs Format)
-        # # TODO(@daehyun99): [#2385] Apply type hint(input, output)
-        # # TODO(@daehyun99): [#2385] Implement code logic and test code When Refactor DAG
-        # networkx_edge_list = super().edges(keys=True, data=True)
-        # from pgmpy.base import DAG
-        # dag = DAG()
-        # for edge in networkx_edge_list:
-        # if edge[-1] == {edge[0]: "-", edge[1]: ">"}:
-        # dag.add_edge(edge[0], edge[1], "->")
-
         return not nx.is_directed_acyclic_graph(self.get_directed_graph())
 
     def _check_new_unshielded_collider(self, u: Hashable, v: Hashable) -> bool:

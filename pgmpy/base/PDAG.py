@@ -125,10 +125,6 @@ class PDAG(_CoreGraph):
             return not self.has_directed_cycle()
         return nx.is_directed_acyclic_graph(self.to_dag())
 
-    def _check_new_unshielded_collider(self, u, v) -> bool:
-        """Whether orienting ``u - v`` as ``u -> v`` would create a new unshielded collider at `v`."""
-        return any((node != u) and (not self.has_edge(u, node)) for node in self.get_parents(v))
-
     def apply_meeks_rules(self, apply_r4=False, inplace=False, debug=False):
         """
         Applies Meek's rules to orient the undirected edges of the PDAG, returning a (maximally
@@ -258,10 +254,7 @@ class PDAG(_CoreGraph):
             for x in sorted(pdag.nodes()):
                 undirected_neighbors = pdag.get_neighbors(x, "--")
                 neighbors_are_adjacent = all(
-                    pdag.has_edge(y, z) or pdag.has_edge(z, y)
-                    for z in pdag.get_neighbors(x)
-                    for y in undirected_neighbors
-                    if not y == z
+                    pdag.has_edge(y, z) for z in pdag.get_neighbors(x) for y in undirected_neighbors if not y == z
                 )
 
                 if not pdag.get_children(x) and (not undirected_neighbors or neighbors_are_adjacent):
