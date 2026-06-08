@@ -1,6 +1,6 @@
 import warnings
 from collections.abc import Iterable
-from itertools import chain, product
+from itertools import chain, pairwise, product
 
 import networkx as nx
 import numpy as np
@@ -751,7 +751,7 @@ class CausalInference:
         all_path_effects = []
         for path in all_simple_paths:
             causal_effect = []
-            for x1, x2 in zip(path, path[1:]):
+            for x1, x2 in pairwise(path):
                 if isinstance(estimand_strategy, frozenset):
                     adjustment_set = frozenset({estimand_strategy})
                     assert self.is_valid_backdoor_adjustment_set(x1, x2, Z=adjustment_set)
