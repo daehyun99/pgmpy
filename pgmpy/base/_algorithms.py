@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from collections.abc import Hashable, Iterable
 
 import networkx as nx
@@ -10,14 +8,15 @@ from pgmpy.utils.types import Self
 class _GraphAlgorithms:
     """Graph-algorithm methods for ``_CoreGraph``-based classes (inherited, not instantiated alone)."""
 
-    def get_ancestral_graph(self, nodes: str | Iterable[str]) -> Self:
+    def get_ancestral_graph(self, nodes: Iterable[Hashable]) -> Self:
         """
-        Return the ancestral graph induced by the input nodes.
+        Return the ancestral graph induced by `nodes`: the subgraph over `nodes` together with all of
+        their ancestors.
 
         Parameters
         ----------
-        nodes : str or iterable of str
-            Node or list of nodes to induce subgraph on.
+        nodes : iterable of Hashable
+            A collection of nodes to induce the ancestral graph on.
 
         Returns
         -------
@@ -33,19 +32,19 @@ class _GraphAlgorithms:
         ...     ("C", "D", "<>"),
         ...     ("C", "E", "--"),
         ... ]
-        >>> graph = _CoreGraph()
-        >>> graph.add_edges_from(edges)
-        >>> ancestral_graph = graph.get_ancestral_graph("C")
+        >>> graph = _CoreGraph(edge_list=edges)
+        >>> ancestral_graph = graph.get_ancestral_graph(["C", "D"])
         >>> sorted(ancestral_graph.get_edges(data=True))
-        [('A', 'B', '->'), ('B', 'C', '->')]
+        [('A', 'B', '->'), ('B', 'C', '->'), ('C', 'D', '<>')]
 
         """
-        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
+        if isinstance(nodes, str):
+            raise ValueError(f"`nodes` must be a collection of nodes, not a single node. Got {nodes!r}.")
+        nodes_set = set(nodes)
 
         ancestors = set(nodes_set)
         for node in nodes_set:
-            ancestor = self.get_ancestors(node)
-            ancestors.update(ancestor)
+            ancestors.update(self.get_ancestors(node))
 
         return self.get_subgraph(ancestors)
 
@@ -65,13 +64,13 @@ class _GraphAlgorithms:
             A set containing the nodes in the Markov blanket of the input node or
             nodes.
 
-        See Also
-        --------
-        `DAG`, `ADMG`
-
         Notes
         -----
-        Currently, this method is only applicable to ADMGs and DAGs.
+        Defined only for graphs with directed/bidirected edges (DAGs and ADMGs). For an ADMG the
+        Markov blanket of ``v`` is the bidirected-connected district ``dis(v)``, the parents of
+        ``dis(v)``, and -- for every child ``c`` of ``v`` -- ``dis(c)`` together with its parents, all
+        with ``v`` itself removed. For a DAG (where ``dis(v) = {v}``) this reduces to the parents,
+        children, and the children's other parents (co-parents).
 
         Examples
         --------
@@ -83,36 +82,42 @@ class _GraphAlgorithms:
         ...     ("A", "D", "<>"),
         ...     ("B", "E", "<>"),
         ... ]
-        >>> admg = ADMG()
-        >>> admg.add_edges_from(edges)
-        >>> admg.add_node("F", latent=True)
-        >>> admg.with_role(role="exposures", variables={"A"}, inplace=True)
-        >>> admg.with_role(role="outcomes", variables={"C"}, inplace=True)
-
+        >>> admg = ADMG(edge_list=edges, exposures={"A"}, outcomes={"C"})
         >>> sorted(admg.get_markov_blanket("B"))
-        ['A', 'C', 'E']
+        ['A', 'C', 'D', 'E']
 
         References
         ----------
-        [1] Richardson, Thomas. "Markov Properties for Acyclic Directed Mixed Graphs."
-            Scandinavian Journal of Statistics 30.1 (2003): 145-157.
-            https://doi.org/10.1111/1467-9469.00323
+        .. [1] Richardson, Thomas. "Markov Properties for Acyclic Directed Mixed Graphs." Scandinavian Journal of
+               Statistics 30.1 (2003): 145-157. https://doi.org/10.1111/1467-9469.00323
         """
-        # NOTE: For simplicity of definition, current support is limited to DAGs and ADMGs.
-        #       This can be extended to MAGs and PAGs in the future.
-        from pgmpy.base import ADMG, DAG
-
-        if not (isinstance(self, DAG) or isinstance(self, ADMG)):
-            raise TypeError("get_markov_blanket is currently only supported for ADMGs and DAGs.")
+        if not self.SUPPORTED_EDGE_TYPES <= {"->", "<-", "<>"}:
+            raise TypeError(
+                "get_markov_blanket is only supported for graphs with directed and bidirected edges "
+                f"(DAG, ADMG); {self.__class__.__name__} supports {sorted(self.SUPPORTED_EDGE_TYPES)}."
+            )
 
         nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
 
         if not nodes_set.issubset(self.nodes):
             raise ValueError("Input nodes must be subset of graph's nodes.")
 
+        has_bidirected = "<>" in self.SUPPORTED_EDGE_TYPES
+
+        def district_with_parents(node):
+            # The node's bidirected-connected district plus the parents of every district member
+            # (just the node and its parents when the graph has no bidirected edges).
+            district = self.get_reachable_nodes(node, "<>") if has_bidirected else {node}
+            members = set(district)
+            for member in district:
+                members.update(self.get_parents(member))
+            return members
+
         markov_blanket = set()
         for node in nodes_set:
-            markov_blanket.update(self.get_parents(node), self.get_children(node), self.get_spouses(node))
+            markov_blanket |= district_with_parents(node)
+            for child in self.get_children(node):
+                markov_blanket |= district_with_parents(child)
 
         markov_blanket -= nodes_set
 

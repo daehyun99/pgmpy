@@ -1416,7 +1416,7 @@ class TestCoreGraph:
 
         # get_ancestral_graph (which is built on get_subgraph) still returns the correct independent graph
         graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "->"), ("C", "D", "<>"), ("C", "E", "--")])
-        ancestral = graph.get_ancestral_graph("C")
+        ancestral = graph.get_ancestral_graph(["C"])
         assert type(ancestral) is _CoreGraph
         assert set(ancestral.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "->")}
         ancestral.add_edge("A", "C", "->")

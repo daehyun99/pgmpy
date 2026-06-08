@@ -1,6 +1,6 @@
 import pytest
 
-from pgmpy.base import ADMG, MAG
+from pgmpy.base import ADMG, MAG, PDAG
 from pgmpy.base._base import _CoreGraph
 
 
@@ -440,7 +440,7 @@ class TestGraphAlgorithmMixin:
         edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "<>"), ("C", "E", "--")]
         graph1.add_edges_from(edges)
 
-        new_graph1 = graph1.get_ancestral_graph("C")
+        new_graph1 = graph1.get_ancestral_graph(["C"])
 
         assert isinstance(new_graph1, _CoreGraph)
         assert set(new_graph1.nodes()) == {"A", "B", "C"}
@@ -451,7 +451,7 @@ class TestGraphAlgorithmMixin:
         edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "<>"), ("C", "E", "->")]
         graph2.add_edges_from(edges)
 
-        new_graph2 = graph2.get_ancestral_graph("C")
+        new_graph2 = graph2.get_ancestral_graph(["C"])
 
         assert isinstance(new_graph2, ADMG)
         assert set(new_graph2.nodes()) == {"A", "B", "C"}
@@ -462,7 +462,7 @@ class TestGraphAlgorithmMixin:
         edges = [("A", "B", "->"), ("B", "C", "->"), ("C", "D", "<>"), ("C", "E", "--")]
         graph3.add_edges_from(edges)
 
-        new_graph3 = graph3.get_ancestral_graph("C")
+        new_graph3 = graph3.get_ancestral_graph(["C"])
 
         assert isinstance(new_graph3, MAG)
         assert set(new_graph3.nodes()) == {"A", "B", "C"}
@@ -485,7 +485,7 @@ class TestGraphAlgorithmMixin:
         graph.outcomes = {"C", "D"}
         graph.latents = {"D", "E"}
 
-        new_graph = graph.get_ancestral_graph("C")
+        new_graph = graph.get_ancestral_graph(["C"])
 
         assert isinstance(new_graph, _CoreGraph)
         assert set(new_graph.nodes()) == {"A", "B", "C"}
@@ -510,13 +510,18 @@ class TestGraphAlgorithmMixin:
         self.admg.with_role(role="exposures", variables={"A"}, inplace=True)
         self.admg.with_role(role="outcomes", variables={"C"}, inplace=True)
 
-        mb_b = self.admg.get_markov_blanket("B")
+        # parents(B)={A}, children(B)={C}, district(B)={B,E} (spouse E), pa(E)={D}.
+        # D enters because conditioning on E (B <> E) opens the collider B <> E <- D.
+        assert self.admg.get_markov_blanket("B") == {"A", "C", "D", "E"}
 
-        assert mb_b == {"A", "C", "E"}
+        # Co-parents: a child's other parents belong to the blanket (collider A -> C <- X).
+        collider = ADMG(edge_list=[("A", "C", "->"), ("X", "C", "->")])
+        assert collider.get_markov_blanket("A") == {"C", "X"}
 
-        # TODO: Implement test code for DAG
-
-        # TODO: Implement failing code for other graphs
+        # The district is the full (transitive) bidirected component and its parents are included:
+        # B <> E <> G with D -> E  =>  MB(B) = {E, G} (district) ∪ {D} (parent of E).
+        chain = ADMG(edge_list=[("B", "E", "<>"), ("E", "G", "<>"), ("D", "E", "->")])
+        assert chain.get_markov_blanket("B") == {"E", "G", "D"}
 
     def test_get_markov_blanket_fails(self):
         """Test getting Markov blanket."""
@@ -528,10 +533,9 @@ class TestGraphAlgorithmMixin:
         with pytest.raises(TypeError):
             graph.get_markov_blanket("B")
 
-        # # TODO(@daehyun99): Activate test code when refactor PDAG
-        # graph = PDAG()
-        # with pytest.raises(TypeError):
-        #     graph.get_markov_blanket("B")
+        graph = PDAG()
+        with pytest.raises(TypeError):
+            graph.get_markov_blanket("B")
 
     def test_has_inducing_path(self, AncestralGraph, MaximalAncestralGraph):
         """"""
