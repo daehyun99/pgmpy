@@ -566,7 +566,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         {'X'}
 
         """
-        # A root has no arrowhead (`<-`/`<>`/`<o`) and no circle (`o-`/`o>`/`oo`) endpoint at it.
         incoming_or_ambiguous = {"<-", "<>", "<o", "o-", "o>", "oo"} & self.SUPPORTED_EDGE_TYPES
         return {node for node in self.nodes() if not self.get_neighbors(node, incoming_or_ambiguous)}
 
@@ -596,24 +595,22 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         {'Y'}
 
         """
-        # A leaf has no tail (`--`/`->`/`-o`) and no circle (`o-`/`o>`/`oo`) endpoint at it.
         outgoing_or_ambiguous = {"--", "->", "-o", "o-", "o>", "oo"} & self.SUPPORTED_EDGE_TYPES
         return {node for node in self.nodes() if not self.get_neighbors(node, outgoing_or_ambiguous)}
 
     def get_neighbors(self, node: Hashable, edge_types: str | Iterable[str] | None = None) -> set[Hashable]:
         """
-        Returns a set of neighbors nodes in the graph.
+        Returns a set of neighbors nodes in the graph that are connected through one of the specified edge types.
 
         Parameters
         ----------
         node : Hashable
-            Nodes can be, for example, strings or numbers.
-            Nodes must be hashable (and not None) Python objects.
+            Nodes can be, for example, strings or numbers. Nodes must be hashable (and not None) Python objects.
 
         edge_types : str or iterable of str, optional (default: None)
-            A single edge type or a collection of them, each from ``SUPPORTED_EDGE_TYPES`` and read
-            from ``node``'s endpoint. A neighbor is returned if connected by an edge of any of these
-            types; ``None`` returns all neighbors. Raises ``ValueError`` on an unsupported type.
+            A single edge type or a collection of them, each from ``SUPPORTED_EDGE_TYPES`` and read from ``node``'s
+            endpoint. A neighbor is returned if connected by an edge of any of these types; ``None`` returns all
+            neighbors. Raises ``ValueError`` on an unsupported type.
 
         Returns
         -------
@@ -652,12 +649,14 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         if unsupported := (requested - self.SUPPORTED_EDGE_TYPES):
             raise ValueError(f"Types must be one of {self.SUPPORTED_EDGE_TYPES}. Got {unsupported}.")
 
-        return {
-            neighbor
-            for neighbor in self.neighbors(node)
-            for markers in self.get_edge_data(node, neighbor).values()
-            if self._to_edge_type(node, neighbor, markers) in requested
-        }
+        neighbors = set()
+        for neighbor in self.neighbors(node):
+            connecting_types = {
+                self._to_edge_type(node, neighbor, markers) for markers in self.get_edge_data(node, neighbor).values()
+            }
+            if connecting_types & requested:
+                neighbors.add(neighbor)
+        return neighbors
 
     def get_parents(self, node: Hashable) -> set[Hashable]:
         """
@@ -666,8 +665,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         Parameters
         ----------
         node : Hashable
-            Nodes can be, for example, strings or numbers.
-            Nodes must be hashable (and not None) Python objects.
+            Nodes can be, for example, strings or numbers. Nodes must be hashable (and not None) Python objects.
 
         Returns
         -------
