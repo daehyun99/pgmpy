@@ -4,8 +4,6 @@ from skbase.base import BaseEstimator as _BaseEstimator
 class BaseParameter(_BaseEstimator):
     """Base class for all parameter classes in pgmpy."""
 
-    _config = {}
-
     _tags = {
         "variable_type": "discrete",
         "produces_factor": False,
