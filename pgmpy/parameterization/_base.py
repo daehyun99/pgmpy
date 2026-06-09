@@ -2,6 +2,8 @@ from skbase.base import BaseEstimator as _BaseEstimator
 
 
 class BaseParameter(_BaseEstimator):
+    """Base class for all parameter classes in pgmpy."""
+
     _config = {}
 
     _tags = {
@@ -9,7 +11,7 @@ class BaseParameter(_BaseEstimator):
         "produces_factor": False,
         "is_linear_gaussian": False,
         "supports_fit_joint": False,
-        "python_dependencies": [],
+        "python_dependencies": (),
     }
 
     @property
