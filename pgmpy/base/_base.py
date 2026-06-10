@@ -179,7 +179,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         u: Hashable,
         v: Hashable,
         edge_type: str,
-        **kwargs,
     ) -> None:
         """
         Add an edge between u and v.
@@ -193,9 +192,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
 
         edge_type : str
             Must be one of the values in `SUPPORTED_EDGE_TYPES`. This argument is required.
-
-        **kwargs : keyword arguments, optional
-            Edge data (or labels or objects) can be assigned using keyword arguments.
 
         Returns
         -------
@@ -227,13 +223,12 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
             raise ValueError(f"Adding edge ({u}, {v}, '{edge_type}') would create a directed cycle.")
 
         markers = self._to_markers(edge=(u, v, edge_type))
-        key = super().add_edge(u, v, **kwargs)
+        key = super().add_edge(u, v)
         self.edges[u, v, key].update({u: markers[u], v: markers[v]})
 
     def add_edges_from(
         self,
         edge_list: Iterable[tuple[Hashable, Hashable, str]],
-        **kwargs,
     ) -> None:
         """
         Add all the edges in edge_list.
@@ -242,10 +237,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         ----------
         edge_list : list of tuples
             [(`u`, `v`, `edge_type`), (`u`, `v`, `edge_type`), ...].
-
-        **kwargs : keyword arguments, optional
-            Edge data (or labels or objects) can be assigned using
-            keyword arguments.
 
         Returns
         -------
@@ -560,9 +551,6 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         if not self.has_edge(u, v):
             raise ValueError(f"Edge ({u}, {v}) not in graph.")
 
-        # TODO: Add logic of maintain edge's attr data
-        #       Currently, we treat `edge_type` as an attribute,
-        #       so additional logic will need to be developed to handle this in the future.
         self.remove_edge(u, v, old_type)
         self.add_edge(u, v, new_type)
 
@@ -737,7 +725,8 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         Parameters
         ----------
         nodes : Hashable or iterable of Hashable
-            The variable(s) to intervene on. All must be present in the graph.
+            The variable(s) to intervene on; all must be present in the graph. A ``str``, ``int``
+            or ``tuple`` is one node; a list, set or frozenset is a collection.
 
         inplace : bool (default: False)
             If True, modify and return this graph; otherwise return a modified copy.
@@ -766,7 +755,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
 
         """
         graph = self if inplace else self.copy()
-        nodes = [nodes] if isinstance(nodes, (str, int)) else list(nodes)
+        nodes = list(nodes) if isinstance(nodes, (list, set, frozenset)) else [nodes]
         if missing := (set(nodes) - set(self.nodes())):
             raise ValueError(f"Nodes not found in the model: {missing}")
 
@@ -1067,15 +1056,15 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
                 queue.extend(self.get_parents(current))
         return ancestors
 
-    def get_descendants(self, node: Hashable) -> set[Hashable]:
+    def get_descendants(self, nodes: Hashable | Iterable[Hashable]) -> set[Hashable]:
         """
         Returns a set of descendants nodes in the graph.
 
         Parameters
         ----------
-        node : Hashable
-            Nodes can be, for example, strings or numbers.
-            Nodes must be hashable (and not None) Python objects.
+        nodes : Hashable or iterable of Hashable
+            A single node, or a list/set of nodes; descendants are unioned over the collection. A
+            ``str``, ``int`` or ``tuple`` is one node; a list, set or frozenset is a collection.
 
         Returns
         -------
@@ -1098,15 +1087,17 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         >>> G = _CoreGraph(edge_list=edges)
         >>> print(sorted(G.get_descendants("A")))
         ['A', 'B', 'C']
-        >>> print(sorted(G.get_descendants("B")))
+        >>> print(sorted(G.get_descendants(["B", "C"])))
         ['B', 'C']
 
         """
-        if node not in self.nodes():
-            raise ValueError(f"Node {node} not in graph.")
+        nodes = list(nodes) if isinstance(nodes, (list, set, frozenset)) else [nodes]
+        for n in nodes:
+            if n not in self.nodes():
+                raise ValueError(f"Node {n} not in graph.")
 
         descendants = set()
-        queue = deque([node])
+        queue = deque(nodes)
 
         while queue:
             current = queue.popleft()
@@ -1364,21 +1355,23 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         True
 
         """
-        if not isinstance(other, self.__class__):
+        if type(other) is not type(self):
             return False
-        return nx.utils.graphs_equal(self, other) and self.get_role_dict() == other.get_role_dict()
+
+        def canonical(graph):
+            return (
+                set(graph.nodes()),
+                frozenset(frozenset({(u, markers[u]), (v, markers[v])}) for u, v, markers in graph.edges(data=True)),
+                frozenset((role, frozenset(nodes)) for role, nodes in graph.get_role_dict().items()),
+            )
+
+        return canonical(self) == canonical(other)
 
     def __hash__(self):
         """
         Returns a hash derived from the same things ``__eq__`` compares: the class, the nodes, the
         edges, and the variable roles. Equal graphs therefore hash equally, and graphs of different
-        types (e.g. an ``ADMG`` and a ``MAG``) with the same structure get distinct hashes. Each edge
-        is represented by the unordered set of its ``(node, marker)`` endpoints, so the hash does not
-        depend on which way round a symmetric edge (``"<>"``, ``"--"``, ``"oo"``) happened to be stored.
-
-        As with any value-based hash of a mutable object, mutating the graph (adding or removing
-        edges, nodes, or roles) changes its hash, so a graph must not be modified while it is held
-        in a ``set`` or used as a ``dict`` key.
+        types (e.g. an ``ADMG`` and a ``MAG``) with the same structure get distinct hashes.
 
         Returns
         -------
@@ -1395,14 +1388,8 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
 
         """
         edges = frozenset(frozenset({(u, markers[u]), (v, markers[v])}) for u, v, markers in self.edges(data=True))
-        return hash(
-            (
-                type(self),
-                frozenset(self.nodes()),
-                edges,
-                frozenset((role, frozenset(nodes)) for role, nodes in self.get_role_dict().items()),
-            )
-        )
+        roles = frozenset((role, frozenset(nodes)) for role, nodes in self.get_role_dict().items())
+        return hash((type(self), frozenset(self.nodes()), edges, roles))
 
     def _validate_edges(
         self,

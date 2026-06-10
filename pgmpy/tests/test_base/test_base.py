@@ -302,16 +302,6 @@ class TestCoreGraph:
 
         check_graph_status(graph, 2, 4, set(), set(), set(), {})
 
-        # edge with kwargs
-        graph = _CoreGraph()
-        graph.add_edge("A", "B", "->", weight=5)
-        graph.add_edge("B", "C", "->", weight=8)
-
-        assert sorted(graph.edges(keys=True, data=True)) == [
-            ("A", "B", 0, {"weight": 5, "A": "-", "B": ">"}),
-            ("B", "C", 0, {"weight": 8, "B": "-", "C": ">"}),
-        ]
-
         # fails: duplicate edge of the same type is rejected
         graph = _CoreGraph()
         graph.add_edge("A", "B", "->")
@@ -709,6 +699,8 @@ class TestCoreGraph:
         assert g.get_children(["A", "B"]) == {"C"}
         assert g.get_ancestors(["C", "Y"]) == {"A", "B", "C", "X", "Y"}
         assert g.get_ancestors({"D"}) == {"A", "B", "C", "D"}  # a set is a collection too
+        assert g.get_descendants(["C", "X"]) == {"C", "D", "X", "Y"}
+        assert g.get_descendants({"A"}) == {"A", "C", "D"}  # a set is a collection too
 
     def test_get_ancestors(self):
         """Test `get_ancestors` method of the `_CoreGraph` class."""
@@ -1056,6 +1048,19 @@ class TestCoreGraph:
         # Not a graph class
         other_str = "not a graph"
         assert graph.__eq__(other_str) == False
+
+        # parallel edges added in a different order are still equal (and hash equally)
+        g1 = _CoreGraph(edge_list=[("X", "Y", "->"), ("X", "Y", "<>")])
+        g2 = _CoreGraph(edge_list=[("X", "Y", "<>"), ("X", "Y", "->")])
+        assert g1 == g2
+        assert hash(g1) == hash(g2)
+
+        # identical structure but different class is never equal, in either direction -- the class
+        # is part of the hash, so a subclass instance must not compare equal to its parent class
+        cg = _CoreGraph(edge_list=[("A", "B", "->")])
+        admg = ADMG(edge_list=[("A", "B", "->")])
+        assert cg.__eq__(admg) == False
+        assert admg.__eq__(cg) == False
 
     def test_hash(self):
         """Test `__hash__`: equal graphs hash equally and are usable in sets / as dict keys."""
@@ -1424,6 +1429,11 @@ class TestCoreGraph:
         # node not in the graph raises
         with pytest.raises(ValueError, match="not found"):
             _CoreGraph(edge_list=[("X", "A", "->")]).do("Q")
+
+        # a tuple is a single (hashable) node, not a collection -- same convention as `get_parents`
+        graph = _CoreGraph(edge_list=[("X", ("A", 0), "->"), (("A", 0), "Y", "->")])
+        result = graph.do(("A", 0))
+        assert set(result.get_edges(data=True)) == {(("A", 0), "Y", "->")}
 
     def test_get_roots_and_leaves(self):
         """Test `get_roots`/`get_leaves` (mark-based): root = all tails at node, leaf = all arrowheads at node."""
