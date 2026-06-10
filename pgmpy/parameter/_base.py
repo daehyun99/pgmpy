@@ -63,7 +63,7 @@ class BaseParameter(_BaseEstimator):
         """
         raise NotImplementedError
 
-    def _check_data(self, X, y):
+    def _check_data(self, X, y=None):
         """check train data with tag"""
         # TODO: Implement when #3455
         # Is this data pd.DataFrame?
