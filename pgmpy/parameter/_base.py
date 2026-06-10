@@ -14,6 +14,7 @@ class BaseParameter(_BaseEstimator):
 
     def fit(self, X, y):
         """API docs"""
+        self._check_data(X, y)
         return self._fit(X, y)
 
     def _fit(self, X, y):
@@ -37,6 +38,7 @@ class BaseParameter(_BaseEstimator):
 
     def predict_proba(self, X):
         """API docs"""
+        self._check_data(X)
         y_pred = self._predict_proba(X)
         return y_pred
 
@@ -60,3 +62,11 @@ class BaseParameter(_BaseEstimator):
             labels predicted for `X`
         """
         raise NotImplementedError
+
+    def _check_data(self, X, y):
+        """check train data with tag"""
+        # TODO: Implement when #3455
+        # Is this data pd.DataFrame?
+        # Is this produces factor?
+        # Is data format match with tag(`variable_type`)?
+        pass
