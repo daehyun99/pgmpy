@@ -8,6 +8,7 @@ class BaseParameter(_BaseEstimator):
         "variable_type": str,
         "produces_factor": bool,
         "is_linear_gaussian": bool,
+        "missing": bool,
         "supports_fit_joint": bool,
         "python_dependencies": tuple,
     }

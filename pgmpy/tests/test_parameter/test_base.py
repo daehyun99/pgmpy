@@ -14,6 +14,7 @@ class TestBaseParameter:
         assert parameter.__class__.__name__ == "BaseParameter"
         assert parameter.get_class_tag("variable_type") is str
         assert parameter.get_class_tag("produces_factor") is bool
+        assert parameter.get_class_tag("missing") is bool
         assert parameter.get_class_tag("is_linear_gaussian") is bool
         assert parameter.get_class_tag("supports_fit_joint") is bool
         assert parameter.get_class_tag("python_dependencies") is tuple
