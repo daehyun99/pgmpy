@@ -1,60 +1,16 @@
-"""Extension template for probability distributions - simple pattern.
-
-Purpose of this implementation template:
-    quick implementation of new estimators following the template
-    NOT a concrete class to import! This is NOT a base class or concrete class!
-    This is to be used as a "fill-in" coding template.
-
-How to use this implementation template to implement a new distribution:
-- make a copy of the template in a suitable location, give it a descriptive name.
-- work through all the "todo" comments below
-- fill in code for mandatory methods, and optionally for optional methods
+"""
 - do not write to reserved attributes: index, columns, head, tail, loc, iloc, at, iat,
   shape, ndim, _bc_params, _tags, _tags_dynamic, _config, _config_dynamic
-- you can add more private methods, but do not override BaseEstimator's private methods
-    an easy way to be safe is to prefix your methods with "_custom"
-- change docstrings for functions and the file
-- ensure interface compatibility by skpro.utils.estimator_checks.check_estimator
-- once complete: use as a local library, or contribute to skpro via PR
-- more details:
-  https://www.sktime.net/en/stable/developer_guide/add_estimators.html
-
-Mandatory methods to implement: at least one, better both of
-    sampling        - _sample(self, n_samples=None)
-    ppf             - _ppf(self, p)
-
-Optional methods to implement:
-    mean            - _mean(self)
-    variance        - _var(self)
-    pdf             - _pdf(self, x)
-    log_pdf         - _log_pdf(self, x)
-    pmf             - _pmf(self, x)
-    log_pmf         - _log_pmf(self, x)
-    cdf             - _cdf(self, x)
-    ppf             - _ppf(self, p)
-    energy_self     - _energy_self(self)
-    energy_x        - _energy_x(self, x)
-
-Testing - required for test framework and check_estimator usage:
-    get default parameters for test instance(s) - get_test_params()
 """
-# todo: write an informative docstring for the file or module, remove the above
-# todo: add an appropriate copyright notice for your estimator
-#       estimators contributed to skpro should have the copyright notice at the top
-#       estimators of your own do not need to have permissive or BSD-3 copyright
 
+import numpy as np
+import pandas as pd
 from skpro.distributions.base import BaseDistribution
-
-# todo: add any necessary imports here - no soft dependency imports
-
-# todo: for imports of skpro soft dependencies:
-# make sure to fill in the "python_dependencies" tag with the package import name
-# import soft dependencies only inside methods of the class, not at the top of the file
 
 
 # todo: change class name and write docstring
 class CategoricalDistribution(BaseDistribution):
-    """Custom probability distribution. todo: write docstring.
+    """Categorical probability distribution.
 
     todo: describe your custom probability distribution here
 
@@ -72,70 +28,32 @@ class CategoricalDistribution(BaseDistribution):
         "distr:measuretype": "discrete",
         "distr:paramtype": "parametric",
         "capabilities:approx": [],
-        "capabilities:exact": ["mean", "var", "log_pmf", "pmf", "cdf", "ppf"],
-        "broadcast_init": "on",
+        "capabilities:exact": ["log_pmf", "pmf", "cdf", "ppf"],
+        "broadcast_init": "off",
     }
 
-    # todo: fill init
-    # params should be written to self and never changed
-    # super call must not be removed, change class name
-    # parameter checks can go after super call
-    def __init__(self, param1="param1default", param2="param2default", index=None, columns=None):
-        # all distributions must have index and columns arg with None defaults
-        # this is to ensure pandas-like behaviour
+    def __init__(self, values, state_names=None, index=None, columns=["variable"]):
 
-        # todo: write any hyper-parameters and components to self
-        self.param1 = param1
-        self.param2 = param2
+        self.values = values
+        self.state_names = state_names
 
-        # leave this as is
+        values = np.asarray(values, dtype=float)
+
+        n_conditions, n_states = values.shape
+
+        if state_names is None:
+            state_names = np.arange(n_states)
+        else:
+            state_names = np.asarray(state_names)
+
+        if index is None:
+            index = pd.RangeIndex(n_conditions)
+
+        self.values = values
+        self.state_names = state_names
+
         super().__init__(index=index, columns=columns)
 
-        # todo: optional, parameter checking logic (if applicable) should happen here
-        # if writes derived values to self, should *not* overwrite self.parama etc
-        # instead, write to self._parama, self._newparam (starting with _)
-
-    # todo: implement as many of the following methods as possible
-    # if not implemented, the base class will try to fill it in
-    # from the other implemented methods
-    # at least _ppf, or sample should be implemented for the distribution to be usable
-    # if _ppf is implemented, _sample does not need to be (uses ppf sampling)
-
-    # todo: consider implementing
-    # if not implemented, uses Monte Carlo estimate via sample
-    def _mean(self):
-        """Return expected value of the distribution.
-
-        Returns
-        -------
-        2D np.ndarray, same shape as ``self``
-            expected value of distribution (entry-wise)
-        """
-        param1 = self._bc_params["param1"]  # returns broadcast params to x.shape
-        param2 = self._bc_params["param2"]  # returns broadcast params to x.shape
-
-        res = "do_sth_with(" + param1 + param2 + ")"  # replace this by internal logic
-        return res
-
-    # todo: consider implementing
-    # if not implemented, uses Monte Carlo estimate via sample
-    def _var(self):
-        r"""Return element/entry-wise variance of the distribution.
-
-        Returns
-        -------
-        2D np.ndarray, same shape as ``self``
-            variance of the distribution (entry-wise)
-        """
-        param1 = self._bc_params["param1"]  # returns broadcast params to x.shape
-        param2 = self._bc_params["param2"]  # returns broadcast params to x.shape
-
-        res = "do_sth_with(" + param1 + param2 + ")"  # replace this by internal logic
-        return res
-
-    # todo: consider implementing - only for discrete or mixed distributions
-    # at least one of _pmf and _log_pmf should be implemented
-    # if not implemented, returns exp of log_pmf
     def _pmf(self, x):
         """Probability mass function.
 
@@ -149,15 +67,32 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray, same shape as ``self``
             pmf values at the given points
         """
-        param1 = self._bc_params["param1"]  # returns broadcast params to x.shape
-        param2 = self._bc_params["param2"]  # returns broadcast params to x.shape
+        values = self.values
+        state_names = self.state_names
 
-        res = "do_sth_with(" + param1 + param2 + ")"  # replace this by internal logic
-        return res
+        x = np.asarray(x)
 
-    # todo: consider implementing - only for discrete or mixed distributions
-    # at least one of _pmf and _log_pmf should be implemented
-    # if not implemented, returns log of pmf
+        if x.ndim == 1:
+            x = x.reshape(-1, 1)
+
+        if x.shape != self.shape:
+            raise ValueError(f"x must have shape {self.shape}, but got {x.shape}")
+
+        x_flat = x[:, 0]
+
+        matches = x_flat[:, None] == state_names[None, :]
+
+        valid = matches.any(axis=1)
+
+        state_idx = matches.argmax(axis=1)
+        row_idx = np.arange(values.shape[0])
+
+        res = values[row_idx, state_idx]
+
+        res = np.where(valid, res, 0.0)
+
+        return res.reshape(-1, 1)
+
     def _log_pmf(self, x):
         """Logarithmic probability mass function.
 
@@ -171,15 +106,9 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray, same shape as ``self``
             log pmf values at the given points
         """
-        param1 = self._bc_params["param1"]  # returns broadcast params to x.shape
-        param2 = self._bc_params["param2"]  # returns broadcast params to x.shape
+        pmf = self._pmf(x)
+        return np.log(pmf)
 
-        res = "do_sth_with(" + param1 + param2 + ")"  # replace this by internal logic
-        return res
-
-    # todo: consider implementing
-    # at least one of _ppf and _sample must be implemented
-    # if not implemented, uses Monte Carlo estimate based on sample
     def _cdf(self, x):
         """Cumulative distribution function.
 
@@ -193,15 +122,27 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray, same shape as ``self``
             cdf values at the given points
         """
-        param1 = self._bc_params["param1"]  # returns broadcast params to x.shape
-        param2 = self._bc_params["param2"]  # returns broadcast params to x.shape
+        values = self.values
+        state_names = self.state_names
 
-        res = "do_sth_with(" + param1 + param2 + ")"  # replace this by internal logic
-        return res
+        x = np.asarray(x)
 
-    # todo: consider implementing
-    # at least one of _ppf and _sample must be implemented
-    # if not implemented, uses bisection method on cdf
+        if x.ndim == 1:
+            x = x.reshape(-1, 1)
+
+        if x.shape != self.shape:
+            raise ValueError(f"x must have shape {self.shape}, but got {x.shape}")
+
+        x_flat = x[:, 0]
+
+        res = np.empty(values.shape[0], dtype=float)
+
+        for i, xi in enumerate(x_flat):
+            mask = state_names <= xi
+            res[i] = values[i, mask].sum()
+
+        return res.reshape(-1, 1)
+
     def _ppf(self, p):
         """Quantile function = percent point function = inverse cdf.
 
@@ -215,88 +156,76 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray, same shape as ``self``
             ppf values at the given points
         """
-        pass
+        values = self.values
+        state_names = self.state_names
 
-    # todo: consider implementing
-    # if not implemented, uses Monte Carlo estimate via sample
-    def _energy_self(self):
-        r"""Energy of self, w.r.t. self.
+        p = np.asarray(p, dtype=float)
 
-        :math:`\mathbb{E}[|X-Y|]`, where :math:`X, Y` are i.i.d. copies of self.
+        if p.ndim == 0:
+            p = p.reshape(1, 1)
 
-        Private method, to be implemented by subclasses.
+        if p.ndim == 1:
+            p = p.reshape(-1, 1)
 
-        Returns
-        -------
-        2D np.ndarray, same shape as ``self``
-            energy values w.r.t. the given points
-        """
-        param1 = self._bc_params["param1"]  # returns broadcast params to x.shape
-        param2 = self._bc_params["param2"]  # returns broadcast params to x.shape
+        if p.shape != self.shape:
+            raise ValueError(f"p must have shape {self.shape}, but got {p.shape}")
 
-        res = "do_sth_with(" + param1 + param2 + ")"  # replace this by internal logic
-        return res
+        if np.any((p < 0) | (p > 1)):
+            raise ValueError("p values must be between 0 and 1.")
 
-    # todo: consider implementing
-    # if not implemented, uses Monte Carlo estimate via sample
-    def _energy_x(self, x):
-        r"""Energy of self, w.r.t. a constant frame x.
+        p_flat = p[:, 0]
 
-        :math:`\mathbb{E}[|X-x|]`, where :math:`X` is a copy of self,
-        and :math:`x` is a constant.
+        # Ensure quantiles follow the same ordering implied by CDF:
+        # F(x) = P(X <= x)
+        order = np.argsort(state_names)
+        sorted_states = state_names[order]
+        sorted_values = values[:, order]
 
-        Private method, to be implemented by subclasses.
+        cdf = np.cumsum(sorted_values, axis=1)
 
-        Parameters
-        ----------
-        x : 2D np.ndarray, same shape as ``self``
-            values to compute energy w.r.t. to
+        # Numerical safety: if probabilities are normalized but floating error exists
+        cdf[:, -1] = 1.0
 
-        Returns
-        -------
-        2D np.ndarray, same shape as ``self``
-            energy values w.r.t. the given points
-        """
-        param1 = self._bc_params["param1"]  # returns broadcast params to x.shape
-        param2 = self._bc_params["param2"]  # returns broadcast params to x.shape
+        idx = np.array([np.searchsorted(cdf[i], p_flat[i], side="left") for i in range(values.shape[0])])
 
-        res = "do_sth_with(" + param1 + param2 + ")"  # replace this by internal logic
-        return res
+        res = sorted_states[idx]
+
+        return res.reshape(-1, 1)
 
     # todo: consider implementing
     # at least one of _ppf and _sample must be implemented
     # if not implemented, uses _ppf for sampling (inverse cdf on uniform)
-    def _sample(self, n_samples=None):
-        """Sample from the distribution.
+    # def _sample(self, n_samples=None):
+    #     """Sample from the distribution.
 
-        Parameters
-        ----------
-        n_samples : int, optional, default = None
-            number of samples to draw from the distribution
+    #     Parameters
+    #     ----------
+    #     n_samples : int, optional, default = None
+    #         number of samples to draw from the distribution
 
-        Returns
-        -------
-        pd.DataFrame
-            samples from the distribution
+    #     Returns
+    #     -------
+    #     pd.DataFrame
+    #         samples from the distribution
 
-            * if ``n_samples`` is ``None``:
-            returns a sample that contains a single sample from ``self``,
-            in ``pd.DataFrame`` mtype format convention, with ``index`` and ``columns``
-            as ``self``
-            * if n_samples is ``int``:
-            returns a ``pd.DataFrame`` that contains ``n_samples`` i.i.d.
-            samples from ``self``, in ``pd-multiindex`` mtype format convention,
-            with same ``columns`` as ``self``, and row ``MultiIndex`` that is product
-            of ``RangeIndex(n_samples)`` and ``self.index``
-        """
-        param1 = self._bc_params["param1"]  # returns broadcast params to x.shape
-        param2 = self._bc_params["param2"]  # returns broadcast params to x.shape
+    #         * if ``n_samples`` is ``None``:
+    #         returns a sample that contains a single sample from ``self``,
+    #         in ``pd.DataFrame`` mtype format convention, with ``index`` and ``columns``
+    #         as ``self``
+    #         * if n_samples is ``int``:
+    #         returns a ``pd.DataFrame`` that contains ``n_samples`` i.i.d.
+    #         samples from ``self``, in ``pd-multiindex`` mtype format convention,
+    #         with same ``columns`` as ``self``, and row ``MultiIndex`` that is product
+    #         of ``RangeIndex(n_samples)`` and ``self.index``
+    #     """
+    #     param1 = self._bc_params["param1"]  # returns broadcast params to x.shape
+    #     param2 = self._bc_params["param2"]  # returns broadcast params to x.shape
 
-        res = "do_sth_with(" + param1 + param2 + ")"  # replace this by internal logic
-        return res
-
+    #     res = "do_sth_with(" + param1 + param2 + ")"  # replace this by internal logic
+    #     return res
     # todo: return default parameters, so that a test instance can be created
     #   required for automated unit and integration testing of estimator
+
     @classmethod
     def get_test_params(cls, parameter_set="default"):
         """Return testing parameter settings for the estimator.
