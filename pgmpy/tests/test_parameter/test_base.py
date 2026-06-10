@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 from sklearn.datasets import make_moons
 
-from pgmpy.parameterization._base import BaseParameter
+from pgmpy.parameter._base import BaseParameter
 
 
 class TestBaseParameter:
