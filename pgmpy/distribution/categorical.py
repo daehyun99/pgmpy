@@ -32,25 +32,27 @@ class CategoricalDistribution(BaseDistribution):
         "broadcast_init": "off",
     }
 
-    def __init__(self, values, state_names=None, index=None, columns=["variable"]):
+    def __init__(self, values, state_names=None, index=None, columns=None):
 
         self.values = values
         self.state_names = state_names
 
-        values = np.asarray(values, dtype=float)
-
-        n_conditions, n_states = values.shape
+        _values = np.asarray(values, dtype=float)
+        n_conditions, n_states = _values.shape
 
         if state_names is None:
-            state_names = np.arange(n_states)
+            _state_names = np.arange(n_states)
         else:
-            state_names = np.asarray(state_names)
+            _state_names = np.asarray(state_names)
 
         if index is None:
             index = pd.RangeIndex(n_conditions)
 
-        self.values = values
-        self.state_names = state_names
+        if columns is None:
+            columns = ["variable"]
+
+        self._values = _values
+        self._state_names = _state_names
 
         super().__init__(index=index, columns=columns)
 
@@ -67,8 +69,8 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray, same shape as ``self``
             pmf values at the given points
         """
-        values = self.values
-        state_names = self.state_names
+        values = self._values
+        state_names = self._state_names
 
         x = np.asarray(x)
 
@@ -122,8 +124,8 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray, same shape as ``self``
             cdf values at the given points
         """
-        values = self.values
-        state_names = self.state_names
+        values = self._values
+        state_names = self._state_names
 
         x = np.asarray(x)
 
@@ -156,8 +158,8 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray, same shape as ``self``
             ppf values at the given points
         """
-        values = self.values
-        state_names = self.state_names
+        values = self._values
+        state_names = self._state_names
 
         p = np.asarray(p, dtype=float)
 
@@ -244,43 +246,10 @@ class CategoricalDistribution(BaseDistribution):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`
         """
+        # params1 = {"values": [[0.1, 0.9], [0.7, 0.3]], "state_names": ["A", "B"]}
+        params2 = {"values": [[0.1, 0.9], [0.7, 0.3]], "state_names": [1, 2]}
+        # params3 = {"values": [[0.1, 0.7, 0.2], [0.5, 0.3, 0.2]], "state_names": [["A"]]}
+        params4 = {"values": [[0.1, 0.7, 0.2], [0.5, 0.3, 0.2]], "state_names": [[1]]}
 
-        # todo: set the testing parameters for the estimators
-        # Testing parameters can be dictionary or list of dictionaries
-        #
-        # this can, if required, use:
-        #   class properties (e.g., inherited); parent class test case
-        #   imported objects such as estimators from skpro or sklearn
-        # important: all such imports should be *inside get_test_params*, not at the top
-        #            since imports are used only at testing time
-        #
-        # A parameter dictionary must be returned *for all values* of parameter_set,
-        #   i.e., "parameter_set not available" errors should never be raised.
-        #
-        # A good parameter set should primarily satisfy two criteria,
-        #   1. Chosen set of parameters should have a low testing time,
-        #      ideally in the magnitude of few seconds for the entire test suite.
-        #       This is vital for the cases where default values result in
-        #       "big" models which not only increases test time but also
-        #       run into the risk of test workers crashing.
-        #   2. There should be a minimum two such parameter sets with different
-        #      sets of values to ensure a wide range of code coverage is provided.
-        #
-        # example 1: specify params as dictionary
-        # any number of params can be specified
-        # params = {"est": value0, "parama": value1, "paramb": value2}
-        #
-        # example 2: specify params as list of dictionary
-        # note: Only first dictionary will be used by create_test_instance
-        # params = [{"est": value1, "parama": value2},
-        #           {"est": value3, "parama": value4}]
-        #
-        # example 3: parameter set depending on param_set value
-        #   note: only needed if a separate parameter set is needed in tests
-        # if parameter_set == "special_param_set":
-        #     params = {"est": value1, "parama": value2}
-        #     return params
-        #
-        # # "default" params
-        # params = {"est": value3, "parama": value4}
-        # return params
+        # return [params1, params2, params3, params4]
+        return [params2, params4]

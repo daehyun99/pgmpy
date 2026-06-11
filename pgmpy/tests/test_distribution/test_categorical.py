@@ -7,7 +7,8 @@ class TestCategoricalDistribution:
     """Tests for Categorical distributions."""
 
     def test_default(self):
-        dist = CategoricalDistribution()
+        values = [[0.1, 0.9], [0.7, 0.3]]
+        dist = CategoricalDistribution(values)
 
         assert dist.name == "CategoricalDistribution"
         assert dist.get_class_tag("python_version") is None
@@ -28,14 +29,10 @@ class TestCategoricalDistribution:
         from skpro.utils.estimator_checks import check_estimator
 
         values = [[0.1, 0.9], [0.7, 0.3]]
-        values = np.asarray(values)
-
-        values = [[0.1, 0.9], [0.7, 0.3]]
-        values = np.asarray(values)
-        x = [["A"], ["B"]]
+        x = [[1], [2]]
         x = np.asarray(x)
 
-        dist = CategoricalDistribution(values=values, state_names=["A", "B"])
+        dist = CategoricalDistribution(values=values, state_names=[1, 2])
 
         check_estimator(dist, raise_exceptions=True, verbose=False)
 
