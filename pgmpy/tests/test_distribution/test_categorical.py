@@ -1,5 +1,3 @@
-import numpy as np
-
 from pgmpy.distribution.categorical import CategoricalDistribution
 
 

@@ -228,9 +228,8 @@ class CategoricalDistribution(BaseDistribution):
 
         sampled = np.empty((n_samples, n_rows), dtype=state_names.dtype)
 
-        for s in range(n_samples):
-            for i in range(n_rows):
-                sampled[s, i] = np.random.choice(state_names, p=values[i])
+        for i in range(n_rows):
+            sampled[:, i] = np.random.choice(state_names, size=n_samples, p=values[i])
 
         index = self.index
         columns = self.columns
