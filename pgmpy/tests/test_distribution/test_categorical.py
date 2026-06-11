@@ -34,6 +34,8 @@ class TestCategoricalDistribution:
 
     def test_init(self):
         """test"""
+        # Case 0: default
+
         # Case 1: values: list
 
         # Case 2: values: numpy
@@ -54,6 +56,16 @@ class TestCategoricalDistribution:
 
         # Case 10: wrong columns
 
+        # Case 11: values: pd.Series
+
+        # Case 12: values: pd.DataFrame
+
+        # Case 13: worng shape(values, state_names)
+
+        # Case 14: state_names's order
+
+        # Case 15: duplicate of state_names
+
     def test_cdf(self):
         """test"""
         # Case 1: x: int
@@ -67,6 +79,8 @@ class TestCategoricalDistribution:
         # Case 5: wrong x's value
 
         # Case 6: wrong x's shape
+
+        # Case 7: broadcasting
 
     def test_ppf(self):
         """test"""
@@ -82,6 +96,7 @@ class TestCategoricalDistribution:
 
         # Case 6: wrong p's shape
 
+        # Case 7: broadcasting
 
     def test_pmf(self):
         """test"""
@@ -97,6 +112,8 @@ class TestCategoricalDistribution:
 
         # Case 6: wrong x's shape
 
+        # Case 7: broadcasting
+
     def test_log_pmf(self):
         """test"""
         # Case 1: x: int
@@ -111,6 +128,8 @@ class TestCategoricalDistribution:
 
         # Case 6: wrong x's shape
 
+        # Case 7: broadcasting
+
     def test_sample(self):
         """test"""
         # Case 1: n_samples
@@ -120,3 +139,11 @@ class TestCategoricalDistribution:
         # Case 3: n_samples shape
 
         # Case 4: wrong n_samples value
+
+    def test_mathematical_consistency(self):
+        """test"""
+        # Case 1: ppf(cdf(x)) = x 
+
+        # Case 2: cdf(ppf(p)) = p
+
+        # Case 3: log(pmf(x)) = log_pmf(x)
