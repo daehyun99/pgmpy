@@ -194,39 +194,61 @@ class CategoricalDistribution(BaseDistribution):
 
         return res.reshape(-1, 1)
 
-    # todo: consider implementing
-    # at least one of _ppf and _sample must be implemented
-    # if not implemented, uses _ppf for sampling (inverse cdf on uniform)
-    # def _sample(self, n_samples=None):
-    #     """Sample from the distribution.
+    def _sample(self, n_samples=None):
+        """Sample from the distribution.
 
-    #     Parameters
-    #     ----------
-    #     n_samples : int, optional, default = None
-    #         number of samples to draw from the distribution
+        Parameters
+        ----------
+        n_samples : int, optional, default = None
+            number of samples to draw from the distribution
 
-    #     Returns
-    #     -------
-    #     pd.DataFrame
-    #         samples from the distribution
+        Returns
+        -------
+        pd.DataFrame
+            samples from the distribution
 
-    #         * if ``n_samples`` is ``None``:
-    #         returns a sample that contains a single sample from ``self``,
-    #         in ``pd.DataFrame`` mtype format convention, with ``index`` and ``columns``
-    #         as ``self``
-    #         * if n_samples is ``int``:
-    #         returns a ``pd.DataFrame`` that contains ``n_samples`` i.i.d.
-    #         samples from ``self``, in ``pd-multiindex`` mtype format convention,
-    #         with same ``columns`` as ``self``, and row ``MultiIndex`` that is product
-    #         of ``RangeIndex(n_samples)`` and ``self.index``
-    #     """
-    #     param1 = self._bc_params["param1"]  # returns broadcast params to x.shape
-    #     param2 = self._bc_params["param2"]  # returns broadcast params to x.shape
+            * if ``n_samples`` is ``None``:
+            returns a sample that contains a single sample from ``self``,
+            in ``pd.DataFrame`` mtype format convention, with ``index`` and ``columns``
+            as ``self``
+            * if n_samples is ``int``:
+            returns a ``pd.DataFrame`` that contains ``n_samples`` i.i.d.
+            samples from ``self``, in ``pd-multiindex`` mtype format convention,
+            with same ``columns`` as ``self``, and row ``MultiIndex`` that is product
+            of ``RangeIndex(n_samples)`` and ``self.index``
+        """
+        values = self._values
+        state_names = self._state_names
 
-    #     res = "do_sth_with(" + param1 + param2 + ")"  # replace this by internal logic
-    #     return res
-    # todo: return default parameters, so that a test instance can be created
-    #   required for automated unit and integration testing of estimator
+        single_sample = n_samples is None
+        if single_sample:
+            n_samples = 1
+
+        n_rows, n_states = values.shape
+
+        sampled = np.empty((n_samples, n_rows), dtype=state_names.dtype)
+
+        for s in range(n_samples):
+            for i in range(n_rows):
+                sampled[s, i] = np.random.choice(state_names, p=values[i])
+
+        index = self.index
+        columns = self.columns
+
+        if single_sample:
+            res = pd.DataFrame(sampled[0].reshape(-1, 1), index=index, columns=columns)
+        else:
+            multi_index = pd.MultiIndex.from_product(
+                [pd.RangeIndex(n_samples), index],
+                names=["sample", None],
+            )
+
+            res = pd.DataFrame(
+                sampled.reshape(n_samples * n_rows, 1),
+                index=multi_index,
+                columns=columns,
+            )
+        return res
 
     @classmethod
     def get_test_params(cls, parameter_set="default"):
