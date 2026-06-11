@@ -1,5 +1,3 @@
-import numpy as np
-
 from pgmpy.distribution.categorical import CategoricalDistribution
 
 
@@ -30,7 +28,6 @@ class TestCategoricalDistribution:
 
         values = [[0.1, 0.9], [0.7, 0.3]]
         x = [[1], [2]]
-        x = np.asarray(x)
 
         dist = CategoricalDistribution(values=values, state_names=[1, 2])
 
