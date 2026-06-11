@@ -1,3 +1,5 @@
+import numpy as np
+
 from pgmpy.distribution.categorical import CategoricalDistribution
 
 
@@ -5,7 +7,8 @@ class TestCategoricalDistribution:
     """Tests for Categorical distributions."""
 
     def test_default(self):
-        dist = CategoricalDistribution()
+        values = [[0.1, 0.9], [0.7, 0.3]]
+        dist = CategoricalDistribution(values)
 
         assert dist.name == "CategoricalDistribution"
         assert dist.get_class_tag("python_version") is None
@@ -14,14 +17,24 @@ class TestCategoricalDistribution:
         assert dist.get_class_tag("distr:paramtype") == "parametric"
         assert dist.get_class_tag("capabilities:approx") == []
         assert dist.get_class_tag("capabilities:exact") == [
-            "mean",
-            "var",
             "log_pmf",
             "pmf",
             "cdf",
             "ppf",
         ]
-        assert dist.get_class_tag("broadcast_init") == "on"
+        assert dist.get_class_tag("broadcast_init") == "off"
+
+    def test_interface_compatibility(self):
+        """ensure interface compatibility by skpro.utils.estimator_checks.check_estimator"""
+        from skpro.utils.estimator_checks import check_estimator
+
+        values = [[0.1, 0.9], [0.7, 0.3]]
+        x = [[1], [2]]
+        x = np.asarray(x)
+
+        dist = CategoricalDistribution(values=values, state_names=[1, 2])
+
+        check_estimator(dist, raise_exceptions=True, verbose=False)
 
     def test_init(self):
         """test"""
