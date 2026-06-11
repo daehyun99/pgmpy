@@ -27,7 +27,6 @@ class TestCategoricalDistribution:
         from skpro.utils.estimator_checks import check_estimator
 
         values = [[0.1, 0.9], [0.7, 0.3]]
-        x = [[1], [2]]
 
         dist = CategoricalDistribution(values=values, state_names=[1, 2])
 
@@ -35,32 +34,89 @@ class TestCategoricalDistribution:
 
     def test_init(self):
         """test"""
-        ...
+        # Case 1: values: list
 
-    def test_mean(self):
-        """test"""
-        ...
+        # Case 2: values: numpy
 
-    def test_var(self):
-        """test"""
-        ...
+        # Case 3: state_names: str
+
+        # Case 4: state_names: int
+
+        # Case 5: index
+
+        # Case 6: columns
+
+        # Case 7: wrong values
+
+        # Case 8: wrong state_names
+
+        # Case 9: wrong index
+
+        # Case 10: wrong columns
 
     def test_cdf(self):
         """test"""
-        ...
+        # Case 1: x: int
+
+        # Case 2: x: str
+
+        # Case 3: wrong x's ndim
+
+        # Case 4: wrong x's type
+
+        # Case 5: wrong x's value
+
+        # Case 6: wrong x's shape
 
     def test_ppf(self):
         """test"""
-        ...
+        # Case 1: p: float
+
+        # Case 2: p: np.float
+
+        # Case 3: wrong p's ndim
+
+        # Case 4: wrong p's type
+
+        # Case 5: wrong p's value
+
+        # Case 6: wrong p's shape
+
 
     def test_pmf(self):
         """test"""
-        ...
+        # Case 1: x: int
+
+        # Case 2: x: str
+
+        # Case 3: wrong x's ndim
+
+        # Case 4: wrong x's type
+
+        # Case 5: wrong x's value
+
+        # Case 6: wrong x's shape
 
     def test_log_pmf(self):
         """test"""
-        ...
+        # Case 1: x: int
+
+        # Case 2: x: str
+
+        # Case 3: wrong x's ndim
+
+        # Case 4: wrong x's type
+
+        # Case 5: wrong x's value
+
+        # Case 6: wrong x's shape
 
     def test_sample(self):
         """test"""
-        ...
+        # Case 1: n_samples
+
+        # Case 2: n_samples
+
+        # Case 3: n_samples shape
+
+        # Case 4: wrong n_samples value
