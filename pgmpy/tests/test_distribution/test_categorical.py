@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 from pgmpy.distribution.categorical import CategoricalDistribution
@@ -165,18 +166,54 @@ class TestCategoricalDistribution:
     def test_cdf(self):
         """test"""
         # Case 1: x: int
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        x = [[1], [1]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": [0.1, 0.5]})
+        pd.testing.assert_frame_equal(dist.cdf(x), expected)
 
         # Case 2: x: str
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = ["A", "B", "C"]
+        x = [["A"], ["C"]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": [0.1, 1]})
+        pd.testing.assert_frame_equal(dist.cdf(x), expected)
 
         # Case 3: wrong x's ndim
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        x = [1, 1]
 
-        # Case 4: wrong x's type
+        dist = CategoricalDistribution(values=values, state_names=state_names)
 
-        # Case 5: wrong x's value
+        with pytest.raises(ValueError):
+            dist.cdf(x)
 
-        # Case 6: wrong x's shape
+        # Case 4: wrong x's value
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        x = [["A"], ["B"]]
 
-        # Case 7: broadcasting
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        with pytest.raises(ValueError):
+            dist.cdf(x)
+
+        # Case 5: broadcasting
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        x = [[1]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": [0.1, 0.5]})
+        pd.testing.assert_frame_equal(dist.cdf(x), expected)
 
     def test_ppf(self):
         """test"""
@@ -186,13 +223,9 @@ class TestCategoricalDistribution:
 
         # Case 3: wrong p's ndim
 
-        # Case 4: wrong p's type
+        # Case 4: wrong p's value
 
-        # Case 5: wrong p's value
-
-        # Case 6: wrong p's shape
-
-        # Case 7: broadcasting
+        # Case 5: broadcasting
 
     def test_pmf(self):
         """test"""
