@@ -45,101 +45,46 @@ def MaximalAncestralGraph():
 
 class TestGraphAlgorithmMixin:
     def test_is_collider(self):
-        """
+        """`is_collider(u, w, v)`: arrowheads at `w` on the edges from both `u` and `v`;
+        `shielded=False` additionally requires `u` and `v` to be non-adjacent (v-structure test).
+
         References
         ----------
         [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
         "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
         Artificial Intelligence 270 (2019): 1-40. Figure 3.
         """
-        graph = _CoreGraph()
-        graph.add_edge("T", "M", "->")
+        # arrowhead at M from T (T -> M); the edge type at the other flank decides
+        graph = _CoreGraph(
+            edge_list=[
+                ("T", "M", "->"),
+                ("M", "O", "->"),
+                ("M", "I", "<-"),
+                ("M", "B", "<>"),
+                ("M", "U", "--"),
+                ("Z", "M", "o>"),
+            ]
+        )
+        assert graph.is_collider("T", "M", "I") is True  # I -> M
+        assert graph.is_collider("T", "M", "B") is True  # B <> M
+        assert graph.is_collider("T", "M", "Z") is True  # Z o> M: a circle-origin arrowhead counts
+        assert graph.is_collider("T", "M", "O") is False  # M -> O: tail at M
+        assert graph.is_collider("T", "M", "U") is False  # M -- U: tail at M
 
-        graph.add_edge("M", "O", "->")
-        graph.add_edge("M", "I", "<-")
-        graph.add_edge("M", "B", "<>")
-        graph.add_edge("M", "U", "--")
+        # no arrowhead at M from T's side -> never a collider
+        for t_edge in ["<-", "--", "-o"]:
+            g = _CoreGraph(edge_list=[("T", "M", t_edge), ("M", "I", "<-")])
+            assert g.is_collider("T", "M", "I") is False
 
-        assert graph.is_collider("T", "O", "M") == False
-        assert graph.is_collider("T", "I", "M") == True
-        assert graph.is_collider("T", "B", "M") == True
-        assert graph.is_collider("T", "U", "M") == False
-
-        graph = _CoreGraph()
-        graph.add_edge("T", "M", "<-")
-
-        graph.add_edge("M", "O", "->")
-        graph.add_edge("M", "I", "<-")
-        graph.add_edge("M", "B", "<>")
-        graph.add_edge("M", "U", "--")
-
-        assert graph.is_collider("T", "O", "M") == False
-        assert graph.is_collider("T", "I", "M") == False
-        assert graph.is_collider("T", "B", "M") == False
-        assert graph.is_collider("T", "U", "M") == False
-
-        graph = _CoreGraph()
-        graph.add_edge("T", "M", "<>")
-
-        graph.add_edge("M", "O", "->")
-        graph.add_edge("M", "I", "<-")
-        graph.add_edge("M", "B", "<>")
-        graph.add_edge("M", "U", "--")
-
-        assert graph.is_collider("T", "O", "M") == False
-        assert graph.is_collider("T", "I", "M") == True
-        assert graph.is_collider("T", "B", "M") == True
-        assert graph.is_collider("T", "U", "M") == False
-
-        graph = _CoreGraph()
-        graph.add_edge("T", "M", "--")
-
-        graph.add_edge("M", "O", "->")
-        graph.add_edge("M", "I", "<-")
-        graph.add_edge("M", "B", "<>")
-        graph.add_edge("M", "U", "--")
-
-        assert graph.is_collider("T", "O", "M") == False
-        assert graph.is_collider("T", "I", "M") == False
-        assert graph.is_collider("T", "B", "M") == False
-        assert graph.is_collider("T", "U", "M") == False
-
-        graph = _CoreGraph()
-        with pytest.raises(ValueError):
-            graph.is_collider("T", "O", "M")
-
-    def test_is_collider_neighbors(self):
-        graph = _CoreGraph()
-        graph.add_edge("T", "M", "->")
-
-        graph.add_edge("M", "O", "->")
-        graph.add_edge("M", "I", "<-")
-        graph.add_edge("M", "B", "<>")
-        graph.add_edge("M", "U", "--")
-
+        # shielded=False requires u and v to be non-adjacent (v-structure)
         graph.add_edge("T", "I", "->")
-        graph.add_edge("T", "B", "<>")
+        assert graph.is_collider("T", "M", "I") is True  # the plain collider test is unaffected
+        assert graph.is_collider("T", "M", "I", shielded=False) is False  # shielded by T -> I
+        assert graph.is_collider("T", "M", "B", shielded=False) is True  # still unshielded
 
-        assert graph.is_collider("T", "O", "M") == False
-        assert graph.is_collider("T", "I", "M") == False
-        assert graph.is_collider("T", "B", "M") == False
-        assert graph.is_collider("T", "U", "M") == False
-
-        graph = _CoreGraph()
-        graph.add_edge("T", "M", "<>")
-
-        graph.add_edge("M", "O", "->")
-        graph.add_edge("M", "I", "<-")
-        graph.add_edge("M", "B", "<>")
-        graph.add_edge("M", "U", "--")
-
-        graph.add_edge("T", "I", "--")
-        graph.add_edge("T", "B", "<-")
-
-        assert graph.is_collider("T", "O", "M") == False
-        assert graph.is_collider("T", "I", "M") == False
-        assert graph.is_collider("T", "B", "M") == False
-        assert graph.is_collider("T", "U", "M") == False
+        # fails: node not in the graph
+        with pytest.raises(ValueError):
+            _CoreGraph().is_collider("T", "M", "O")
 
     # @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
     # def test_is_m_separator(self):

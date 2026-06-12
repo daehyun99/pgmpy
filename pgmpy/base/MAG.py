@@ -45,23 +45,6 @@ class MAG(_CoreGraph):
 
     SUPPORTED_EDGE_TYPES = frozenset(["->", "<-", "<>", "--"])
 
-    def _is_collider(self, u, c, v):
-        """
-        Whether `c` is a collider on the path ``u - c - v`` (an arrowhead at `c` from both sides).
-
-        Unlike :meth:`is_collider`, this does *not* require ``u`` and ``v`` to be non-adjacent, so it
-        detects shielded colliders as needed by the inducing/visible-path checks below.
-
-        Examples
-        --------
-        >>> from pgmpy.base import MAG
-        >>> mag = MAG(edge_list=[("X", "Z", "->"), ("Y", "Z", "->")])
-        >>> mag._is_collider("X", "Z", "Y")
-        True
-        """
-        into_c = self.get_neighbors(c, {"<-", "<>"})
-        return u in into_c and v in into_c
-
     def is_visible_edge(self, u, v):
         """
         Whether the directed edge ``u -> v`` is visible in the MAG.
@@ -107,7 +90,7 @@ class MAG(_CoreGraph):
                 valid = True
                 for i in range(1, len(path) - 1):
                     prev_node, curr_node, next_node = path[i - 1], path[i], path[i + 1]
-                    if (not self._is_collider(prev_node, curr_node, next_node)) or (curr_node not in parents_v):
+                    if (not self.is_collider(prev_node, curr_node, next_node)) or (curr_node not in parents_v):
                         valid = False
                         break
                 if valid:

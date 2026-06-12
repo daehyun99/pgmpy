@@ -1295,21 +1295,23 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         # Step 3: Return the dataframe.
         return adj
 
-    def is_collider(self, u: Hashable, v: Hashable, w: Hashable) -> bool:
+    def is_collider(self, u: Hashable, w: Hashable, v: Hashable, shielded: bool = True) -> bool:
         """
         Check whether `w` is a collider between `u` and `v`.
 
-        The method returns True if `w` has an arrowhead at it for both the edges from  `u` and `v` and there is no edge
-        between `u` and `v`.
+        `w` is a collider when both the edge from `u` and the edge from `v` have an arrowhead at
+        `w` (e.g. ``u -> w <- v``, ``u <> w <- v``, ``u o> w <> v``).
 
         Parameters
         ----------
-        u : Hashable
-            The first endpoint node.
-        v : Hashable
-            The second endpoint node.
+        u, v : Hashable
+            The flanking nodes.
         w : Hashable
             The middle node to test as a collider.
+        shielded : bool (default: True)
+            If True, adjacency between `u` and `v` is irrelevant (the plain collider test). If
+            False, `u` and `v` must additionally be non-adjacent, making this the
+            unshielded-collider (v-structure) test.
 
         Returns
         -------
@@ -1318,26 +1320,23 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         Examples
         --------
         >>> from pgmpy.base._base import _CoreGraph
-        >>> graph = _CoreGraph(edge_list=[("T", "M", "->"), ("M", "O", "->"), ("M", "I", "<-"),
-        ...                               ("M", "B", "<>"), ("M", "U", "--")])
-        >>> graph.is_collider("T", "O", "M")
+        >>> graph = _CoreGraph(edge_list=[("T", "M", "->"), ("M", "O", "->"), ("M", "I", "<-"), ("T", "I", "->")])
+        >>> graph.is_collider("T", "M", "O")
         False
-        >>> graph.is_collider("T", "I", "M")
+        >>> graph.is_collider("T", "M", "I")
         True
+        >>> graph.is_collider("T", "M", "I", shielded=False)  # T and I are adjacent
+        False
         """
         if not {u, v, w}.issubset(self.nodes):
             raise ValueError(f"{u}, {v}, {w} must be present in the graph.")
 
-        neighbors = self.neighbors(u)
-        if v in neighbors:
+        if not shielded and self.has_edge(u, v):
             return False
 
-        parents = self.get_neighbors(w, edge_types="<-")
-        spouses = self.get_neighbors(w, edge_types="<>")
-
-        incoming_to_w = parents.union(spouses)
-
-        return (u in incoming_to_w) and (v in incoming_to_w)
+        arrowhead_types = {"<-", "<>", "<o"} & self.SUPPORTED_EDGE_TYPES
+        into_w = self.get_neighbors(w, arrowhead_types)
+        return (u in into_w) and (v in into_w)
 
     def __eq__(self, other):
         """

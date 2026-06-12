@@ -162,10 +162,14 @@ class TestMAG:
 
     def test_is_collider(self):
         m = MAG(edge_list=[("X", "Z", "->"), ("Y", "Z", "->")])
-        assert m._is_collider("X", "Z", "Y") is True
+        assert m.is_collider("X", "Z", "Y") is True
         # Z is not a collider when an edge has its tail at Z
         m2 = MAG(edge_list=[("X", "Z", "->"), ("Z", "Y", "->")])
-        assert m2._is_collider("X", "Z", "Y") is False
+        assert m2.is_collider("X", "Z", "Y") is False
+        # a shielded collider counts by default; shielded=False makes it a v-structure test
+        m3 = MAG(edge_list=[("X", "Z", "->"), ("Y", "Z", "->"), ("X", "Y", "->")])
+        assert m3.is_collider("X", "Z", "Y") is True
+        assert m3.is_collider("X", "Z", "Y", shielded=False) is False
 
     def test_is_visible_edge(self):
         m = MAG(edge_list=[("A", "D", "->"), ("B", "C", "->"), ("X", "A", "->")])
