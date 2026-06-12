@@ -1247,6 +1247,46 @@ class TestCoreGraph:
         with pytest.raises(ValueError, match="encoding"):
             _CoreGraph(edge_list=[("A", "B", "->")]).to_adjacency(encoding="nonsense")
 
+    def test_from_adjacency(self):
+        """`from_adjacency` is the inverse of `to_adjacency` for every encoding; the constructed
+        graph is of the class it is called on, with that class's edge-type restrictions."""
+        import pandas as pd
+
+        # edge_type round-trip, including parallel edges, circle marks, and an isolated node
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("A", "B", "<>"), ("B", "C", "o>"), ("C", "D", "--")])
+        graph.add_node("E")
+        assert _CoreGraph.from_adjacency(graph.to_adjacency()) == graph
+
+        # binary round-trip (directed + undirected), class-typed result
+        pdag = PDAG(edge_list=[("A", "B", "->"), ("B", "C", "--")])
+        result = PDAG.from_adjacency(pdag.to_adjacency(encoding="binary"), encoding="binary")
+        assert type(result) is PDAG
+        assert result == pdag
+
+        # pcalg round-trip; causal-learn round-trip including coincident (4/5-coded) edges
+        mag = MAG(edge_list=[("X", "Y", "->"), ("Y", "Z", "<>")])
+        assert MAG.from_adjacency(mag.to_adjacency(encoding="pcalg"), encoding="pcalg") == mag
+        admg = ADMG(edge_list=[("X", "Y", "->"), ("X", "Y", "<>"), ("Y", "Z", "->")])
+        assert ADMG.from_adjacency(admg.to_adjacency(encoding="causal-learn"), encoding="causal-learn") == admg
+
+        # subclass edge-type restrictions are enforced: a PDAG cannot hold "<>"
+        with pytest.raises(ValueError):
+            PDAG.from_adjacency(ADMG(edge_list=[("A", "B", "<>")]).to_adjacency())
+
+        # fails: unknown encoding / binary on a class with non-DAG/PDAG edge types /
+        # mismatched index vs columns / mirror-inconsistent cells
+        with pytest.raises(ValueError, match="encoding"):
+            _CoreGraph.from_adjacency(graph.to_adjacency(), encoding="nonsense")
+        with pytest.raises(ValueError, match="binary"):
+            _CoreGraph.from_adjacency(pdag.to_adjacency(encoding="binary"), encoding="binary")
+        bad_labels = pd.DataFrame(0, index=["A", "B"], columns=["B", "A"])
+        with pytest.raises(ValueError, match="index"):
+            _CoreGraph.from_adjacency(bad_labels)
+        inconsistent = pd.DataFrame(0, index=["A", "B"], columns=["A", "B"], dtype=object)
+        inconsistent.at["A", "B"] = "->"  # mirror cell left as 0
+        with pytest.raises(ValueError, match="[Ii]nconsistent"):
+            _CoreGraph.from_adjacency(inconsistent)
+
     def test_get_subgraph(self):
         """Test the `_CoreGraph.get_subgraph` method (class-preserving, node-induced, independent copy)."""
         # node-induced subgraph keeps only edges among the requested nodes, with their edge types preserved

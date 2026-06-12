@@ -1,5 +1,6 @@
 from collections import deque
 from collections.abc import Hashable, Iterable
+from itertools import combinations
 from typing import Any
 
 import networkx as nx
@@ -1404,6 +1405,141 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
 
         # Step 3: Return the dataframe.
         return adj
+
+    @classmethod
+    def from_adjacency(cls, adj: pd.DataFrame, encoding: str = "edge_type"):
+        """
+        Construct a graph from an adjacency matrix -- the inverse of :meth:`to_adjacency`.
+
+        The graph is created as an instance of the class this is called on, so the class's
+        ``SUPPORTED_EDGE_TYPES`` (and acyclicity of directed edges) are enforced while decoding.
+        Node roles are not part of an adjacency matrix; assign them on the returned graph if
+        needed. For every encoding ``cls.from_adjacency(g.to_adjacency(e), encoding=e) == g``
+        holds (up to roles).
+
+        Parameters
+        ----------
+        adj : pandas.DataFrame
+            A square adjacency matrix with identical index and columns, in one of the encodings
+            produced by :meth:`to_adjacency`. For a numpy array ``arr`` from another library,
+            wrap it first: ``pd.DataFrame(arr, index=nodes, columns=nodes)``.
+
+        encoding : str (default="edge_type")
+            One of ``"edge_type"``, ``"binary"`` (alias ``"bnlearn"``), ``"causal-learn"``,
+            ``"pcalg"``; see :meth:`to_adjacency` for the cell conventions of each.
+
+        Returns
+        -------
+        graph : instance of `cls`
+            The decoded graph over the matrix's index as nodes.
+
+        Raises
+        ------
+        ValueError
+            If ``encoding`` is unknown; if ``encoding="binary"`` is requested for a class whose
+            edge types exceed ``{"->", "<-", "--"}``; if index and columns differ; if a cell and
+            its mirror cell are inconsistent; or if a decoded edge is not representable by `cls`.
+
+        See Also
+        --------
+        to_adjacency : The encoding counterpart.
+
+        Examples
+        --------
+        >>> from pgmpy.base import PDAG
+        >>> pdag = PDAG(edge_list=[("A", "B", "->"), ("B", "C", "--")])
+        >>> PDAG.from_adjacency(pdag.to_adjacency()) == pdag
+        True
+        >>> adj = pdag.to_adjacency(encoding="binary")
+        >>> sorted(PDAG.from_adjacency(adj, encoding="binary").get_edges(data=True))
+        [('A', 'B', '->'), ('B', 'C', '--')]
+
+        """
+        # Step 0: Validate the inputs.
+        valid = {"edge_type", "binary", "bnlearn", "causal-learn", "pcalg"}
+        if encoding not in valid:
+            raise ValueError(f"encoding must be one of {sorted(valid)}. Got {encoding!r}.")
+        if encoding == "bnlearn":
+            encoding = "binary"
+        if encoding == "binary" and not cls.SUPPORTED_EDGE_TYPES <= {"->", "<-", "--"}:
+            raise ValueError(
+                "binary encoding is only supported for DAG and PDAG (directed/undirected edges); "
+                f"{cls.__name__} supports {sorted(cls.SUPPORTED_EDGE_TYPES)}."
+            )
+        if list(adj.index) != list(adj.columns):
+            raise ValueError("adj must be a square DataFrame with identical index and columns.")
+        for node in adj.index:
+            if adj.at[node, node] != 0:
+                raise ValueError(f"Inconsistent matrix: the diagonal cell ({node}, {node}) must be 0.")
+
+        # Step 1: Create the graph and the decoding tables (inverses of the `to_adjacency` codes).
+        graph = cls()
+        graph.add_nodes_from(adj.index)
+
+        pcalg_mark = {1: "o", 2: ">", 3: "-"}
+        causal_learn_mark = {-1: "-", 1: ">", 2: "o"}
+        causal_learn_coincident = {(4, 5): ("->", "<>"), (5, 4): ("<-", "<>")}
+
+        # Step 2: Decode each node pair from its cell and the mirror cell.
+        for u, v in combinations(adj.index, 2):
+            cell_uv, cell_vu = adj.at[u, v], adj.at[v, u]
+
+            # Step 2.1: binary cells are 0/1; asymmetric = directed (so an asymmetric zero is
+            #           valid here, unlike the mark-based encodings below).
+            if encoding == "binary":
+                if cell_uv not in (0, 1) or cell_vu not in (0, 1):
+                    raise ValueError(f"binary cells must be 0 or 1. Got ({cell_uv!r}, {cell_vu!r}) for ({u}, {v}).")
+                if cell_uv and cell_vu:
+                    graph.add_edge(u, v, "--")
+                elif cell_uv:
+                    graph.add_edge(u, v, "->")
+                elif cell_vu:
+                    graph.add_edge(v, u, "->")
+                continue
+
+            # The mark-based encodings store an edge in both cells: zero in one but not the other
+            # is inconsistent.
+            if (cell_uv == 0) != (cell_vu == 0):
+                raise ValueError(f"Inconsistent cells for ({u}, {v}): {cell_uv!r} vs {cell_vu!r}.")
+            if cell_uv == 0:
+                continue
+
+            # Step 2.2: edge_type cells hold the type oriented u -> v (a tuple for parallel
+            #           edges); the mirror cell must hold the reversed orientations.
+            if encoding == "edge_type":
+                types_uv = (cell_uv,) if isinstance(cell_uv, str) else tuple(cell_uv)
+                types_vu = (cell_vu,) if isinstance(cell_vu, str) else tuple(cell_vu)
+                graph._validate_edges([(u, v, edge_type) for edge_type in types_uv])
+                mirrored = tuple(graph._to_edge_type(v, u, graph._to_markers((u, v, t))) for t in types_uv)
+                if sorted(mirrored) != sorted(types_vu):
+                    raise ValueError(
+                        f"Inconsistent cells for ({u}, {v}): {cell_uv!r} mirrors to {mirrored!r}, got {cell_vu!r}."
+                    )
+                for edge_type in types_uv:
+                    graph.add_edge(u, v, edge_type)
+
+            # Step 2.3: pcalg cells hold the mark at the column endpoint.
+            elif encoding == "pcalg":
+                if cell_uv not in pcalg_mark or cell_vu not in pcalg_mark:
+                    raise ValueError(f"Cannot decode pcalg marks ({cell_uv!r}, {cell_vu!r}) between {u} and {v}.")
+                graph.add_edge(u, v, graph._to_edge_type(u, v, {u: pcalg_mark[cell_vu], v: pcalg_mark[cell_uv]}))
+
+            # Step 2.4: causal-learn cells hold the mark at the row endpoint; the codes 4/5 encode
+            #           coincident directed + bidirected edges.
+            else:
+                if cell_uv in causal_learn_mark and cell_vu in causal_learn_mark:
+                    markers = {u: causal_learn_mark[cell_uv], v: causal_learn_mark[cell_vu]}
+                    graph.add_edge(u, v, graph._to_edge_type(u, v, markers))
+                elif (cell_uv, cell_vu) in causal_learn_coincident:
+                    for edge_type in causal_learn_coincident[(cell_uv, cell_vu)]:
+                        graph.add_edge(u, v, edge_type)
+                else:
+                    raise ValueError(
+                        f"Cannot decode causal-learn marks ({cell_uv!r}, {cell_vu!r}) between {u} and {v}."
+                    )
+
+        # Step 3: Return the decoded graph.
+        return graph
 
     def is_collider(self, u: Hashable, w: Hashable, v: Hashable, shielded: bool = True) -> bool:
         """
