@@ -218,14 +218,55 @@ class TestCategoricalDistribution:
     def test_ppf(self):
         """test"""
         # Case 1: p: float
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        p = [[0.1], [0.9]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": [1, 3]})
+        pd.testing.assert_frame_equal(dist.ppf(p), expected)
 
         # Case 2: p: np.float
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        p = [[0.1], [0.9]]
+        p = np.asarray(p, dtype=float)
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": [1, 3]})
+        pd.testing.assert_frame_equal(dist.ppf(p), expected)
 
         # Case 3: wrong p's ndim
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        p = [0.1, 0.9]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        with pytest.raises(ValueError):
+            dist.ppf(p)
 
         # Case 4: wrong p's value
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        p = [[-0.1], [1.1]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        with pytest.raises(ValueError):
+            dist.ppf(p)
 
         # Case 5: broadcasting
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        p = [[0.1]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": [1, 1]})
+        pd.testing.assert_frame_equal(dist.ppf(p), expected)
 
     def test_pmf(self):
         """test"""
