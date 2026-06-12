@@ -241,6 +241,26 @@ class CategoricalDistribution(BaseDistribution):
 
         return res
 
+    def _subset_params(self, rowidx, colidx, coerce_scalar=False):
+        values = np.asarray(self.values, dtype=float)
+        state_names = np.asarray(self.state_names)
+
+        if rowidx is not None:
+            values = values[rowidx, :]
+
+            if values.ndim == 1:
+                values = values.reshape(1, -1)
+
+            if state_names.ndim == 2:
+                state_names = state_names[rowidx, :]
+                if state_names.ndim == 1:
+                    state_names = state_names.reshape(1, -1)
+
+        return {
+            "values": values,
+            "state_names": state_names,
+        }
+
     @classmethod
     def get_test_params(cls, parameter_set="default"):
         """Return testing parameter settings for the estimator.
