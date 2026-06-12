@@ -144,6 +144,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
     >>> G.get_role_dict() == {"latents": ["D"]}
     True
 
+    References
+    ----------
+    - :cite:p:`ali_2009`
+    - :cite:p:`zhang_2008`
     """
 
     SUPPORTED_EDGE_TYPES = frozenset(["--", "-o", "o-", "->", "<-", "o>", "<o", "<>", "oo"])
@@ -972,6 +976,10 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
     def get_spouses(self, node: Hashable) -> set[Hashable]:
         """
         Returns a set of spouses nodes in the graph.
+
+        The spouses of a ``node`` are nodes that are connected to it through bi-directed edges. Note that this
+        definition is different from the definition commonly used for DAGs where other parents of the ``node``'s
+        children are the spouses.
 
         Parameters
         ----------
