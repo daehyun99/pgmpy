@@ -253,7 +253,7 @@ class CategoricalDistribution(BaseDistribution):
         # params1 = {"values": [[0.1, 0.9], [0.7, 0.3]], "state_names": ["A", "B"]}
         params2 = {"values": [[0.1, 0.9], [0.7, 0.3]], "state_names": [1, 2]}
         # params3 = {"values": [[0.1, 0.7, 0.2], [0.5, 0.3, 0.2]], "state_names": [["A"]]}
-        params4 = {"values": [[0.1, 0.7, 0.2], [0.5, 0.3, 0.2]], "state_names": [[1]]}
+        params4 = {"values": [[0.1, 0.7, 0.2], [0.5, 0.3, 0.2]], "state_names": [1, 2, 3]}
 
         # return [params1, params2, params3, params4]
         return [params2, params4]
