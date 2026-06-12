@@ -1,3 +1,6 @@
+import numpy as np
+import pytest
+
 from pgmpy.distribution.categorical import CategoricalDistribution
 
 
@@ -35,36 +38,129 @@ class TestCategoricalDistribution:
     def test_init(self):
         """test"""
         # Case 0: default
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, "C"]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        assert dist.values == values
+        assert dist.state_names == state_names
+        assert dist.columns == ["variable"]
+        np.testing.assert_allclose(dist._values, np.asarray(values, dtype=float))
+        np.testing.assert_array_equal(dist._state_names, np.asarray(state_names))
 
         # Case 1: values: list
+        values = [[0.1, 0.9], [0.7, 0.3]]
+        state_names = [1, 2]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        assert dist.values == values
+        assert dist.state_names == state_names
+        assert dist.columns == ["variable"]
+        np.testing.assert_allclose(dist._values, np.asarray(values, dtype=float))
+        np.testing.assert_array_equal(dist._state_names, np.asarray(state_names))
 
         # Case 2: values: numpy
+        values = [[0.1, 0.9], [0.7, 0.3]]
+        values = np.asarray(values, dtype=float)
+        state_names = [1, 2]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        assert dist.state_names == state_names
+        assert dist.columns == ["variable"]
+        np.testing.assert_allclose(dist._values, np.asarray(values, dtype=float))
+        np.testing.assert_array_equal(dist._state_names, np.asarray(state_names))
 
         # Case 3: state_names: str
+        values = [[0.1, 0.9], [0.7, 0.3]]
+        state_names = ["A", "B"]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        assert dist.values == values
+        assert dist.state_names == state_names
+        assert dist.columns == ["variable"]
+        np.testing.assert_allclose(dist._values, np.asarray(values, dtype=float))
+        np.testing.assert_array_equal(dist._state_names, np.asarray(state_names))
 
         # Case 4: state_names: int
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        assert dist.values == values
+        assert dist.state_names == state_names
+        assert dist.columns == ["variable"]
+        np.testing.assert_allclose(dist._values, np.asarray(values, dtype=float))
+        np.testing.assert_array_equal(dist._state_names, np.asarray(state_names))
 
         # Case 5: index
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = ["A", "B", "C"]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names, index=["studentA", "studentB"])
+
+        assert dist.values == values
+        assert dist.state_names == state_names
+        assert list(dist.index) == ["studentA", "studentB"]
+        assert list(dist.columns) == ["variable"]
+        np.testing.assert_allclose(dist._values, np.asarray(values, dtype=float))
+        np.testing.assert_array_equal(dist._state_names, np.asarray(state_names))
 
         # Case 6: columns
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = ["A", "B", "C"]
+
+        dist = CategoricalDistribution(
+            values=values, state_names=state_names, index=["studentA", "studentB"], columns=["grade"]
+        )
+
+        assert dist.values == values
+        assert dist.state_names == state_names
+        assert list(dist.index) == ["studentA", "studentB"]
+        assert list(dist.columns) == ["grade"]
+        np.testing.assert_allclose(dist._values, np.asarray(values, dtype=float))
+        np.testing.assert_array_equal(dist._state_names, np.asarray(state_names))
 
         # Case 7: wrong values
+        values = [[0.1, 0.2, 0.9], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+
+        with pytest.raises(ValueError):
+            dist = CategoricalDistribution(values=values, state_names=state_names)
 
         # Case 8: wrong state_names
+        values = [[0.1, 0.2, 0.8], [0.5, 0.3, 0.2]]
+        state_names = [1, 1, 1]
+
+        with pytest.raises(ValueError):
+            dist = CategoricalDistribution(values=values, state_names=state_names)
 
         # Case 9: wrong index
+        values = [[0.1, 0.2, 0.8], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        index = ["A", "B", "C"]
+
+        with pytest.raises(ValueError):
+            dist = CategoricalDistribution(values=values, state_names=state_names, index=index)
 
         # Case 10: wrong columns
+        values = [[0.1, 0.2, 0.8], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        columns = ["A", "B", "C"]
 
-        # Case 11: values: pd.Series
-
-        # Case 12: values: pd.DataFrame
+        with pytest.raises(ValueError):
+            dist = CategoricalDistribution(values=values, state_names=state_names, columns=columns)
 
         # Case 13: worng shape(values, state_names)
+        values = [[0.1, 0.2], [0.5, 0.3]]
+        state_names = [1, 2, 3]
 
-        # Case 14: state_names's order
-
-        # Case 15: duplicate of state_names
+        with pytest.raises(ValueError):
+            dist = CategoricalDistribution(values=values, state_names=state_names)
 
     def test_cdf(self):
         """test"""
@@ -142,7 +238,7 @@ class TestCategoricalDistribution:
 
     def test_mathematical_consistency(self):
         """test"""
-        # Case 1: ppf(cdf(x)) = x 
+        # Case 1: ppf(cdf(x)) = x
 
         # Case 2: cdf(ppf(p)) = p
 
