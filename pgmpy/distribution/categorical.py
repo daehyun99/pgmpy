@@ -29,7 +29,7 @@ class CategoricalDistribution(BaseDistribution):
         "distr:paramtype": "parametric",
         "capabilities:approx": [],
         "capabilities:exact": ["log_pmf", "pmf", "cdf", "ppf"],
-        "broadcast_init": "on",
+        "broadcast_init": "off",
     }
 
     def __init__(self, values, state_names, index=None, columns=None):
@@ -68,8 +68,11 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray, same shape as ``self``
             pmf values at the given points
         """
-        values = self._bc_params["values"]
-        state_names = self._bc_params["state_names"]
+        values = self.values
+        state_names = self.state_names
+
+        values = np.asarray(values, dtype=float)
+        state_names = np.asarray(state_names)
 
         matches = x == state_names
 
@@ -113,15 +116,18 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray, same shape as ``self``
             cdf values at the given points
         """
-        values = self._bc_params["values"]
-        state_names = self._bc_params["state_names"]
+        values = self.values
+        state_names = self.state_names
+
+        values = np.asarray(values, dtype=float)
+        state_names = np.asarray(state_names)
 
         res = np.empty(values.shape[0], dtype=float)
 
         for i, xi in enumerate(x):
             target = xi[0]
 
-            idx_arr = np.where(state_names[i] == target)[0]
+            idx_arr = np.where(state_names == target)[0]
 
             if len(idx_arr) == 0:
                 res[i] = 0.0
@@ -144,8 +150,11 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray, same shape as ``self``
             ppf values at the given points
         """
-        values = self._bc_params["values"]
-        state_names = self._bc_params["state_names"]
+        values = self.values
+        state_names = self.state_names
+
+        values = np.asarray(values, dtype=float)
+        state_names = np.asarray(state_names)
 
         if np.any((p < 0) | (p > 1)):
             raise ValueError("p values must be between 0 and 1.")
@@ -161,7 +170,7 @@ class CategoricalDistribution(BaseDistribution):
             if idx >= values.shape[1]:
                 idx = values.shape[1] - 1
 
-            res[i] = state_names[i, idx]
+            res[i] = state_names[idx]
 
         return res.reshape(-1, 1)
 
@@ -188,8 +197,11 @@ class CategoricalDistribution(BaseDistribution):
             with same ``columns`` as ``self``, and row ``MultiIndex`` that is product
             of ``RangeIndex(n_samples)`` and ``self.index``
         """
-        values = self._bc_params["values"]
-        state_names = self._bc_params["state_names"]
+        values = self.values
+        state_names = self.state_names
+
+        values = np.asarray(values, dtype=float)
+        state_names = np.asarray(state_names)
 
         single_sample = n_samples is None
         if single_sample:
@@ -201,7 +213,7 @@ class CategoricalDistribution(BaseDistribution):
 
         for i in range(n_rows):
             sampled[:, i] = np.random.choice(
-                state_names[i],
+                state_names,
                 size=n_samples,
                 p=values[i],
             )

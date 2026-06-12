@@ -25,7 +25,7 @@ class TestCategoricalDistribution:
             "cdf",
             "ppf",
         ]
-        assert dist.get_class_tag("broadcast_init") == "on"
+        assert dist.get_class_tag("broadcast_init") == "off"
 
     def test_interface_compatibility(self):
         """ensure interface compatibility by skpro.utils.estimator_checks.check_estimator"""
