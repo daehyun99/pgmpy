@@ -375,12 +375,66 @@ class TestCategoricalDistribution:
     def test_sample(self):
         """test"""
         # Case 1: n_samples
+        np.random.seed(42)
+
+        values = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
+        state_names = [1, 2, 3]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": [2, 3]})
+        pd.testing.assert_frame_equal(dist.sample(), expected)
 
         # Case 2: n_samples
+        np.random.seed(42)
+
+        values = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
+        state_names = [1, 2, 3]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame(
+            {"variable": [2, 3, 3, 1, 2, 1]},
+            index=pd.MultiIndex.from_tuples(
+                [
+                    (0, 0),
+                    (0, 1),
+                    (1, 0),
+                    (1, 1),
+                    (2, 0),
+                    (2, 1),
+                ],
+                names=["sample", None],
+            ),
+        )
+
+        pd.testing.assert_frame_equal(dist.sample(3), expected)
 
         # Case 3: n_samples shape
+        np.random.seed(42)
+
+        values = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
+        state_names = [1, 2, 3]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        res = dist.sample(3)
+
+        assert res.shape == (6, 1)
+        assert list(res.columns) == ["variable"]
+        assert isinstance(res.index, pd.MultiIndex)
+        assert res.index.names == ["sample", None]
 
         # Case 4: wrong n_samples value
+        np.random.seed(42)
+
+        values = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
+        state_names = [1, 2, 3]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        with pytest.raises(TypeError):
+            dist.sample("A")
 
     def test_mathematical_consistency(self):
         """test"""
