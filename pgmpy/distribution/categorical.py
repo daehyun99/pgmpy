@@ -34,6 +34,9 @@ class CategoricalDistribution(BaseDistribution):
 
     def __init__(self, values, state_names=None, index=None, columns=None):
 
+        if state_names is not None and len(state_names) != len(set(state_names)):
+            raise ValueError("state_names must not contain duplicate values")
+
         self.values = values
         self.state_names = state_names
 
@@ -45,11 +48,18 @@ class CategoricalDistribution(BaseDistribution):
         else:
             _state_names = np.asarray(state_names)
 
+        if n_states != len(_state_names):
+            raise ValueError("mismatch values and state_names's shape")
+
         if index is None:
             index = pd.RangeIndex(n_conditions)
+        elif len(index) != n_conditions:
+            raise ValueError("wrong index's len")
 
         if columns is None:
             columns = ["variable"]
+        elif len(columns) != 1:
+            raise ValueError("wrong columns's len")
 
         self._values = _values
         self._state_names = _state_names
