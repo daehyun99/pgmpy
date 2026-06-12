@@ -72,14 +72,6 @@ class CategoricalDistribution(BaseDistribution):
         values = self._values
         state_names = self._state_names
 
-        x = np.asarray(x)
-
-        if x.ndim == 1:
-            x = x.reshape(-1, 1)
-
-        if x.shape != self.shape:
-            raise ValueError(f"x must have shape {self.shape}, but got {x.shape}")
-
         x_flat = x[:, 0]
 
         matches = x_flat[:, None] == state_names[None, :]
@@ -127,14 +119,6 @@ class CategoricalDistribution(BaseDistribution):
         values = self._values
         state_names = self._state_names
 
-        x = np.asarray(x)
-
-        if x.ndim == 1:
-            x = x.reshape(-1, 1)
-
-        if x.shape != self.shape:
-            raise ValueError(f"x must have shape {self.shape}, but got {x.shape}")
-
         x_flat = x[:, 0]
 
         res = np.empty(values.shape[0], dtype=float)
@@ -160,17 +144,6 @@ class CategoricalDistribution(BaseDistribution):
         """
         values = self._values
         state_names = self._state_names
-
-        p = np.asarray(p, dtype=float)
-
-        if p.ndim == 0:
-            p = p.reshape(1, 1)
-
-        if p.ndim == 1:
-            p = p.reshape(-1, 1)
-
-        if p.shape != self.shape:
-            raise ValueError(f"p must have shape {self.shape}, but got {p.shape}")
 
         if np.any((p < 0) | (p > 1)):
             raise ValueError("p values must be between 0 and 1.")
@@ -224,7 +197,7 @@ class CategoricalDistribution(BaseDistribution):
         if single_sample:
             n_samples = 1
 
-        n_rows, n_states = values.shape
+        n_rows, _ = values.shape
 
         sampled = np.empty((n_samples, n_rows), dtype=state_names.dtype)
 
