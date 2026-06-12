@@ -439,7 +439,31 @@ class TestCategoricalDistribution:
     def test_mathematical_consistency(self):
         """test"""
         # Case 1: ppf(cdf(x)) = x
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        x = [[1], [3]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": [1, 3]})
+        pd.testing.assert_frame_equal(dist.ppf(dist.cdf(x)), expected)
 
         # Case 2: cdf(ppf(p)) = p
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        p = [[0.3], [0.8]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": [0.3, 0.8]})
+        pd.testing.assert_frame_equal(dist.cdf(dist.ppf(p)), expected)
 
         # Case 3: log(pmf(x)) = log_pmf(x)
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        x = [[1], [3]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = np.log(dist.pmf(x))
+        pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
