@@ -556,7 +556,117 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
             raise ValueError(f"Edge ({u}, {v}) not in graph.")
 
         self.remove_edge(u, v, old_type)
-        self.add_edge(u, v, new_type)
+        try:
+            self.add_edge(u, v, new_type)
+        except ValueError:
+            # The new edge was rejected (e.g. it would close a directed cycle); restore the old
+            # edge so a failed replace leaves the graph unchanged.
+            self.add_edge(u, v, old_type)
+            raise
+
+    def get_marker(self, u: Hashable, v: Hashable) -> str:
+        """
+        Return the endpoint marker at `v` on the edge between `u` and `v`.
+
+        The marker is read at the **second** argument's endpoint: for an edge ``A o> B``,
+        ``get_marker("A", "B")`` is ``">"`` and ``get_marker("B", "A")`` is ``"o"``.
+
+        Parameters
+        ----------
+        u, v : Hashable
+            The endpoints of the edge; the marker at `v` is returned.
+
+        Returns
+        -------
+        marker : str
+            One of ``"-"`` (tail), ``">"`` (arrowhead), or ``"o"`` (circle).
+
+        Raises
+        ------
+        ValueError
+            If there is no edge between `u` and `v`, or the pair is joined by parallel edges
+            (use ``get_edge_type`` for multi-edge pairs).
+
+        See Also
+        --------
+        set_marker : Re-orient a single endpoint.
+        get_edge_type : The full edge type(s) between two nodes.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph(edge_list=[("A", "B", "o>")])
+        >>> graph.get_marker("A", "B")
+        '>'
+        >>> graph.get_marker("B", "A")
+        'o'
+
+        """
+        if not self.has_edge(u, v):
+            raise ValueError(f"Edge ({u}, {v}) not in graph.")
+
+        edges = list(self.get_edge_data(u, v).values())
+        if len(edges) > 1:
+            raise ValueError(f"There are parallel edges between {u} and {v}; use get_edge_type instead.")
+        return edges[0][v]
+
+    def set_marker(self, u: Hashable, v: Hashable, marker: str) -> None:
+        """
+        Set the endpoint marker at `v` on the edge between `u` and `v`, leaving the marker at
+        `u` untouched.
+
+        This is the single-endpoint orientation move of FCI-style algorithms: e.g. on an edge
+        ``A oo B``, ``set_marker("A", "B", ">")`` orients it to ``A o> B``. The marker is set at
+        the **second** argument's endpoint. The resulting edge type must be supported by the
+        class and must not close a directed cycle; a failed call leaves the edge unchanged.
+
+        Parameters
+        ----------
+        u, v : Hashable
+            The endpoints of the edge; the marker at `v` is set.
+
+        marker : str
+            One of ``"-"`` (tail), ``">"`` (arrowhead), or ``"o"`` (circle).
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If `marker` is invalid; if there is no edge between `u` and `v` or the pair is
+            joined by parallel edges; if the resulting edge type is not in
+            ``SUPPORTED_EDGE_TYPES``; or if the re-orientation would create a directed cycle.
+
+        See Also
+        --------
+        get_marker : Read a single endpoint marker.
+        replace_edge : Replace the full edge type.
+
+        Examples
+        --------
+        >>> from pgmpy.base._base import _CoreGraph
+        >>> graph = _CoreGraph(edge_list=[("A", "B", "oo")])
+        >>> graph.set_marker("A", "B", ">")
+        >>> graph.get_edges(data=True)
+        [('A', 'B', 'o>')]
+        >>> graph.set_marker("B", "A", "-")
+        >>> graph.get_edges(data=True)
+        [('A', 'B', '->')]
+
+        """
+        if marker not in {"-", ">", "o"}:
+            raise ValueError(f"marker must be one of '-', '>', 'o'. Got {marker!r}.")
+
+        u_marker = self.get_marker(v, u)
+        v_marker = self.get_marker(u, v)
+        if v_marker == marker:
+            return
+
+        old_type = self._to_edge_type(u, v, {u: u_marker, v: v_marker})
+        new_type = self._to_edge_type(u, v, {u: u_marker, v: marker})
+        self.replace_edge(u, v, old_type=old_type, new_type=new_type)
 
     def copy(self):
         """

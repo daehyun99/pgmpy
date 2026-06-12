@@ -936,6 +936,60 @@ class TestCoreGraph:
         with pytest.raises(ValueError):
             graph.replace_edge("B", "C", old_type="--", new_type="->")
 
+        # a failed replace must not destroy the edge (atomicity): "->" here would close a cycle
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "->"), ("C", "A", "--")])
+        with pytest.raises(ValueError, match="cycle"):
+            graph.replace_edge("C", "A", old_type="--", new_type="->")
+        assert graph.has_edge("C", "A", "--")
+
+    def test_get_marker(self):
+        """`get_marker(u, v)` returns the endpoint marker at `v` (the second argument)."""
+        graph = _CoreGraph(edge_list=[("A", "B", "o>"), ("B", "C", "->")])
+        assert graph.get_marker("A", "B") == ">"
+        assert graph.get_marker("B", "A") == "o"
+        assert graph.get_marker("B", "C") == ">"
+        assert graph.get_marker("C", "B") == "-"
+
+        # fails: no edge between the nodes / ambiguous parallel edges
+        with pytest.raises(ValueError, match="not in graph"):
+            graph.get_marker("A", "C")
+        graph.add_edge("A", "B", "<>")
+        with pytest.raises(ValueError, match="parallel"):
+            graph.get_marker("A", "B")
+
+    def test_set_marker(self):
+        """`set_marker(u, v, marker)` re-orients the single endpoint at `v`, leaving the other
+        endpoint untouched -- the core orientation move of FCI-style algorithms."""
+        graph = _CoreGraph(edge_list=[("A", "B", "oo")])
+        graph.set_marker("A", "B", ">")  # A oo B  =>  A o> B
+        assert graph.get_edges(data=True) == [("A", "B", "o>")]
+        graph.set_marker("B", "A", "-")  # A o> B  =>  A -> B
+        assert graph.get_edges(data=True) == [("A", "B", "->")]
+        graph.set_marker("B", "A", ">")  # A -> B  =>  A <> B
+        assert graph.get_edges(data=True) == [("A", "B", "<>")]
+
+        # setting the marker it already has is a no-op
+        graph.set_marker("A", "B", ">")
+        assert graph.get_edges(data=True) == [("A", "B", "<>")]
+
+        # subclass edge-type restrictions are enforced: a PDAG cannot hold "<>"
+        pdag = PDAG(edge_list=[("A", "B", "->")])
+        with pytest.raises(ValueError):
+            pdag.set_marker("B", "A", ">")
+        assert pdag.has_edge("A", "B", "->")
+
+        # acyclicity is enforced, and a failed set_marker leaves the edge unchanged
+        graph = _CoreGraph(edge_list=[("A", "B", "->"), ("B", "C", "->"), ("C", "A", "--")])
+        with pytest.raises(ValueError, match="cycle"):
+            graph.set_marker("C", "A", ">")  # C -- A  =>  C -> A closes the cycle
+        assert graph.has_edge("C", "A", "--")
+
+        # fails: invalid marker / no edge between the nodes
+        with pytest.raises(ValueError, match="marker"):
+            graph.set_marker("A", "B", "x")
+        with pytest.raises(ValueError, match="not in graph"):
+            graph.set_marker("A", "Z", ">")
+
     def test_eq(self):
         """Test the `__eq__` method of the `_CoreGraph` class."""
         # empty graphs are equal
