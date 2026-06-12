@@ -323,18 +323,54 @@ class TestCategoricalDistribution:
     def test_log_pmf(self):
         """test"""
         # Case 1: x: int
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        x = [[1], [1]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": np.log([0.1, 0.5])})
+        pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
 
         # Case 2: x: str
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = ["A", "B", "C"]
+        x = [["A"], ["C"]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": np.log([0.1, 0.2])})
+        pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
 
         # Case 3: wrong x's ndim
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        x = [1, 1]
 
-        # Case 4: wrong x's type
+        dist = CategoricalDistribution(values=values, state_names=state_names)
 
-        # Case 5: wrong x's value
+        with pytest.raises(ValueError):
+            dist.log_pmf(x)
 
-        # Case 6: wrong x's shape
+        # Case 4: wrong x's value
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        x = [["A"], ["B"]]
 
-        # Case 7: broadcasting
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": np.log([0, 0])})
+        pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
+
+        # Case 5: broadcasting
+        values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
+        x = [[1]]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        expected = pd.DataFrame({"variable": np.log([0.1, 0.5])})
+        pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
 
     def test_sample(self):
         """test"""
