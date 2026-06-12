@@ -538,20 +538,44 @@ class TestGraphAlgorithmMixin:
             graph.get_markov_blanket("B")
 
     def test_has_inducing_path(self, AncestralGraph, MaximalAncestralGraph):
-        """"""
-        graph = AncestralGraph
-        assert graph.has_inducing_path("C", "D", set())
+        """`has_inducing_path(u, v, w)`: a path on which every intermediate in `w` (the pool of
+        variables available for conditioning; default: the observed nodes) is a collider, and every
+        collider is an ancestor of `u` or `v` -- i.e. a dependence no subset of `w` can block."""
+        # Zhang (2008) Fig. 1-(a): on C <> A <> B <> D the colliders A, B are ancestors of the
+        # endpoints (A -> D, B -> C), so no subset of the observed nodes m-separates C and D
+        assert AncestralGraph.has_inducing_path("C", "D") is True
+        assert MaximalAncestralGraph.has_inducing_path("C", "D") is True
 
-        graph = MaximalAncestralGraph
-        assert graph.has_inducing_path("C", "D", set())
+        # a latent chain X -> L -> Y is unblockable (L cannot be conditioned on) ...
+        g = MAG(edge_list=[("X", "L", "->"), ("L", "Y", "->")], latents={"L"})
+        assert g.has_inducing_path("X", "Y") is True
+        # ... but allowing L into the conditioning pool makes the path blockable
+        assert g.has_inducing_path("X", "Y", w={"L"}) is False
 
-        graph = AncestralGraph
-        graph.latents = "B"
-        assert graph.has_inducing_path("C", "D", graph.latents)
+        # a latent collider X -> L <- Y is NOT inducing: conditioning on nothing blocks it, since
+        # L is neither conditionable-irrelevant (it is a collider) nor an ancestor of an endpoint
+        g = MAG(edge_list=[("X", "L", "->"), ("Y", "L", "->")], latents={"L"})
+        assert g.has_inducing_path("X", "Y") is False
 
-        graph = MaximalAncestralGraph
-        graph.latents = "B"
-        assert graph.has_inducing_path("C", "D", graph.latents)
+        # an observed chain is blocked by conditioning on the middle node
+        g = _CoreGraph(edge_list=[("X", "M", "->"), ("M", "Y", "->")])
+        assert g.has_inducing_path("X", "Y") is False
+
+        # exists-semantics: one inducing path (X <> C <> Y with C -> X) plus an unrelated
+        # non-inducing path (X -> M -> Y); the parallel C -> X edge also exercises multi-edges
+        g = _CoreGraph(
+            edge_list=[("X", "C", "<>"), ("C", "Y", "<>"), ("C", "X", "->"), ("X", "M", "->"), ("M", "Y", "->")]
+        )
+        assert g.has_inducing_path("X", "Y") is True
+
+        # a direct edge has no intermediate node and does not count; disconnected nodes -> False
+        assert _CoreGraph(edge_list=[("X", "Y", "->")]).has_inducing_path("X", "Y") is False
+        g = _CoreGraph(edge_list=[("X", "A", "->"), ("B", "Y", "->")])
+        assert g.has_inducing_path("X", "Y") is False
+
+        # fails: endpoint not in the graph
+        with pytest.raises(ValueError, match="not in graph"):
+            _CoreGraph(edge_list=[("X", "Y", "->")]).has_inducing_path("X", "Q")
 
     def test_check_new_unshielded_collider(self):
         graph = _CoreGraph()

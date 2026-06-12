@@ -1,4 +1,5 @@
 from collections.abc import Hashable, Iterable
+from itertools import pairwise
 
 import networkx as nx
 
@@ -121,35 +122,48 @@ class _GraphAlgorithms:
 
         return markov_blanket
 
-    def has_inducing_path(self, u: Hashable, v: Hashable, w: set) -> bool:
+    def has_inducing_path(self, u: Hashable, v: Hashable, w: Iterable[Hashable] | None = None) -> bool:
         """
-        Check if there exists an inducing path between two nodes relative to W.
+        Check if there exists an inducing path between `u` and `v` relative to `w`.
 
-        An inducing path between u and v is a path such that:
-        - The path has length > 2 (at least one intermediate node),
-        - Every intermediate node is a collider on the path,
-        - Every intermediate node is either:
-            * in W, or
-            * an ancestor of u or v.
+        `w` is the pool of variables available for conditioning. An inducing path between `u` and
+        `v` relative to `w` is a path with at least one intermediate node such that:
+
+        - every intermediate node in `w` is a collider on the path (an intermediate outside `w`
+          can never be conditioned on, so it only blocks the path if it is a collider), and
+        - every collider on the path is an ancestor of `u` or `v` (which keeps it open under
+          every conditioning set drawn from `w`).
+
+        Such a path is a dependence between `u` and `v` that no subset of `w` can block: `u` and
+        `v` cannot be m-separated using only variables from `w`. With the default
+        ``w = self.observed``, an inducing path exists exactly when `u` and `v` must be adjacent
+        in the MAG over the observed variables :cite:p:`zhang_2008`.
 
         Parameters
         ----------
-        u : Hashable
-            Source node.
+        u, v : Hashable
+            The endpoints of the path. Both must be present in the graph.
 
-        v : Hashable
-            Target node.
-
-        w : set
-            Subset of nodes to check inducing paths through (often latents).
+        w : iterable of Hashable, optional (default: the observed nodes)
+            The variables available for conditioning. ``None`` uses all nodes except the
+            ``latents`` role.
 
         Returns
         -------
         bool
-            True if there exists an inducing path, False otherwise.
+            True if an inducing path exists, False otherwise.
 
         Examples
         --------
+        A latent chain cannot be blocked by conditioning on observed variables:
+
+        >>> from pgmpy.base import MAG
+        >>> mag = MAG(edge_list=[("X", "L", "->"), ("L", "Y", "->")], latents={"L"})
+        >>> mag.has_inducing_path("X", "Y")
+        True
+
+        A collider path is inducing only if the colliders are ancestors of the endpoints:
+
         >>> from pgmpy.base._base import _CoreGraph
         >>> edges = [
         ...     ("A", "B", "<>"),
@@ -159,34 +173,28 @@ class _GraphAlgorithms:
         ...     ("B", "C", "->"),
         ... ]
         >>> graph = _CoreGraph(edge_list=edges)
-        >>> graph.has_inducing_path("C", "D", set())
+        >>> graph.has_inducing_path("C", "D")
         True
 
         """
-        has_inducing = False
+        for node in (u, v):
+            if node not in self.nodes():
+                raise ValueError(f"Node {node} not in graph.")
 
+        w = self.observed if w is None else set(w)
         ancestors = self.get_ancestors([u, v])
 
-        for path in nx.all_simple_paths(self, source=u, target=v):
-            if len(path) <= 2:
+        for path in nx.all_simple_edge_paths(self, u, v):
+            if len(path) < 2:  # a single edge has no intermediate node
                 continue
-
-            for i in range(len(path) - 3):
-                src, mid, dst = path[i : i + 3]
-
-                if self.is_collider(src, mid, dst) and mid in w:
-                    has_inducing = True
+            for into_edge, out_of_edge in pairwise(path):
+                mid = into_edge[1]
+                is_collider = self.edges[into_edge][mid] == ">" and self.edges[out_of_edge][mid] == ">"
+                if (not is_collider and mid in w) or (is_collider and mid not in ancestors):
                     break
-
-                elif not self.is_collider(src, mid, dst) and mid not in w:
-                    has_inducing = True
-                    break
-
-                if mid in ancestors:
-                    has_inducing = True
-                    break
-
-        return has_inducing
+            else:
+                return True
+        return False
 
     def has_path(self, source: Hashable, target: Hashable, edge_types: str | Iterable[str] | None = None) -> bool:
         """

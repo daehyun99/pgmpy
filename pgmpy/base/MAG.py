@@ -62,47 +62,6 @@ class MAG(_CoreGraph):
         into_c = self.get_neighbors(c, {"<-", "<>"})
         return u in into_c and v in into_c
 
-    def has_inducing_path(self, u, v, W):
-        """
-        Whether an inducing path between `u` and `v` relative to `W` exists.
-
-        An inducing path is a path on which every intermediate node is a collider and is either in
-        `W` or an ancestor of `u` or `v`.
-
-        Parameters
-        ----------
-        u, v : Hashable
-            The endpoints of the path.
-
-        W : set
-            The reference set (often the latent variables).
-
-        Returns
-        -------
-        bool
-
-        Examples
-        --------
-        >>> from pgmpy.base import MAG
-        >>> mag = MAG(edge_list=[("X", "L", "->"), ("Y", "L", "->")], latents={"L"})
-        >>> mag.has_inducing_path("X", "Y", {"L"})
-        True
-        """
-        is_inducing = True
-        for path in self.get_all_paths(u, v):
-            if len(path) <= 2:
-                continue
-            for i in range(1, len(path) - 1):
-                prev_node, curr_node, next_node = path[i - 1], path[i], path[i + 1]
-                if not self._is_collider(prev_node, curr_node, next_node):
-                    is_inducing = False
-                    break
-                ancestors_uv = self.get_ancestors([u, v])
-                if curr_node not in W and curr_node not in ancestors_uv:
-                    is_inducing = False
-                    break
-        return is_inducing
-
     def is_visible_edge(self, u, v):
         """
         Whether the directed edge ``u -> v`` is visible in the MAG.

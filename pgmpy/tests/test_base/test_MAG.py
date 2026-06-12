@@ -167,10 +167,6 @@ class TestMAG:
         m2 = MAG(edge_list=[("X", "Z", "->"), ("Z", "Y", "->")])
         assert m2._is_collider("X", "Z", "Y") is False
 
-    def test_has_inducing_path(self):
-        m = MAG(edge_list=[("X", "L", "->"), ("Y", "L", "->")], latents={"L"})
-        assert m.has_inducing_path("X", "Y", {"L"}) is True
-
     def test_is_visible_edge(self):
         m = MAG(edge_list=[("A", "D", "->"), ("B", "C", "->"), ("X", "A", "->")])
         assert m.is_visible_edge("A", "D") is True
