@@ -1,25 +1,38 @@
-"""
-- do not write to reserved attributes: index, columns, head, tail, loc, iloc, at, iat,
-  shape, ndim, _bc_params, _tags, _tags_dynamic, _config, _config_dynamic
-"""
-
 import numpy as np
 import pandas as pd
 from skpro.distributions.base import BaseDistribution
 
 
-# todo: change class name and write docstring
 class CategoricalDistribution(BaseDistribution):
-    """Categorical probability distribution.
+    """Categorical distribution for discrete random variables.
 
-    todo: describe your custom probability distribution here
+    Represents one or more categorical probability distributions over a
+    finite set of discrete states. Each row of ``values`` defines the
+    probability mass assigned to the states specified by ``state_names``.
 
     Parameters
     ----------
-    parama : float or np.ndarray
-        descriptive explanation of parama
-    paramb : float or np.ndarray, optional (default='default')
-        descriptive explanation of paramb
+    values : array-like of shape (n_instances, n_states)
+        Probability masses for each state. Each row represents one
+        categorical distribution and must contain non-negative values
+        that sum to 1.
+    state_names : array-like of shape (n_states,)
+        Names or labels of the possible discrete states. The order of
+        ``state_names`` corresponds to the order of probabilities in
+        each row of ``values``. State names must be unique.
+    index : pd.Index, optional, default = RangeIndex
+    columns : pd.Index, optional, default = RangeIndex
+
+    Examples
+    -----
+    >>> from pgmpy.distributions.categorical import CategoricalDistribution
+
+    >>> values = [[0.2, 0.4, 0.3, 0.1], [0.4, 0.4, 0.1, 0.1]]
+    >>> state_names = ["A", "B", "C", "D"]
+    >>> index=["studentA", "studentB"]
+    >>> columns = ["grade"]
+    >>> dist = CategoricalDistribution(values=values, state_names=state_names, index=index, columns=columns)
+
     """
 
     _tags = {
@@ -67,6 +80,7 @@ class CategoricalDistribution(BaseDistribution):
         -------
         2D np.ndarray, same shape as ``self``
             pmf values at the given points
+
         """
         values = self.values
         state_names = self.state_names
@@ -99,6 +113,7 @@ class CategoricalDistribution(BaseDistribution):
         -------
         2D np.ndarray, same shape as ``self``
             log pmf values at the given points
+
         """
         pmf = self._pmf(x)
         return np.log(pmf)
@@ -115,6 +130,7 @@ class CategoricalDistribution(BaseDistribution):
         -------
         2D np.ndarray, same shape as ``self``
             cdf values at the given points
+
         """
         values = self.values
         state_names = self.state_names
@@ -149,6 +165,7 @@ class CategoricalDistribution(BaseDistribution):
         -------
         2D np.ndarray, same shape as ``self``
             ppf values at the given points
+
         """
         values = self.values
         state_names = self.state_names
@@ -187,15 +204,6 @@ class CategoricalDistribution(BaseDistribution):
         pd.DataFrame
             samples from the distribution
 
-            * if ``n_samples`` is ``None``:
-            returns a sample that contains a single sample from ``self``,
-            in ``pd.DataFrame`` mtype format convention, with ``index`` and ``columns``
-            as ``self``
-            * if n_samples is ``int``:
-            returns a ``pd.DataFrame`` that contains ``n_samples`` i.i.d.
-            samples from ``self``, in ``pd-multiindex`` mtype format convention,
-            with same ``columns`` as ``self``, and row ``MultiIndex`` that is product
-            of ``RangeIndex(n_samples)`` and ``self.index``
         """
         values = self.values
         state_names = self.state_names
@@ -245,6 +253,23 @@ class CategoricalDistribution(BaseDistribution):
         return res
 
     def _subset_params(self, rowidx, colidx, coerce_scalar=False):
+        """Subset distribution parameters to given rows and columns.
+
+        Parameters
+        ----------
+        rowidx : None, numpy index/slice coercible, or int
+            Rows to subset to. If None, no subsetting is done.
+        colidx : None, numpy index/slice coercible, or int
+            Columns to subset to. If None, no subsetting is done.
+        coerce_scalar : bool, optional, default=False
+            If True, and the subsetted parameter is a scalar, coerce it to a scalar.
+
+        Returns
+        -------
+        dict
+            Dictionary with subsetted distribution parameters.
+            Keys are parameter names of ``self``, values are the subsetted parameters.
+        """
         values = np.asarray(self.values, dtype=float)
         state_names = np.asarray(self.state_names)
 
