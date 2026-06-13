@@ -32,10 +32,17 @@ class TestCategoricalDistribution:
         from skpro.utils.estimator_checks import check_estimator
 
         values = [[0.1, 0.9], [0.7, 0.3]]
-
         dist = CategoricalDistribution(values=values, state_names=[1, 2])
-
         check_estimator(dist, raise_exceptions=True, verbose=False)
+
+        values = [[0.1, 0.7, 0.2], [0.6, 0.3, 0.1], [0.6, 0.3, 0.1], [0.6, 0.3, 0.1]]
+        dist = CategoricalDistribution(values=values, state_names=[1, 2, 3])
+        check_estimator(dist, raise_exceptions=True, verbose=False)
+
+        # # NOTE: An error occurs when `state_names` contains strings.
+        # values = [[0.1, 0.9], [0.7, 0.3]]
+        # dist = CategoricalDistribution(values=values, state_names=["A", "B"])
+        # check_estimator(dist, raise_exceptions=True, verbose=False)
 
     def test_init(self):
         """test"""
