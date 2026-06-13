@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from pgmpy.distribution.categorical import CategoricalDistribution
+from pgmpy.distributions.categorical import CategoricalDistribution
 
 
 class TestCategoricalDistribution:
