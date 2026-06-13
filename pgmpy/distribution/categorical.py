@@ -203,9 +203,11 @@ class CategoricalDistribution(BaseDistribution):
         values = np.asarray(values, dtype=float)
         state_names = np.asarray(state_names)
 
-        single_sample = n_samples is None
-        if single_sample:
+        if n_samples is None:
             n_samples = 1
+            single_sample = True
+        else:
+            single_sample = False
 
         n_rows, _ = values.shape
 
@@ -216,6 +218,7 @@ class CategoricalDistribution(BaseDistribution):
                 state_names,
                 size=n_samples,
                 p=values[i],
+                replace=True,
             )
 
         index = self.index
