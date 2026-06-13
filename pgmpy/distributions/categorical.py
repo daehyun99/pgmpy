@@ -21,10 +21,10 @@ class CategoricalDistribution(BaseDistribution):
         ``state_names`` corresponds to the order of probabilities in
         each row of ``values``. State names must be unique.
     index : pd.Index, optional, default = RangeIndex
-    columns : pd.Index, optional, default = RangeIndex
+    columns : pd.Index, optional, default = ["variable"]
 
     Examples
-    -----
+    --------
     >>> from pgmpy.distributions.categorical import CategoricalDistribution
 
     >>> values = [[0.2, 0.4, 0.3, 0.1], [0.4, 0.4, 0.1, 0.1]]
@@ -255,15 +255,6 @@ class CategoricalDistribution(BaseDistribution):
     def _subset_params(self, rowidx, colidx, coerce_scalar=False):
         """Subset distribution parameters to given rows and columns.
 
-        Parameters
-        ----------
-        rowidx : None, numpy index/slice coercible, or int
-            Rows to subset to. If None, no subsetting is done.
-        colidx : None, numpy index/slice coercible, or int
-            Columns to subset to. If None, no subsetting is done.
-        coerce_scalar : bool, optional, default=False
-            If True, and the subsetted parameter is a scalar, coerce it to a scalar.
-
         Returns
         -------
         dict
@@ -307,10 +298,6 @@ class CategoricalDistribution(BaseDistribution):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`
         """
-        # params1 = {"values": [[0.1, 0.9], [0.7, 0.3]], "state_names": ["A", "B"]}
-        params2 = {"values": [[0.1, 0.9], [0.7, 0.3]], "state_names": [1, 2]}
-        # params3 = {"values": [[0.1, 0.7, 0.2], [0.5, 0.3, 0.2]], "state_names": [["A"]]}
-        params4 = {"values": [[0.1, 0.7, 0.2], [0.5, 0.3, 0.2]], "state_names": [1, 2, 3]}
-
-        # return [params1, params2, params3, params4]
-        return [params2, params4]
+        params1 = {"values": [[0.1, 0.9], [0.7, 0.3]], "state_names": [1, 2]}
+        params2 = {"values": [[0.1, 0.7, 0.2], [0.5, 0.3, 0.2]], "state_names": [1, 2, 3]}
+        return [params1, params2]
