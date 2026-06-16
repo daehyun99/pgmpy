@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from skbase.utils.dependencies import _check_soft_dependencies
 from skpro.distributions.base import BaseDistribution
 
 
@@ -251,6 +252,41 @@ class CategoricalDistribution(BaseDistribution):
             )
 
         return res
+
+    def plot(self, fun="pmf", ax=None, **kwargs):
+        _check_soft_dependencies("matplotlib", obj="distribution plot")
+        import matplotlib.pyplot as plt
+
+        values = np.asarray(self.values, dtype=float)
+        states = np.asarray(self.state_names)
+
+        n_rows, _ = values.shape
+
+        if fun != "pmf":
+            raise NotImplementedError("`Categorical` only supports `pmf` currently")
+
+        if ax is None:
+            fig, axes = plt.subplots(
+                n_rows,
+                1,
+                squeeze=False,
+                sharex=True,
+                sharey=True,
+            )
+        else:
+            axes = np.asarray(ax, dtype=object).reshape(n_rows, 1)
+            fig = axes[0, 0].figure
+
+        for i in range(n_rows):
+            current_ax = axes[i, 0]
+            current_ax.bar(states, values[i], **kwargs)
+            current_ax.set_ylabel(str(self.index[i]))
+            current_ax.set_ylim(0, 1)
+
+        axes[0, 0].set_title(str(self.columns[0]))
+        axes[-1, 0].set_xlabel("state names")
+
+        return fig, axes[:, 0]
 
     def _subset_params(self, rowidx, colidx, coerce_scalar=False):
         """Subset distribution parameters to given rows and columns.

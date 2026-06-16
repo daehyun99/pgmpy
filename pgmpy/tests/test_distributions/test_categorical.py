@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from skbase.utils.dependencies import _check_soft_dependencies
 
 from pgmpy.distributions.categorical import CategoricalDistribution
 
@@ -431,3 +432,44 @@ class TestCategoricalDistribution:
 
         with pytest.raises(TypeError):
             dist.sample("A")
+
+    @pytest.mark.skipif(
+        not _check_soft_dependencies("matplotlib", severity="none"),
+        reason="execute only if required dependency present",
+    )
+    def test_plot(self):
+        # Case 1: default
+        import matplotlib
+        import matplotlib.pyplot as plt
+
+        matplotlib.use("Agg")
+
+        values = [[0.2, 0.4, 0.3, 0.1], [0.4, 0.4, 0.1, 0.1]]
+        state_names = ["A", "B", "C", "D"]
+        index = ["studentA", "studentB"]
+        columns = ["grade"]
+
+        dist = CategoricalDistribution(values=values, state_names=state_names, index=index, columns=columns)
+        fig, axes = dist.plot(fun="pmf")
+        try:
+            assert isinstance(fig, plt.Figure)
+            assert isinstance(axes, np.ndarray)
+            assert axes.shape == (2,)
+
+            assert axes[0].get_ylabel() == "studentA"
+            assert axes[1].get_ylabel() == "studentB"
+
+            assert axes[0].get_title() == "grade"
+            assert axes[1].get_xlabel() == "state names"
+
+            for ax in axes:
+                assert ax.get_ylim() == pytest.approx((0.0, 1.0))
+        finally:
+            plt.close(fig)
+
+        # Case 2: "cdf", "pdf"
+        with pytest.raises(NotImplementedError):
+            dist.plot(fun="pdf")
+
+        with pytest.raises(NotImplementedError):
+            dist.plot(fun="cdf")
