@@ -263,7 +263,7 @@ class CategoricalDistribution(BaseDistribution):
         n_rows, _ = values.shape
 
         if fun != "pmf":
-            raise NotImplementedError("`Categorical` is only support `pmf` now")
+            raise NotImplementedError("`Categorical` only supports `pmf` currently")
 
         if ax is None:
             fig, axes = plt.subplots(
