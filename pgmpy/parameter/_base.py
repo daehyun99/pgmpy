@@ -10,6 +10,7 @@ class BaseParameter(_BaseEstimator):
         "is_linear_gaussian": bool,
         "missing": bool,
         "supports_fit_joint": bool,
+        "can_be_root": bool,
         "python_dependencies": tuple,
     }
 
@@ -70,4 +71,7 @@ class BaseParameter(_BaseEstimator):
         # Is this data pd.DataFrame?
         # Is this produces factor?
         # Is data format match with tag(`variable_type`)?
+        pass
+
+    def _check_is_fitted(self):
         pass
