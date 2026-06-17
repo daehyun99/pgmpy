@@ -316,8 +316,8 @@ class CategoricalDistribution(BaseDistribution):
         >>> index = ["studentA", "studentB"]
         >>> columns = ["grade"]
         >>> dist = CategoricalDistribution(values=values, state_names=state_names, index=index, columns=columns)
-        fig, axes = dist.plot(fun="pmf")
-
+        >>> dist.plot(fun="pmf") # doctest: +SKIP
+        <Figure ...>
         """
         _check_soft_dependencies("matplotlib", obj="distribution plot")
         import matplotlib.pyplot as plt
