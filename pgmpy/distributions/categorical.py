@@ -187,7 +187,7 @@ class CategoricalDistribution(BaseDistribution):
 
         Parameters
         ----------
-        x : 2D np.ndarray
+        p : 2D np.ndarray
 
         Returns
         -------

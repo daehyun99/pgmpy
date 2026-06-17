@@ -157,7 +157,7 @@ class TestCategoricalDistribution:
 
         # Case 14: wrong values(negative)
         values = [[0.1, 0.2], [-0.5, 0.3]]
-        state_names = [1, 2, 3]
+        state_names = [1, 2]
 
         with pytest.raises(ValueError):
             dist = CategoricalDistribution(values=values, state_names=state_names)
