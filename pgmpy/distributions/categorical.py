@@ -305,6 +305,10 @@ class CategoricalDistribution(BaseDistribution):
         ax : matplotlib.Axes
             the axis or axes on which the plot is drawn
 
+        Notes
+        -----
+        The `matplotlib` library must be installed to use this method.
+
         Examples
         --------
         >>> values = [[0.2, 0.4, 0.3, 0.1], [0.4, 0.4, 0.1, 0.1]]
@@ -315,7 +319,6 @@ class CategoricalDistribution(BaseDistribution):
         fig, axes = dist.plot(fun="pmf")
 
         """
-
         _check_soft_dependencies("matplotlib", obj="distribution plot")
         import matplotlib.pyplot as plt
 
