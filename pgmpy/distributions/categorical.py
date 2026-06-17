@@ -108,13 +108,11 @@ class CategoricalDistribution(BaseDistribution):
 
         Parameters
         ----------
-        x : 2D np.ndarray, same shape as ``self``
-            values to evaluate the pmf at
+        x : 2D np.ndarray
 
         Returns
         -------
-        2D np.ndarray, same shape as ``self``
-            pmf values at the given points
+        2D np.ndarray
 
         """
         values = self.values
@@ -141,13 +139,11 @@ class CategoricalDistribution(BaseDistribution):
 
         Parameters
         ----------
-        x : 2D np.ndarray, same shape as ``self``
-            values to evaluate the pmf at
+        x : 2D np.ndarray
 
         Returns
         -------
-        2D np.ndarray, same shape as ``self``
-            log pmf values at the given points
+        2D np.ndarray
 
         """
         pmf = self._pmf(x)
@@ -158,13 +154,11 @@ class CategoricalDistribution(BaseDistribution):
 
         Parameters
         ----------
-        x : 2D np.ndarray, same shape as ``self``
-            values to evaluate the cdf at
+        x : 2D np.ndarray
 
         Returns
         -------
-        2D np.ndarray, same shape as ``self``
-            cdf values at the given points
+        2D np.ndarray
 
         """
         values = self.values
@@ -193,13 +187,11 @@ class CategoricalDistribution(BaseDistribution):
 
         Parameters
         ----------
-        p : 2D np.ndarray, same shape as ``self``
-            values to evaluate the ppf at
+        x : 2D np.ndarray
 
         Returns
         -------
-        2D np.ndarray, same shape as ``self``
-            ppf values at the given points
+        2D np.ndarray
 
         """
         values = self.values
@@ -232,12 +224,10 @@ class CategoricalDistribution(BaseDistribution):
         Parameters
         ----------
         n_samples : int, optional, default = None
-            number of samples to draw from the distribution
 
         Returns
         -------
         pd.DataFrame
-            samples from the distribution
 
         """
         values = self.values
