@@ -51,21 +51,55 @@ class CategoricalDistribution(BaseDistribution):
         self.values = values
         self.state_names = state_names
 
+        # Validate values.
+        values_for_check = np.asarray(values, dtype=float)
+        if np.any(values_for_check < 0):
+            raise ValueError("values must contain only non-negative probabilities")
+
+        row_sums = values_for_check.sum(axis=1)
+        invalid_rows = np.flatnonzero(~np.isclose(row_sums, 1.0, rtol=1e-9, atol=1e-12))
+        if invalid_rows.size:
+            raise ValueError(
+                "The probabilities in each row of values must sum to 1; "
+                f"invalid row indices: {invalid_rows.tolist()}, "
+                f"row sums: {row_sums[invalid_rows].tolist()}"
+            )
+
+        # Validate state_names.
+        expected_type = type(state_names[0])
+        mismatched_items = [
+            (index, value, type(value).__name__)
+            for index, value in enumerate(state_names)
+            if type(value) is not expected_type
+        ]
+
+        if mismatched_items:
+            raise TypeError(
+                "All values in state_names must have the same type; "
+                f"expected {expected_type.__name__}, "
+                f"but found mismatched values: {mismatched_items}"
+            )
+
+        # Validate shape of state_name and values.
         if len(state_names) != len(set(state_names)):
-            raise ValueError("state_names must not contain duplicate values")
+            raise ValueError(f"state_names must contain unique values: {state_names}")
 
         if len(values[0]) != len(state_names):
-            raise ValueError("mismatch values and state_names's shape")
+            raise ValueError(
+                f"mismatch between the shape of state_names and values: {len(values[0])}, {len(state_names)}"
+            )
 
+        # Validate index, columns.
         if index is None:
             index = pd.RangeIndex(len(values))
         elif len(index) != len(values):
-            raise ValueError("wrong index's len")
-
+            raise ValueError(
+                f"The length of index must match the number of rows in values: {len(index)}, {len(values)}"
+            )
         if columns is None:
             columns = ["variable"]
         elif len(columns) != 1:
-            raise ValueError("wrong columns's len")
+            raise ValueError("columns must contain exactly one column name")
 
         super().__init__(index=index, columns=columns)
 

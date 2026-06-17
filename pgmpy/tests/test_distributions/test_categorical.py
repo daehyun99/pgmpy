@@ -51,11 +51,8 @@ class TestCategoricalDistribution:
         values = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
         state_names = [1, 2, "C"]
 
-        dist = CategoricalDistribution(values=values, state_names=state_names)
-
-        assert dist.values == values
-        assert dist.state_names == state_names
-        assert dist.columns == ["variable"]
+        with pytest.raises(TypeError):
+            dist = CategoricalDistribution(values=values, state_names=state_names)
 
         # Case 1: values: list
         values = [[0.1, 0.9], [0.7, 0.3]]
@@ -121,14 +118,12 @@ class TestCategoricalDistribution:
         assert list(dist.index) == ["studentA", "studentB"]
         assert list(dist.columns) == ["grade"]
 
-        # # Case 7: wrong values
-        # Note: Adding logic to the `__init__()` method to check
-        # whether the values in each row sum to 1 causes a bug with `skpro`’s `BaseDistribution`.
-        # values = [[0.1, 0.2, 0.9], [0.5, 0.3, 0.2]]
-        # state_names = [1, 2, 3]
+        # Case 7: wrong values
+        values = [[0.1, 0.2, 0.9], [0.5, 0.3, 0.2]]
+        state_names = [1, 2, 3]
 
-        # with pytest.raises(ValueError):
-        #     dist = CategoricalDistribution(values=values, state_names=state_names)
+        with pytest.raises(ValueError):
+            dist = CategoricalDistribution(values=values, state_names=state_names)
 
         # Case 8: wrong state_names
         values = [[0.1, 0.2, 0.8], [0.5, 0.3, 0.2]]
@@ -153,8 +148,15 @@ class TestCategoricalDistribution:
         with pytest.raises(ValueError):
             dist = CategoricalDistribution(values=values, state_names=state_names, columns=columns)
 
-        # Case 13: worng shape(values, state_names)
+        # Case 13: wrong shape(values, state_names)
         values = [[0.1, 0.2], [0.5, 0.3]]
+        state_names = [1, 2, 3]
+
+        with pytest.raises(ValueError):
+            dist = CategoricalDistribution(values=values, state_names=state_names)
+
+        # Case 14: wrong values(negative)
+        values = [[0.1, 0.2], [-0.5, 0.3]]
         state_names = [1, 2, 3]
 
         with pytest.raises(ValueError):
