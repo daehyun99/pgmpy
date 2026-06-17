@@ -278,6 +278,44 @@ class CategoricalDistribution(BaseDistribution):
         return res
 
     def plot(self, fun="pmf", ax=None, **kwargs):
+        """Plot the categorical probability mass function.
+
+        A separate bar plot is created for each row in ``values``. The category
+        labels are taken from ``state_names``, and the height of each bar represents
+        the corresponding probability.
+
+        Each subplot is labeled using the corresponding entry in ``index``. The
+        first entry in ``columns`` is used as the figure title.
+
+        Parameters
+        ----------
+        fun : {"pmf"}, default="pmf"
+            Distribution function to plot.
+            Currently, only the probability mass function (``"pmf"``) is supported.
+        ax : matplotlib Axes object, optional
+            matplotlib Axes to plot in
+            if not provided, defaults to current axes (``plot.gca``)
+        kwargs : keyword arguments
+            passed to the plotting function
+
+        Returns
+        -------
+        fig : matplotlib.Figure, only returned if self is array distribution
+            matplotlig Figure object for subplots
+        ax : matplotlib.Axes
+            the axis or axes on which the plot is drawn
+
+        Examples
+        --------
+        >>> values = [[0.2, 0.4, 0.3, 0.1], [0.4, 0.4, 0.1, 0.1]]
+        >>> state_names = ["A", "B", "C", "D"]
+        >>> index = ["studentA", "studentB"]
+        >>> columns = ["grade"]
+        >>> dist = CategoricalDistribution(values=values, state_names=state_names, index=index, columns=columns)
+        fig, axes = dist.plot(fun="pmf")
+
+        """
+
         _check_soft_dependencies("matplotlib", obj="distribution plot")
         import matplotlib.pyplot as plt
 
@@ -318,8 +356,7 @@ class CategoricalDistribution(BaseDistribution):
         Returns
         -------
         dict
-            Dictionary with subsetted distribution parameters.
-            Keys are parameter names of ``self``, values are the subsetted parameters.
+
         """
         values = np.asarray(self.values, dtype=float)
         state_names = np.asarray(self.state_names)
