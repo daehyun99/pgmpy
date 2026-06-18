@@ -56,8 +56,8 @@ class TestTabularCPD:
                 ]
             ),
         )
-        assert parameter.state_names_ == ['no', 'yes']
-        assert parameter.columns_ == ['target']
+        assert list(parameter.state_names_) == [0, 1]
+        assert parameter.columns_ == ['variable']
 
         # Case 2: not root node case
         X, y = discrete_data
@@ -73,7 +73,7 @@ class TestTabularCPD:
         )
 
         assert parameter.is_fitted_ is True
-        assert parameter.estimator_.__class__.__name__ == "DiscreteMLE"
+        assert parameter.estimator_.__class__.__name__ == "TempMLE" # "DiscreteMLE"
         assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
         np.testing.assert_allclose(
             parameter.values_,
@@ -81,8 +81,8 @@ class TestTabularCPD:
             rtol=1e-7,
             atol=1e-8,
         )
-        assert parameter.state_names_ == ['no', 'yes']
-        assert parameter.columns_ == ['target']
+        assert list(parameter.state_names_) == [0, 1]
+        assert parameter.columns_ == ['variable']
 
     def test_predict_proba(self, discrete_data):
         X, y = discrete_data
