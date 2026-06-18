@@ -14,7 +14,7 @@ class BaseParameter(_BaseEstimator):
         "python_dependencies": tuple,
     }
 
-    def fit(self, X, y):
+    def fit(self, X, y=None):
         """API docs"""
         self._check_data(X, y)
         return self._fit(X, y)

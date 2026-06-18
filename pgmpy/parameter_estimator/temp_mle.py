@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class TempMLE:
     _tags = {
         "allow_variable_type": "discrete",
@@ -8,11 +9,12 @@ class TempMLE:
     def __init__(self):
         pass
 
-    def fit(self, X, y, sample_weight=None):
+    def fit(
+        self, X, y, sample_weight=None, state_names=None, prior_type=None, equivalent_sample_size=10, pseudo_counts=None
+    ):
         X = X.loc[:, sorted(X.columns)].copy()
 
         self.feature_names_in_ = np.asarray(X.columns, dtype=object)
-        self.state_names_ = np.unique(np.asarray(y))
 
         target_name = "__target__"
         while target_name in X.columns:
@@ -32,7 +34,7 @@ class TempMLE:
             .size()
             .unstack(evidence_names, fill_value=0)
             .reindex(
-                index=self.state_names_,
+                index=state_names,
                 fill_value=0,
             )
             .rename_axis(index=None)

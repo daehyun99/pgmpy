@@ -36,39 +36,72 @@ class TestTabularCPD:
         assert parameter.get_class_tag("supports_fit_joint") is False
         assert parameter.get_class_tag("python_dependencies") == ("skpro")
 
-    def test_root_node_case(self, discrete_data):
+    def test_fit(self, discrete_data):
+        # Case 1: root node case
         _, y = discrete_data
         parameter = TabularCPD()
         parameter.fit(y)
 
-        assert parameter.values_ == ...
 
-    def test_child_node_case(self, discrete_data):
-        X, y = discrete_data
-        parameter = TabularCPD()
-        parameter.fit(X, y)
-
-        assert parameter.values_ == ...
-
-    def test_fit(self, discrete_data):
-        X, y = discrete_data
-        parameter = TabularCPD()
-
-        parameter.fit(X, y)
 
         assert parameter.is_fitted_ is True
-        assert parameter.estimator_.__class__.__name__ == "DiscreteMLE"
+        assert parameter.estimator_.__class__.__name__ == "TempMLE" # "DiscreteMLE"
         assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
-        assert parameter.values_ == ...
-        assert parameter.index_ == ...
-        assert parameter.state_names_ == ...
-        assert parameter.columns_ == ...
+        np.testing.assert_allclose(
+            parameter.values_,
+            np.array(
+                [
+                    [0.42],
+                    [0.58],
+                ]
+            ),
+        )
+        assert list(parameter.state_names_) == [0, 1]
+        assert parameter.columns_ == ['variable']
+
+        # Case 2: not root node case
+        X, y = discrete_data
+        parameter = TabularCPD()
+
+        parameter.fit(X, y)
+
+        expected_values = np.array(
+            [
+                [0.75, 0.50, 0.66666667, 0.00],
+                [0.25, 0.50, 0.33333333, 1.00],
+            ]
+        )
+
+        assert parameter.is_fitted_ is True
+        assert parameter.estimator_.__class__.__name__ == "TempMLE" # "DiscreteMLE"
+        assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
+        np.testing.assert_allclose(
+            parameter.values_,
+            expected_values,
+            rtol=1e-7,
+            atol=1e-8,
+        )
+        assert list(parameter.state_names_) == [0, 1]
+        assert parameter.columns_ == ['variable']
 
     def test_predict_proba(self, discrete_data):
         X, y = discrete_data
         parameter = TabularCPD()
+        parameter.fit(X, y)
+        dist = parameter.predict_proba(X)
 
-        parameter.predict_proba(X)
+        expected = np.array([
+            [0., 1.],
+            [1., 0.],
+            [1., 0.],
+            [0., 1.],
+            [1., 0.]
+        ])
+
+        np.testing.assert_array_equal(dist.values[:5], expected)
+        assert dist.__class__.__name__ == "CategoricalDistribution"
+        assert list(dist.state_names) == [0, 1]
+        assert list(dist.columns) == ['variable']
 
         with pytest.raises(RuntimeError):
             parameter = TabularCPD()
@@ -77,12 +110,17 @@ class TestTabularCPD:
     def test_set_values(self):
         parameter = TabularCPD()
 
+        assert hasattr(parameter, "values_") is False
+        assert hasattr(parameter, "state_names_") is False
+        assert hasattr(parameter, "columns_") is False
+        assert parameter.is_fitted_ is False
+
         parameter.set_values(...)
 
-        assert parameter.values_ == ...
-        assert parameter.index_ == ...
-        assert parameter.state_names_ == ...
-        assert parameter.columns_ == ...
+        assert hasattr(parameter, "values_")
+        assert hasattr(parameter, "state_names_")
+        assert hasattr(parameter, "columns_")
+        assert parameter.is_fitted_ is True
 
     def test_get_values(self):
         parameter = TabularCPD()
@@ -92,5 +130,4 @@ class TestTabularCPD:
 
         assert result["values"] == ...
         assert result["state_names"] == ...
-        assert result["index"] == ...
         assert result["columns"] == ...

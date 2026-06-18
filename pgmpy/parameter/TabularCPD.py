@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import LabelBinarizer
 
 from pgmpy.distributions.categorical import CategoricalDistribution
@@ -58,7 +59,11 @@ class TabularCPD(BaseParameter):
         self.estimator_.fit(
             X,
             y,
-            sample_weight=sample_weight,
+            sample_weight,
+            self.state_names_,
+            prior_type=self.prior_type,
+            equivalent_sample_size=self.equivalent_sample_size,
+            pseudo_counts=self.pseudo_counts,
         )
         self.values_ = np.asarray(self.estimator_.values_)
         self.columns_ = [y.name if getattr(y, "name", None) is not None else "variable"]
@@ -67,11 +72,17 @@ class TabularCPD(BaseParameter):
         return self
 
     def _predict_proba(self, X):
+
         if not self.is_fitted_:
             raise RuntimeError("This TabularCPD instance is not fitted yet. Call 'fit' before calling 'predict_proba'.")
 
+        evidence_columns = self.estimator_.evidence_states_.names
+        row_evidence = pd.MultiIndex.from_frame(X.loc[:, evidence_columns])
+        column_positions = self.estimator_.evidence_states_.get_indexer(row_evidence)
+        probabilities = self.values_[:, column_positions].T
+
         return CategoricalDistribution(
-            values=self.values_,
+            values=probabilities,
             state_names=self.state_names_,
             columns=self.columns_,
         )  # (len(X), variable_card)
