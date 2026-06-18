@@ -42,10 +42,8 @@ class TestTabularCPD:
         parameter = TabularCPD()
         parameter.fit(y)
 
-
-
         assert parameter.is_fitted_ is True
-        assert parameter.estimator_.__class__.__name__ == "TempMLE" # "DiscreteMLE"
+        assert parameter.estimator_.__class__.__name__ == "TempMLE"  # "DiscreteMLE"
         assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
         np.testing.assert_allclose(
             parameter.values_,
@@ -57,7 +55,7 @@ class TestTabularCPD:
             ),
         )
         assert list(parameter.state_names_) == [0, 1]
-        assert parameter.columns_ == ['variable']
+        assert parameter.columns_ == ["variable"]
 
         # Case 2: not root node case
         X, y = discrete_data
@@ -73,7 +71,7 @@ class TestTabularCPD:
         )
 
         assert parameter.is_fitted_ is True
-        assert parameter.estimator_.__class__.__name__ == "TempMLE" # "DiscreteMLE"
+        assert parameter.estimator_.__class__.__name__ == "TempMLE"  # "DiscreteMLE"
         assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
         np.testing.assert_allclose(
             parameter.values_,
@@ -82,7 +80,7 @@ class TestTabularCPD:
             atol=1e-8,
         )
         assert list(parameter.state_names_) == [0, 1]
-        assert parameter.columns_ == ['variable']
+        assert parameter.columns_ == ["variable"]
 
     def test_predict_proba(self, discrete_data):
         X, y = discrete_data
@@ -90,18 +88,12 @@ class TestTabularCPD:
         parameter.fit(X, y)
         dist = parameter.predict_proba(X)
 
-        expected = np.array([
-            [0., 1.],
-            [1., 0.],
-            [1., 0.],
-            [0., 1.],
-            [1., 0.]
-        ])
+        expected = np.array([[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 0.0]])
 
         np.testing.assert_array_equal(dist.values[:5], expected)
         assert dist.__class__.__name__ == "CategoricalDistribution"
         assert list(dist.state_names) == [0, 1]
-        assert list(dist.columns) == ['variable']
+        assert list(dist.columns) == ["variable"]
 
         with pytest.raises(RuntimeError):
             parameter = TabularCPD()
@@ -115,19 +107,66 @@ class TestTabularCPD:
         assert hasattr(parameter, "columns_") is False
         assert parameter.is_fitted_ is False
 
-        parameter.set_values(...)
+        parameter.set_values(
+            values=np.array(
+                [
+                    [0.2, 0.3],
+                    [0.8, 0.7],
+                ]
+            ),
+            columns=["grade"],
+            state_names=["P", "F"],
+            evidence_states=pd.MultiIndex.from_tuples(
+                [
+                    (0, 0),
+                    (0, 1),
+                    (1, 0),
+                    (1, 1),
+                ],
+                names=["x1", "x2"],
+            ),
+        )
 
         assert hasattr(parameter, "values_")
         assert hasattr(parameter, "state_names_")
         assert hasattr(parameter, "columns_")
+        assert hasattr(parameter, "evidence_states_")
         assert parameter.is_fitted_ is True
 
     def test_get_values(self):
         parameter = TabularCPD()
 
-        parameter.set_values(...)
-        result = parameter.get_values(...)
+        values = np.array(
+            [
+                [0.2, 0.3],
+                [0.8, 0.7],
+            ]
+        )
+        columns = ["grade"]
+        state_names = ["P", "F"]
+        evidence_states = pd.MultiIndex.from_tuples(
+            [
+                (0, 0),
+                (0, 1),
+                (1, 0),
+                (1, 1),
+            ],
+            names=["x1", "x2"],
+        )
 
-        assert result["values"] == ...
-        assert result["state_names"] == ...
-        assert result["columns"] == ...
+        parameter.set_values(
+            values=values,
+            columns=columns,
+            state_names=state_names,
+            evidence_states=evidence_states,
+        )
+
+        result = parameter.get_values()
+
+        np.testing.assert_array_equal(result["values"], values)
+        assert result["columns"] == columns
+        assert result["state_names"] == state_names
+        pd.testing.assert_index_equal(
+            result["evidence_states"],
+            evidence_states,
+        )
