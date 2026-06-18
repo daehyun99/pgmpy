@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from sklearn.preprocessing import LabelBinarizer
 
 from pgmpy.distributions.categorical import CategoricalDistribution
@@ -9,11 +8,13 @@ from pgmpy.parameter_estimator import (
     DiscreteEM,
     DiscreteMLE,
 )
+from pgmpy.parameter_estimator.temp_mle import TempMLE  # DiscreteMLE
 
 _ESTIMATOR_REGISTRY = {
     "mle": DiscreteMLE,
     "bayesian": DiscreteBayesianEstimator,
     "em": DiscreteEM,
+    "temp": TempMLE,
 }
 
 
@@ -31,7 +32,7 @@ class TabularCPD(BaseParameter):
 
     def __init__(
         self,
-        estimator="mle",
+        estimator="temp",
         prior_type=None,
         equivalent_sample_size=10,
         pseudo_counts=None,
@@ -43,10 +44,13 @@ class TabularCPD(BaseParameter):
         self.is_fitted_ = False
         super().__init__()
 
-    def _fit(self, X, y, sample_weight=None):
+    def _fit(self, X, y=None, sample_weight=None):
         if not hasattr(self, "classes_"):
             self._label_binarizer = LabelBinarizer()
-            self._label_binarizer.fit(y)
+            if y is None:  # if root node
+                self._label_binarizer.fit(X)
+            else:
+                self._label_binarizer.fit(y)
             self.state_names_ = self._label_binarizer.classes_
 
         estimator_cls = _ESTIMATOR_REGISTRY[self.estimator.lower()]
@@ -57,8 +61,7 @@ class TabularCPD(BaseParameter):
             sample_weight=sample_weight,
         )
         self.values_ = np.asarray(self.estimator_.values_)
-        self.index_ = pd.RangeIndex(len(self.values_))
-        self.columns_ = ["variable"]
+        self.columns_ = [y.name if getattr(y, "name", None) is not None else "variable"]
         self.is_fitted_ = True
 
         return self
@@ -70,7 +73,6 @@ class TabularCPD(BaseParameter):
         return CategoricalDistribution(
             values=self.values_,
             state_names=self.state_names_,
-            index=self.index_,
             columns=self.columns_,
         )  # (len(X), variable_card)
 
@@ -91,7 +93,6 @@ class TabularCPD(BaseParameter):
         result = {
             "values": self.values_,
             "state_names": self.state_names_,
-            "index": self.index_,
             "columns": self.columns_,
         }
         return result

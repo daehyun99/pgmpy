@@ -36,6 +36,20 @@ class TestTabularCPD:
         assert parameter.get_class_tag("supports_fit_joint") is False
         assert parameter.get_class_tag("python_dependencies") == ("skpro")
 
+    def test_root_node_case(self, discrete_data):
+        _, y = discrete_data
+        parameter = TabularCPD()
+        parameter.fit(y)
+
+        assert parameter.values_ == ...
+
+    def test_child_node_case(self, discrete_data):
+        X, y = discrete_data
+        parameter = TabularCPD()
+        parameter.fit(X, y)
+
+        assert parameter.values_ == ...
+
     def test_fit(self, discrete_data):
         X, y = discrete_data
         parameter = TabularCPD()
