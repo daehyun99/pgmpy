@@ -97,9 +97,11 @@ class TabularCPD(BaseParameter):
         return self
 
     def get_values(self):
-        return {
-            "values": self.values_,
-            "columns": self.columns_,
-            "state_names": self.state_names_,
-            "evidence_states": self.evidence_states_,
+        attributes = {
+            "values": "values_",
+            "columns": "columns_",
+            "state_names": "state_names_",
+            "evidence_states": "evidence_states_",
         }
+
+        return {key: getattr(self, attr_name) for key, attr_name in attributes.items() if hasattr(self, attr_name)}
