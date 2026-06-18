@@ -43,8 +43,8 @@ class TestTabularCPD:
         parameter.fit(X, y)
 
         assert parameter.is_fitted_ is True
-        assert self.estimator_.__class__.__name__ == "DiscreteMLE"
-        assert self._label_binarizer.__class__.__name__ == "LabelBinarizer"
+        assert parameter.estimator_.__class__.__name__ == "DiscreteMLE"
+        assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
         assert parameter.values_ == ...
         assert parameter.index_ == ...
         assert parameter.state_names_ == ...
@@ -55,6 +55,10 @@ class TestTabularCPD:
         parameter = TabularCPD()
 
         parameter.predict_proba(X)
+
+        with pytest.raises(RuntimeError):
+            parameter = TabularCPD()
+            parameter.predict_proba(X)
 
     def test_set_values(self):
         parameter = TabularCPD()

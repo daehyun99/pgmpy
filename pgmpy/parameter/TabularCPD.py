@@ -65,7 +65,7 @@ class TabularCPD(BaseParameter):
 
     def _predict_proba(self, X):
         if not self.is_fitted_:
-            raise ...
+            raise RuntimeError("This TabularCPD instance is not fitted yet. Call 'fit' before calling 'predict_proba'.")
 
         return CategoricalDistribution(
             values=self.values_,
@@ -87,13 +87,7 @@ class TabularCPD(BaseParameter):
         self.is_fitted_ = True
         return self
 
-    def get_values(
-        self,
-        values,
-        evidence_card=None,
-        state_names=None,
-        parent_order=None,
-    ):
+    def get_values(self):
         result = {
             "values": self.values_,
             "state_names": self.state_names_,
