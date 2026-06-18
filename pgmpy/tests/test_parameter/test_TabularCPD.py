@@ -1,7 +1,9 @@
+import numpy as np
 import pandas as pd
 import pytest
-import numpy as np
+
 from pgmpy.parameter.TabularCPD import TabularCPD
+
 
 @pytest.fixture
 def discrete_data():
@@ -15,11 +17,7 @@ def discrete_data():
         }
     )
 
-    y = pd.DataFrame(
-        {
-            "y": ((X["x1"] + X["x2"]) % 2).astype(int)
-        }
-    )
+    y = pd.DataFrame({"y": ((X["x1"] + X["x2"]) % 2).astype(int)})
 
     return X, y
 
@@ -31,12 +29,12 @@ class TestTabularCPD:
         parameter = TabularCPD()
 
         assert parameter.__class__.__name__ == "TabularCPD"
-        assert parameter.get_class_tag("variable_type") is "discrete"
+        assert parameter.get_class_tag("variable_type") == "discrete"
         assert parameter.get_class_tag("produces_factor") is True
         assert parameter.get_class_tag("missing") is False
         assert parameter.get_class_tag("is_linear_gaussian") is False
         assert parameter.get_class_tag("supports_fit_joint") is False
-        assert parameter.get_class_tag("python_dependencies") is ("skpro")
+        assert parameter.get_class_tag("python_dependencies") == ("skpro")
 
     def test_fit(self, discrete_data):
         X, y = discrete_data
@@ -44,8 +42,41 @@ class TestTabularCPD:
 
         parameter.fit(X, y)
 
+        assert parameter.is_fitted_ is True
+        assert parameter.estimator_.__class__.__name__ == "DiscreteMLE"
+        assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
+        assert parameter.values_ == ...
+        assert parameter.index_ == ...
+        assert parameter.state_names_ == ...
+        assert parameter.columns_ == ...
+
     def test_predict_proba(self, discrete_data):
         X, y = discrete_data
         parameter = TabularCPD()
 
         parameter.predict_proba(X)
+
+        with pytest.raises(RuntimeError):
+            parameter = TabularCPD()
+            parameter.predict_proba(X)
+
+    def test_set_values(self):
+        parameter = TabularCPD()
+
+        parameter.set_values(...)
+
+        assert parameter.values_ == ...
+        assert parameter.index_ == ...
+        assert parameter.state_names_ == ...
+        assert parameter.columns_ == ...
+
+    def test_get_values(self):
+        parameter = TabularCPD()
+
+        parameter.set_values(...)
+        result = parameter.get_values(...)
+
+        assert result["values"] == ...
+        assert result["state_names"] == ...
+        assert result["index"] == ...
+        assert result["columns"] == ...
