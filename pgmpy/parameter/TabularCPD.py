@@ -10,10 +10,13 @@ from pgmpy.parameter_estimator import (
     DiscreteMLE,
 )
 
+from pgmpy.parameter_estimator.temp_mle import TempMLE
+
 _ESTIMATOR_REGISTRY = {
     "mle": DiscreteMLE,
     "bayesian": DiscreteBayesianEstimator,
     "em": DiscreteEM,
+    "temp": TempMLE,
 }
 
 
@@ -31,7 +34,7 @@ class TabularCPD(BaseParameter):
 
     def __init__(
         self,
-        estimator="mle",
+        estimator="temp",
         prior_type=None,
         equivalent_sample_size=10,
         pseudo_counts=None,
