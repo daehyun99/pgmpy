@@ -1,19 +1,22 @@
-from pgmpy.parameter._base import BaseParameter
-from pgmpy.distributions.categorical import CategoricalDistribution
-from sklearn.preprocessing import LabelBinarizer
-import pandas as pd
 import numpy as np
+from sklearn.preprocessing import LabelBinarizer
+
+from pgmpy.distributions.categorical import CategoricalDistribution
+from pgmpy.parameter._base import BaseParameter
 from pgmpy.parameter_estimator import (
-    DiscreteMLE,
     DiscreteBayesianEstimator,
     DiscreteEM,
+    DiscreteMLE,
 )
+from pgmpy.parameter_estimator.temp_mle import TempMLE  # DiscreteMLE
 
 _ESTIMATOR_REGISTRY = {
     "mle": DiscreteMLE,
     "bayesian": DiscreteBayesianEstimator,
     "em": DiscreteEM,
+    "temp": TempMLE,
 }
+
 
 class TabularCPD(BaseParameter):
     """TabularCPD"""
@@ -29,7 +32,7 @@ class TabularCPD(BaseParameter):
 
     def __init__(
         self,
-        estimator="mle",
+        estimator="temp",
         prior_type=None,
         equivalent_sample_size=10,
         pseudo_counts=None,
@@ -38,12 +41,16 @@ class TabularCPD(BaseParameter):
         self.prior_type = prior_type
         self.equivalent_sample_size = equivalent_sample_size
         self.pseudo_counts = pseudo_counts
+        self.is_fitted_ = False
         super().__init__()
 
-    def _fit(self, X, y, sample_weight=None):
+    def _fit(self, X, y=None, sample_weight=None):
         if not hasattr(self, "classes_"):
             self._label_binarizer = LabelBinarizer()
-            self._label_binarizer.fit(y)
+            if y is None:  # if root node
+                self._label_binarizer.fit(X)
+            else:
+                self._label_binarizer.fit(y)
             self.state_names_ = self._label_binarizer.classes_
 
         estimator_cls = _ESTIMATOR_REGISTRY[self.estimator.lower()]
@@ -54,29 +61,38 @@ class TabularCPD(BaseParameter):
             sample_weight=sample_weight,
         )
         self.values_ = np.asarray(self.estimator_.values_)
-        self.index_ = pd.RangeIndex(len(self.values_))
-        self.columns_ = ["variable"]
-        self.is_fitted_=True
+        self.columns_ = [y.name if getattr(y, "name", None) is not None else "variable"]
+        self.is_fitted_ = True
 
         return self
-    
+
     def _predict_proba(self, X):
+        if not self.is_fitted_:
+            raise RuntimeError("This TabularCPD instance is not fitted yet. Call 'fit' before calling 'predict_proba'.")
+
         return CategoricalDistribution(
             values=self.values_,
             state_names=self.state_names_,
-            index=self.index_,
             columns=self.columns_,
-        ) # (len(X), variable_card)
+        )  # (len(X), variable_card)
 
-    def get_values(
+    def set_values(
         self,
         values,
         evidence_card=None,
         state_names=None,
         parent_order=None,
     ):
-        self.values_ =...
+        self.values_ = ...
         self.state_names_ = ...
         self.columns_ = ...
         self.is_fitted_ = True
         return self
+
+    def get_values(self):
+        result = {
+            "values": self.values_,
+            "state_names": self.state_names_,
+            "columns": self.columns_,
+        }
+        return result
