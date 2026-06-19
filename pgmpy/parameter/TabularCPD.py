@@ -68,6 +68,10 @@ class TabularCPD(BaseParameter):
         self.CPT_ = np.asarray(self.estimator_.CPT_)
         self.columns_ = [y.name if getattr(y, "name", None) is not None else "variable"]
         self.evidence_states_ = self.estimator_.evidence_states_
+        self.evidence_names_ = np.asarray(
+            self.estimator_.evidence_names_,
+            dtype=object,
+        )
         self.is_fitted_ = True
 
         return self
@@ -76,6 +80,21 @@ class TabularCPD(BaseParameter):
 
         if not self.is_fitted_:
             raise RuntimeError("This TabularCPD instance is not fitted yet. Call 'fit' before calling 'predict_proba'.")
+
+        evidence_names = self.evidence_names_
+
+        if evidence_names.size == 0:
+            probabilities = np.repeat(
+                np.asarray(self.CPT_).T,
+                repeats=len(X),
+                axis=0,
+            )
+
+            return CategoricalDistribution(
+                probs=probabilities,
+                categories=self.categories_,
+                columns=self.columns_,
+            )
 
         evidence_columns = self.evidence_states_.names
         row_evidence = pd.MultiIndex.from_frame(X.loc[:, evidence_columns])
@@ -88,11 +107,12 @@ class TabularCPD(BaseParameter):
             columns=self.columns_,
         )  # (len(X), variable_card)
 
-    def set_values(self, CPT, columns, categories, evidence_states):
+    def set_values(self, CPT, columns, categories, evidence_states, evidence_names):
         self.CPT_ = CPT
         self.columns_ = columns
         self.categories_ = categories
         self.evidence_states_ = evidence_states
+        self.evidence_names_ = evidence_names
         self.is_fitted_ = True
         return self
 
@@ -102,6 +122,7 @@ class TabularCPD(BaseParameter):
             "columns": "columns_",
             "categories": "categories_",
             "evidence_states": "evidence_states_",
+            "evidence_names": "evidence_names_",
         }
 
         return {key: getattr(self, attr_name) for key, attr_name in attributes.items() if hasattr(self, attr_name)}

@@ -7,6 +7,44 @@ from pgmpy.parameter.TabularCPD import TabularCPD
 
 @pytest.fixture
 def discrete_data():
+    """
+    # MLE result
+    # evidences: {x1: (0, 1, 2), x2: (0, 1)}
+    # variable: {y: (0, 1)}
+    +---------+-----------------------+-----------------------+-----------------------+
+    | x1      |           0           |           1           |           2           |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
+    | x2      |     0     |     1     |     0     |     1     |     0     |     1     |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
+    | y = 0   |     7     |     6     |    11     |     9     |    11     |    12     |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
+    | y = 1   |     7     |     7     |    10     |     3     |     5     |    12     |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
+
+    # Case 1: non-root node
+    # evidences: {x1: (0, 1, 2), x2: (0, 1)}
+    # variable: {y: (0, 1)}
+    +---------+-----------------------+-----------------------+-----------------------+
+    | x1      |           0           |           1           |           2           |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
+    | x2      |     0     |     1     |     0     |     1     |     0     |     1     |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
+    | y = 0   |   0.5     | 0.461538  | 0.52381   |   0.75    |  0.6875   |   0.5     |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
+    | y = 1   |   0.5     | 0.538462  | 0.47619   |   0.25    |  0.3125   |   0.5     |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
+
+    # Case 2: root node
+    # evidences : None
+    # variable: {y: (0, 1)}
+    +---------+-------------+
+    | y       | probability |
+    +---------+-------------+
+    | y = 0   |    0.56     |
+    +---------+-------------+
+    | y = 1   |    0.44     |
+    +---------+-------------+
+    """
     rng = np.random.default_rng(seed=42)
     n_samples = 100
 
@@ -17,7 +55,7 @@ def discrete_data():
         }
     )
 
-    y = pd.DataFrame({"y": ((X["x1"] + X["x2"]) % 2).astype(int)})
+    y = pd.DataFrame({"y": rng.integers(0, 2, size=n_samples)})
 
     return X, y
 
@@ -49,8 +87,8 @@ class TestTabularCPD:
             parameter.CPT_,
             np.array(
                 [
-                    [0.42],
-                    [0.58],
+                    [0.56],
+                    [0.44],
                 ]
             ),
         )
@@ -65,8 +103,22 @@ class TestTabularCPD:
 
         expected_CPT = np.array(
             [
-                [0.75, 0.50, 0.66666667, 0.00],
-                [0.25, 0.50, 0.33333333, 1.00],
+                [
+                    7 / 14,
+                    6 / 13,
+                    11 / 21,
+                    9 / 12,
+                    11 / 16,
+                    12 / 24,
+                ],
+                [
+                    7 / 14,
+                    7 / 13,
+                    10 / 21,
+                    3 / 12,
+                    5 / 16,
+                    12 / 24,
+                ],
             ]
         )
 
@@ -84,13 +136,40 @@ class TestTabularCPD:
 
     def test_predict_proba(self, discrete_data):
         X, y = discrete_data
+
+        # Case １: root node case
+        parameter = TabularCPD()
+        parameter.fit(y)
+        dist = parameter.predict_proba(y)
+
+        expected_CPT = np.array(
+            [
+                [56 / 100, 44 / 100],
+                [56 / 100, 44 / 100],
+                [56 / 100, 44 / 100],
+                [56 / 100, 44 / 100],
+                [56 / 100, 44 / 100],
+            ]
+        )
+
+        np.testing.assert_array_equal(dist.probs[:5], expected_CPT)
+
+        # Case ２: non-root node case
         parameter = TabularCPD()
         parameter.fit(X, y)
         dist = parameter.predict_proba(X)
 
-        expected = np.array([[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 0.0]])
+        expected_probs = np.array(
+            [
+                [6 / 13, 7 / 13],
+                [11 / 16, 5 / 16],
+                [3 / 4, 1 / 4],
+                [11 / 21, 10 / 21],
+                [3 / 4, 1 / 4],
+            ]
+        )
 
-        np.testing.assert_array_equal(dist.probs[:5], expected)
+        np.testing.assert_array_equal(dist.probs[:5], expected_probs)
         assert dist.__class__.__name__ == "CategoricalDistribution"
         assert list(dist.categories) == [0, 1]
         assert list(dist.columns) == ["variable"]
@@ -108,14 +187,14 @@ class TestTabularCPD:
         assert parameter.is_fitted_ is False
 
         parameter.set_values(
-            values=np.array(
+            CPT=np.array(
                 [
                     [0.2, 0.3],
                     [0.8, 0.7],
                 ]
             ),
             columns=["grade"],
-            state_names=["P", "F"],
+            categories=["P", "F"],
             evidence_states=pd.MultiIndex.from_tuples(
                 [
                     (0, 0),
@@ -125,12 +204,14 @@ class TestTabularCPD:
                 ],
                 names=["x1", "x2"],
             ),
+            evidence_names=["x1", "x2"],
         )
 
         assert hasattr(parameter, "CPT_")
         assert hasattr(parameter, "categories_")
         assert hasattr(parameter, "columns_")
         assert hasattr(parameter, "evidence_states_")
+        assert hasattr(parameter, "evidence_names_")
         assert parameter.is_fitted_ is True
 
     def test_get_values(self):
@@ -153,12 +234,14 @@ class TestTabularCPD:
             ],
             names=["x1", "x2"],
         )
+        evidence_names = ["x1", "x2"]
 
         parameter.set_values(
             CPT=CPT,
             columns=columns,
             categories=categories,
             evidence_states=evidence_states,
+            evidence_names=evidence_names,
         )
 
         result = parameter.get_values()
@@ -170,3 +253,4 @@ class TestTabularCPD:
             result["evidence_states"],
             evidence_states,
         )
+        assert result["evidence_names"] == evidence_names
