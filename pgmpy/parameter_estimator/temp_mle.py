@@ -10,7 +10,7 @@ class TempMLE:
         pass
 
     def fit(
-        self, X, y, sample_weight=None, state_names=None, prior_type=None, equivalent_sample_size=10, pseudo_counts=None
+        self, X, y, sample_weight=None, categories=None, prior_type=None, equivalent_sample_size=10, pseudo_counts=None
     ):
         X = X.loc[:, sorted(X.columns)].copy()
 
@@ -34,18 +34,18 @@ class TempMLE:
             .size()
             .unstack(evidence_names, fill_value=0)
             .reindex(
-                index=state_names,
+                index=categories,
                 fill_value=0,
             )
             .rename_axis(index=None)
         )
 
-        self.values_ = counts.div(
+        self.CPT_ = counts.div(
             counts.sum(axis=0),
             axis=1,
         )
 
         self.evidence_names_ = np.asarray(evidence_names, dtype=object)
-        self.evidence_states_ = self.values_.columns
+        self.evidence_states_ = self.CPT_.columns
 
         return self
