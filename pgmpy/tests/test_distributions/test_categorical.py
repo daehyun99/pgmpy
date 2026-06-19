@@ -11,8 +11,8 @@ class TestCategoricalDistribution:
 
     def test_default(self):
         probs = [[0.1, 0.9], [0.7, 0.3]]
-        state_names = ["A", "B"]
-        dist = CategoricalDistribution(probs, state_names)
+        categories = ["A", "B"]
+        dist = CategoricalDistribution(probs, categories)
 
         assert dist.name == "CategoricalDistribution"
         assert dist.get_class_tag("python_version") is None
@@ -33,183 +33,183 @@ class TestCategoricalDistribution:
         from skpro.utils.estimator_checks import check_estimator
 
         probs = [[0.1, 0.9], [0.7, 0.3]]
-        dist = CategoricalDistribution(probs=probs, state_names=[1, 2])
+        dist = CategoricalDistribution(probs=probs, categories=[1, 2])
         check_estimator(dist, raise_exceptions=True, verbose=False)
 
         probs = [[0.1, 0.7, 0.2], [0.6, 0.3, 0.1], [0.6, 0.3, 0.1], [0.6, 0.3, 0.1]]
-        dist = CategoricalDistribution(probs=probs, state_names=[1, 2, 3])
+        dist = CategoricalDistribution(probs=probs, categories=[1, 2, 3])
         check_estimator(dist, raise_exceptions=True, verbose=False)
 
-        # # NOTE: An error occurs when `state_names` contains strings.
+        # # NOTE: An error occurs when `categories` contains strings.
         # probs = [[0.1, 0.9], [0.7, 0.3]]
-        # dist = CategoricalDistribution(probs=probs, state_names=["A", "B"])
+        # dist = CategoricalDistribution(probs=probs, categories=["A", "B"])
         # check_estimator(dist, raise_exceptions=True, verbose=False)
 
     def test_init(self):
         """test"""
         # Case 0: default
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, "C"]
+        categories = [1, 2, "C"]
 
         with pytest.raises(TypeError):
-            dist = CategoricalDistribution(probs=probs, state_names=state_names)
+            dist = CategoricalDistribution(probs=probs, categories=categories)
 
         # Case 1: probs: list
         probs = [[0.1, 0.9], [0.7, 0.3]]
-        state_names = [1, 2]
+        categories = [1, 2]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         assert dist.probs == probs
-        assert dist.state_names == state_names
+        assert dist.categories == categories
         assert dist.columns == ["variable"]
 
         # Case 2: probs: numpy
         probs = [[0.1, 0.9], [0.7, 0.3]]
         probs = np.asarray(probs, dtype=float)
-        state_names = [1, 2]
+        categories = [1, 2]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
-        assert dist.state_names == state_names
+        assert dist.categories == categories
         assert dist.columns == ["variable"]
 
-        # Case 3: state_names: str
+        # Case 3: categories: str
         probs = [[0.1, 0.9], [0.7, 0.3]]
-        state_names = ["A", "B"]
+        categories = ["A", "B"]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         assert dist.probs == probs
-        assert dist.state_names == state_names
+        assert dist.categories == categories
         assert dist.columns == ["variable"]
 
-        # Case 4: state_names: int
+        # Case 4: categories: int
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         assert dist.probs == probs
-        assert dist.state_names == state_names
+        assert dist.categories == categories
         assert dist.columns == ["variable"]
 
         # Case 5: index
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = ["A", "B", "C"]
+        categories = ["A", "B", "C"]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names, index=["studentA", "studentB"])
+        dist = CategoricalDistribution(probs=probs, categories=categories, index=["studentA", "studentB"])
 
         assert dist.probs == probs
-        assert dist.state_names == state_names
+        assert dist.categories == categories
         assert list(dist.index) == ["studentA", "studentB"]
         assert list(dist.columns) == ["variable"]
 
         # Case 6: columns
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = ["A", "B", "C"]
+        categories = ["A", "B", "C"]
 
         dist = CategoricalDistribution(
-            probs=probs, state_names=state_names, index=["studentA", "studentB"], columns=["grade"]
+            probs=probs, categories=categories, index=["studentA", "studentB"], columns=["grade"]
         )
 
         assert dist.probs == probs
-        assert dist.state_names == state_names
+        assert dist.categories == categories
         assert list(dist.index) == ["studentA", "studentB"]
         assert list(dist.columns) == ["grade"]
 
         # Case 7: wrong probs
         probs = [[0.1, 0.2, 0.9], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
 
         with pytest.raises(ValueError):
-            dist = CategoricalDistribution(probs=probs, state_names=state_names)
+            dist = CategoricalDistribution(probs=probs, categories=categories)
 
-        # Case 8: wrong state_names
+        # Case 8: wrong categories
         probs = [[0.1, 0.2, 0.8], [0.5, 0.3, 0.2]]
-        state_names = [1, 1, 1]
+        categories = [1, 1, 1]
 
         with pytest.raises(ValueError):
-            dist = CategoricalDistribution(probs=probs, state_names=state_names)
+            dist = CategoricalDistribution(probs=probs, categories=categories)
 
         # Case 9: wrong index
         probs = [[0.1, 0.2, 0.8], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         index = ["A", "B", "C"]
 
         with pytest.raises(ValueError):
-            dist = CategoricalDistribution(probs=probs, state_names=state_names, index=index)
+            dist = CategoricalDistribution(probs=probs, categories=categories, index=index)
 
         # Case 10: wrong columns
         probs = [[0.1, 0.2, 0.8], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         columns = ["A", "B", "C"]
 
         with pytest.raises(ValueError):
-            dist = CategoricalDistribution(probs=probs, state_names=state_names, columns=columns)
+            dist = CategoricalDistribution(probs=probs, categories=categories, columns=columns)
 
-        # Case 13: wrong shape(probs, state_names)
+        # Case 13: wrong shape(probs, categories)
         probs = [[0.1, 0.2], [0.5, 0.3]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
 
         with pytest.raises(ValueError):
-            dist = CategoricalDistribution(probs=probs, state_names=state_names)
+            dist = CategoricalDistribution(probs=probs, categories=categories)
 
         # Case 14: wrong probs(negative)
         probs = [[0.1, 0.2], [-0.5, 0.3]]
-        state_names = [1, 2]
+        categories = [1, 2]
 
         with pytest.raises(ValueError):
-            dist = CategoricalDistribution(probs=probs, state_names=state_names)
+            dist = CategoricalDistribution(probs=probs, categories=categories)
 
     def test_cdf(self):
         """test"""
         # Case 1: x: int
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [[1], [1]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.1, 0.5]})
         pd.testing.assert_frame_equal(dist.cdf(x), expected)
 
         # Case 2: x: str
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = ["A", "B", "C"]
+        categories = ["A", "B", "C"]
         x = [["A"], ["C"]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.1, 1]})
         pd.testing.assert_frame_equal(dist.cdf(x), expected)
 
         # Case 3: wrong x's ndim
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [1, 1]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         with pytest.raises(ValueError):
             dist.cdf(x)
 
         # Case 4: wrong x's value
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [["A"], ["B"]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.0, 0.0]})
         pd.testing.assert_frame_equal(dist.cdf(x), expected)
 
         # Case 5: broadcasting
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [[1]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.1, 0.5]})
         pd.testing.assert_frame_equal(dist.cdf(x), expected)
@@ -218,51 +218,51 @@ class TestCategoricalDistribution:
         """test"""
         # Case 1: p: float
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         p = [[0.1], [0.9]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [1, 3]})
         pd.testing.assert_frame_equal(dist.ppf(p), expected)
 
         # Case 2: p: np.float
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         p = [[0.1], [0.9]]
         p = np.asarray(p, dtype=float)
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [1, 3]})
         pd.testing.assert_frame_equal(dist.ppf(p), expected)
 
         # Case 3: wrong p's ndim
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         p = [0.1, 0.9]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         with pytest.raises(ValueError):
             dist.ppf(p)
 
         # Case 4: wrong p's value
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         p = [[-0.1], [1.1]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         with pytest.raises(ValueError):
             dist.ppf(p)
 
         # Case 5: broadcasting
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         p = [[0.1]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [1, 1]})
         pd.testing.assert_frame_equal(dist.ppf(p), expected)
@@ -271,50 +271,50 @@ class TestCategoricalDistribution:
         """test"""
         # Case 1: x: int
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [[1], [1]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.1, 0.5]})
         pd.testing.assert_frame_equal(dist.pmf(x), expected)
 
         # Case 2: x: str
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = ["A", "B", "C"]
+        categories = ["A", "B", "C"]
         x = [["A"], ["C"]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.1, 0.2]})
         pd.testing.assert_frame_equal(dist.pmf(x), expected)
 
         # Case 3: wrong x's ndim
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [1, 1]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         with pytest.raises(ValueError):
             dist.pmf(x)
 
         # Case 4: wrong x's value
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [["A"], ["B"]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.0, 0.0]})
         pd.testing.assert_frame_equal(dist.pmf(x), expected)
 
         # Case 5: broadcasting
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [[1]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.1, 0.5]})
         pd.testing.assert_frame_equal(dist.pmf(x), expected)
@@ -323,50 +323,50 @@ class TestCategoricalDistribution:
         """test"""
         # Case 1: x: int
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [[1], [1]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": np.log([0.1, 0.5])})
         pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
 
         # Case 2: x: str
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = ["A", "B", "C"]
+        categories = ["A", "B", "C"]
         x = [["A"], ["C"]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": np.log([0.1, 0.2])})
         pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
 
         # Case 3: wrong x's ndim
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [1, 1]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         with pytest.raises(ValueError):
             dist.log_pmf(x)
 
         # Case 4: wrong x's value
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [["A"], ["B"]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": np.log([0, 0])})
         pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
 
         # Case 5: broadcasting
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
         x = [[1]]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": np.log([0.1, 0.5])})
         pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
@@ -377,9 +377,9 @@ class TestCategoricalDistribution:
         np.random.seed(42)
 
         probs = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [2, 3]})
         pd.testing.assert_frame_equal(dist.sample(), expected)
@@ -388,9 +388,9 @@ class TestCategoricalDistribution:
         np.random.seed(42)
 
         probs = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame(
             {"variable": [2, 3, 3, 1, 2, 1]},
@@ -413,9 +413,9 @@ class TestCategoricalDistribution:
         np.random.seed(42)
 
         probs = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         res = dist.sample(3)
 
@@ -428,9 +428,9 @@ class TestCategoricalDistribution:
         np.random.seed(42)
 
         probs = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
-        state_names = [1, 2, 3]
+        categories = [1, 2, 3]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names)
+        dist = CategoricalDistribution(probs=probs, categories=categories)
 
         with pytest.raises(TypeError):
             dist.sample("A")
@@ -447,11 +447,11 @@ class TestCategoricalDistribution:
         matplotlib.use("Agg")
 
         probs = [[0.2, 0.4, 0.3, 0.1], [0.4, 0.4, 0.1, 0.1]]
-        state_names = ["A", "B", "C", "D"]
+        categories = ["A", "B", "C", "D"]
         index = ["studentA", "studentB"]
         columns = ["grade"]
 
-        dist = CategoricalDistribution(probs=probs, state_names=state_names, index=index, columns=columns)
+        dist = CategoricalDistribution(probs=probs, categories=categories, index=index, columns=columns)
         fig, axes = dist.plot(fun="pmf")
         try:
             assert isinstance(fig, plt.Figure)
