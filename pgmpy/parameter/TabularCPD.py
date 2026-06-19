@@ -77,6 +77,24 @@ class TabularCPD(BaseParameter):
         if not self.is_fitted_:
             raise RuntimeError("This TabularCPD instance is not fitted yet. Call 'fit' before calling 'predict_proba'.")
 
+        evidence_names = np.asarray(
+            self.estimator_.evidence_names_,
+            dtype=object,
+        )
+
+        if evidence_names.size == 0:
+            probabilities = np.repeat(
+                np.asarray(self.CPT_).T,
+                repeats=len(X),
+                axis=0,
+            )
+
+            return CategoricalDistribution(
+                probs=probabilities,
+                categories=self.categories_,
+                columns=self.columns_,
+            )
+
         evidence_columns = self.evidence_states_.names
         row_evidence = pd.MultiIndex.from_frame(X.loc[:, evidence_columns])
         column_positions = self.estimator_.evidence_states_.get_indexer(row_evidence)
