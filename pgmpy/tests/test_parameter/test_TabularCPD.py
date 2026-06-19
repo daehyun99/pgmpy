@@ -55,7 +55,7 @@ class TestTabularCPD:
             ),
         )
         assert list(parameter.categories_) == [0, 1]
-        assert parameter.columns_ == ['variable']
+        assert parameter.columns_ == ["variable"]
 
         # Case 2: not root node case
         X, y = discrete_data
@@ -80,7 +80,7 @@ class TestTabularCPD:
             atol=1e-8,
         )
         assert list(parameter.categories_) == [0, 1]
-        assert parameter.columns_ == ['variable']
+        assert parameter.columns_ == ["variable"]
 
     def test_predict_proba(self, discrete_data):
         X, y = discrete_data
@@ -93,7 +93,7 @@ class TestTabularCPD:
         np.testing.assert_array_equal(dist.probs[:5], expected)
         assert dist.__class__.__name__ == "CategoricalDistribution"
         assert list(dist.categories) == [0, 1]
-        assert list(dist.columns) == ['variable']
+        assert list(dist.columns) == ["variable"]
 
         with pytest.raises(RuntimeError):
             parameter = TabularCPD()
