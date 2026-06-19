@@ -46,7 +46,7 @@ class TestTabularCPD:
         assert parameter.estimator_.__class__.__name__ == "TempMLE"  # "DiscreteMLE"
         assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
         np.testing.assert_allclose(
-            parameter.values_,
+            parameter.CPT_,
             np.array(
                 [
                     [0.42],
@@ -54,7 +54,7 @@ class TestTabularCPD:
                 ]
             ),
         )
-        assert list(parameter.state_names_) == [0, 1]
+        assert list(parameter.categories_) == [0, 1]
         assert parameter.columns_ == ["variable"]
 
         # Case 2: not root node case
@@ -63,7 +63,7 @@ class TestTabularCPD:
 
         parameter.fit(X, y)
 
-        expected_values = np.array(
+        expected_CPT = np.array(
             [
                 [0.75, 0.50, 0.66666667, 0.00],
                 [0.25, 0.50, 0.33333333, 1.00],
@@ -74,12 +74,12 @@ class TestTabularCPD:
         assert parameter.estimator_.__class__.__name__ == "TempMLE"  # "DiscreteMLE"
         assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
         np.testing.assert_allclose(
-            parameter.values_,
-            expected_values,
+            parameter.CPT_,
+            expected_CPT,
             rtol=1e-7,
             atol=1e-8,
         )
-        assert list(parameter.state_names_) == [0, 1]
+        assert list(parameter.categories_) == [0, 1]
         assert parameter.columns_ == ["variable"]
 
     def test_predict_proba(self, discrete_data):
@@ -90,9 +90,9 @@ class TestTabularCPD:
 
         expected = np.array([[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 0.0]])
 
-        np.testing.assert_array_equal(dist.values[:5], expected)
+        np.testing.assert_array_equal(dist.probs[:5], expected)
         assert dist.__class__.__name__ == "CategoricalDistribution"
-        assert list(dist.state_names) == [0, 1]
+        assert list(dist.categories) == [0, 1]
         assert list(dist.columns) == ["variable"]
 
         with pytest.raises(RuntimeError):
@@ -102,8 +102,8 @@ class TestTabularCPD:
     def test_set_values(self):
         parameter = TabularCPD()
 
-        assert hasattr(parameter, "values_") is False
-        assert hasattr(parameter, "state_names_") is False
+        assert hasattr(parameter, "CPT_") is False
+        assert hasattr(parameter, "categories_") is False
         assert hasattr(parameter, "columns_") is False
         assert parameter.is_fitted_ is False
 
@@ -127,8 +127,8 @@ class TestTabularCPD:
             ),
         )
 
-        assert hasattr(parameter, "values_")
-        assert hasattr(parameter, "state_names_")
+        assert hasattr(parameter, "CPT_")
+        assert hasattr(parameter, "categories_")
         assert hasattr(parameter, "columns_")
         assert hasattr(parameter, "evidence_states_")
         assert parameter.is_fitted_ is True
@@ -136,14 +136,14 @@ class TestTabularCPD:
     def test_get_values(self):
         parameter = TabularCPD()
 
-        values = np.array(
+        CPT = np.array(
             [
                 [0.2, 0.3],
                 [0.8, 0.7],
             ]
         )
         columns = ["grade"]
-        state_names = ["P", "F"]
+        categories = ["P", "F"]
         evidence_states = pd.MultiIndex.from_tuples(
             [
                 (0, 0),
@@ -155,17 +155,17 @@ class TestTabularCPD:
         )
 
         parameter.set_values(
-            values=values,
+            CPT=CPT,
             columns=columns,
-            state_names=state_names,
+            categories=categories,
             evidence_states=evidence_states,
         )
 
         result = parameter.get_values()
 
-        np.testing.assert_array_equal(result["values"], values)
+        np.testing.assert_array_equal(result["CPT"], CPT)
         assert result["columns"] == columns
-        assert result["state_names"] == state_names
+        assert result["categories"] == categories
         pd.testing.assert_index_equal(
             result["evidence_states"],
             evidence_states,

@@ -52,7 +52,7 @@ class TabularCPD(BaseParameter):
                 self._label_binarizer.fit(X)
             else:
                 self._label_binarizer.fit(y)
-            self.state_names_ = self._label_binarizer.classes_
+            self.categories_ = self._label_binarizer.classes_
 
         estimator_cls = _ESTIMATOR_REGISTRY[self.estimator.lower()]
         self.estimator_ = estimator_cls()
@@ -60,12 +60,12 @@ class TabularCPD(BaseParameter):
             X,
             y,
             sample_weight,
-            self.state_names_,
+            self.categories_,
             prior_type=self.prior_type,
             equivalent_sample_size=self.equivalent_sample_size,
             pseudo_counts=self.pseudo_counts,
         )
-        self.values_ = np.asarray(self.estimator_.values_)
+        self.CPT_ = np.asarray(self.estimator_.CPT_)
         self.columns_ = [y.name if getattr(y, "name", None) is not None else "variable"]
         self.evidence_states_ = self.estimator_.evidence_states_
         self.is_fitted_ = True
@@ -79,28 +79,28 @@ class TabularCPD(BaseParameter):
 
         evidence_columns = self.evidence_states_.names
         row_evidence = pd.MultiIndex.from_frame(X.loc[:, evidence_columns])
-        column_positions = self.evidence_states_.get_indexer(row_evidence)
-        probabilities = self.values_[:, column_positions].T
+        column_positions = self.estimator_.evidence_states_.get_indexer(row_evidence)
+        probabilities = self.CPT_[:, column_positions].T
 
         return CategoricalDistribution(
-            values=probabilities,
-            state_names=self.state_names_,
+            probs=probabilities,
+            categories=self.categories_,
             columns=self.columns_,
         )  # (len(X), variable_card)
 
-    def set_values(self, values, columns, state_names, evidence_states):
-        self.values_ = values
+    def set_values(self, CPT, columns, categories, evidence_states):
+        self.CPT_ = CPT
         self.columns_ = columns
-        self.state_names_ = state_names
+        self.categories_ = categories
         self.evidence_states_ = evidence_states
         self.is_fitted_ = True
         return self
 
     def get_values(self):
         attributes = {
-            "values": "values_",
+            "CPT": "CPT_",
             "columns": "columns_",
-            "state_names": "state_names_",
+            "categories": "categories_",
             "evidence_states": "evidence_states_",
         }
 
