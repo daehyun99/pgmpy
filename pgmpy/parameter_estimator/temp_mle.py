@@ -32,6 +32,9 @@ class TempMLE:
                 sort=True,
             ).size()
 
+            if categories is not None:
+                counts = counts.reindex(categories, fill_value=0)
+
             self.CPT_ = counts.div(counts.sum()).to_frame(name=0)
 
             self.evidence_names_ = np.asarray([], dtype=object)

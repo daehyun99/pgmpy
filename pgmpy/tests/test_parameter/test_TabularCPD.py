@@ -204,12 +204,14 @@ class TestTabularCPD:
                 ],
                 names=["x1", "x2"],
             ),
+            evidence_names=["x1", "x2"],
         )
 
         assert hasattr(parameter, "CPT_")
         assert hasattr(parameter, "categories_")
         assert hasattr(parameter, "columns_")
         assert hasattr(parameter, "evidence_states_")
+        assert hasattr(parameter, "evidence_names_")
         assert parameter.is_fitted_ is True
 
     def test_get_values(self):
@@ -232,12 +234,14 @@ class TestTabularCPD:
             ],
             names=["x1", "x2"],
         )
+        evidence_names = ["x1", "x2"]
 
         parameter.set_values(
             CPT=CPT,
             columns=columns,
             categories=categories,
             evidence_states=evidence_states,
+            evidence_names=evidence_names,
         )
 
         result = parameter.get_values()
@@ -249,3 +253,4 @@ class TestTabularCPD:
             result["evidence_states"],
             evidence_states,
         )
+        assert result["evidence_names"] == evidence_names
