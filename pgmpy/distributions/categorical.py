@@ -8,19 +8,19 @@ class CategoricalDistribution(BaseDistribution):
     """Categorical distribution for discrete random variables.
 
     Represents one or more categorical probability distributions over a
-    finite set of discrete states. Each row of ``values`` defines the
-    probability mass assigned to the states specified by ``state_names``.
+    finite set of discrete states. Each row of ``probs`` defines the
+    probability mass assigned to the states specified by ``categories``.
 
     Parameters
     ----------
-    values : array-like of shape (n_instances, n_states)
+    probs : array-like of shape (n_instances, n_states)
         Probability masses for each state. Each row represents one
-        categorical distribution and must contain non-negative values
+        categorical distribution and must contain non-negative probs
         that sum to 1.
-    state_names : array-like of shape (n_states,)
+    categories : array-like of shape (n_states,)
         Names or labels of the possible discrete states. The order of
-        ``state_names`` corresponds to the order of probabilities in
-        each row of ``values``. State names must be unique.
+        ``categories`` corresponds to the order of probabilities in
+        each row of ``probs``. State names must be unique.
     index : pd.Index, optional, default = RangeIndex
     columns : pd.Index, optional, default = ["variable"]
 
@@ -28,11 +28,11 @@ class CategoricalDistribution(BaseDistribution):
     --------
     >>> from pgmpy.distributions.categorical import CategoricalDistribution
 
-    >>> values = [[0.2, 0.4, 0.3, 0.1], [0.4, 0.4, 0.1, 0.1]]
-    >>> state_names = ["A", "B", "C", "D"]
+    >>> probs = [[0.2, 0.4, 0.3, 0.1], [0.4, 0.4, 0.1, 0.1]]
+    >>> categories = ["A", "B", "C", "D"]
     >>> index=["studentA", "studentB"]
     >>> columns = ["grade"]
-    >>> dist = CategoricalDistribution(values=values, state_names=state_names, index=index, columns=columns)
+    >>> dist = CategoricalDistribution(probs=probs, categories=categories, index=index, columns=columns)
 
     """
 
@@ -46,55 +46,55 @@ class CategoricalDistribution(BaseDistribution):
         "broadcast_init": "off",
     }
 
-    def __init__(self, values, state_names, index=None, columns=None):
+    def __init__(self, probs, categories, index=None, columns=None):
 
-        self.values = values
-        self.state_names = state_names
+        self.probs = probs
+        self.categories = categories
 
-        # Validate values.
-        values_for_check = np.asarray(values, dtype=float)
-        if np.any(values_for_check < 0):
-            raise ValueError("values must contain only non-negative probabilities")
+        # Validate probs.
+        probs_for_check = np.asarray(probs, dtype=float)
+        if np.any(probs_for_check < 0):
+            raise ValueError("probs must contain only non-negative probabilities")
 
-        row_sums = values_for_check.sum(axis=1)
+        row_sums = probs_for_check.sum(axis=1)
         invalid_rows = np.flatnonzero(~np.isclose(row_sums, 1.0, rtol=1e-9, atol=1e-12))
         if invalid_rows.size:
             raise ValueError(
-                "The probabilities in each row of values must sum to 1; "
+                "The probabilities in each row of probs must sum to 1; "
                 f"invalid row indices: {invalid_rows.tolist()}, "
                 f"row sums: {row_sums[invalid_rows].tolist()}"
             )
 
-        # Validate state_names.
-        expected_type = type(state_names[0])
+        # Validate categories.
+        expected_type = type(categories[0])
         mismatched_items = [
             (index, value, type(value).__name__)
-            for index, value in enumerate(state_names)
+            for index, value in enumerate(categories)
             if type(value) is not expected_type
         ]
 
         if mismatched_items:
             raise TypeError(
-                "All values in state_names must have the same type; "
+                "All probs in categories must have the same type; "
                 f"expected {expected_type.__name__}, "
-                f"but found mismatched values: {mismatched_items}"
+                f"but found mismatched probs: {mismatched_items}"
             )
 
-        # Validate shape of state_name and values.
-        if len(state_names) != len(set(state_names)):
-            raise ValueError(f"state_names must contain unique values: {state_names}")
+        # Validate shape of state_name and probs.
+        if len(categories) != len(set(categories)):
+            raise ValueError(f"categories must contain unique probs: {categories}")
 
-        if len(values[0]) != len(state_names):
+        if len(probs[0]) != len(categories):
             raise ValueError(
-                f"mismatch between the shape of state_names and values: {len(values[0])}, {len(state_names)}"
+                f"mismatch between the shape of categories and probs: {len(probs[0])}, {len(categories)}"
             )
 
         # Validate index, columns.
         if index is None:
-            index = pd.RangeIndex(len(values))
-        elif len(index) != len(values):
+            index = pd.RangeIndex(len(probs))
+        elif len(index) != len(probs):
             raise ValueError(
-                f"The length of index must match the number of rows in values: {len(index)}, {len(values)}"
+                f"The length of index must match the number of rows in probs: {len(index)}, {len(probs)}"
             )
         if columns is None:
             columns = ["variable"]
@@ -115,20 +115,20 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray
 
         """
-        values = self.values
-        state_names = self.state_names
+        probs = self.probs
+        categories = self.categories
 
-        values = np.asarray(values, dtype=float)
-        state_names = np.asarray(state_names)
+        probs = np.asarray(probs, dtype=float)
+        categories = np.asarray(categories)
 
-        matches = x == state_names
+        matches = x == categories
 
         valid = matches.any(axis=1)
 
         state_idx = matches.argmax(axis=1)
-        row_idx = np.arange(values.shape[0])
+        row_idx = np.arange(probs.shape[0])
 
-        res = values[row_idx, state_idx]
+        res = probs[row_idx, state_idx]
 
         res = np.where(valid, res, 0.0)
 
@@ -161,24 +161,24 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray
 
         """
-        values = self.values
-        state_names = self.state_names
+        probs = self.probs
+        categories = self.categories
 
-        values = np.asarray(values, dtype=float)
-        state_names = np.asarray(state_names)
+        probs = np.asarray(probs, dtype=float)
+        categories = np.asarray(categories)
 
-        res = np.empty(values.shape[0], dtype=float)
+        res = np.empty(probs.shape[0], dtype=float)
 
         for i, xi in enumerate(x):
             target = xi[0]
 
-            idx_arr = np.where(state_names == target)[0]
+            idx_arr = np.where(categories == target)[0]
 
             if len(idx_arr) == 0:
                 res[i] = 0.0
             else:
                 idx = idx_arr[0]
-                res[i] = values[i, : idx + 1].sum()
+                res[i] = probs[i, : idx + 1].sum()
 
         return res.reshape(-1, 1)
 
@@ -194,27 +194,27 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray
 
         """
-        values = self.values
-        state_names = self.state_names
+        probs = self.probs
+        categories = self.categories
 
-        values = np.asarray(values, dtype=float)
-        state_names = np.asarray(state_names)
+        probs = np.asarray(probs, dtype=float)
+        categories = np.asarray(categories)
 
         if np.any((p < 0) | (p > 1)):
             raise ValueError("p values must be between 0 and 1.")
 
-        res = np.empty(values.shape[0], dtype=state_names.dtype)
+        res = np.empty(probs.shape[0], dtype=categories.dtype)
 
         for i, pi in enumerate(p):
             prob = pi[0]
 
-            cum_values = np.cumsum(values[i])
-            idx = np.searchsorted(cum_values, prob, side="left")
+            cum_probs = np.cumsum(probs[i])
+            idx = np.searchsorted(cum_probs, prob, side="left")
 
-            if idx >= values.shape[1]:
-                idx = values.shape[1] - 1
+            if idx >= probs.shape[1]:
+                idx = probs.shape[1] - 1
 
-            res[i] = state_names[idx]
+            res[i] = categories[idx]
 
         return res.reshape(-1, 1)
 
@@ -230,11 +230,11 @@ class CategoricalDistribution(BaseDistribution):
         pd.DataFrame
 
         """
-        values = self.values
-        state_names = self.state_names
+        probs = self.probs
+        categories = self.categories
 
-        values = np.asarray(values, dtype=float)
-        state_names = np.asarray(state_names)
+        probs = np.asarray(probs, dtype=float)
+        categories = np.asarray(categories)
 
         if n_samples is None:
             n_samples = 1
@@ -242,15 +242,15 @@ class CategoricalDistribution(BaseDistribution):
         else:
             single_sample = False
 
-        n_rows, _ = values.shape
+        n_rows, _ = probs.shape
 
-        sampled = np.empty((n_samples, n_rows), dtype=state_names.dtype)
+        sampled = np.empty((n_samples, n_rows), dtype=categories.dtype)
 
         for i in range(n_rows):
             sampled[:, i] = np.random.choice(
-                state_names,
+                categories,
                 size=n_samples,
-                p=values[i],
+                p=probs[i],
                 replace=True,
             )
 
@@ -280,8 +280,8 @@ class CategoricalDistribution(BaseDistribution):
     def plot(self, fun="pmf", ax=None, **kwargs):
         """Plot the categorical probability mass function.
 
-        A separate bar plot is created for each row in ``values``. The category
-        labels are taken from ``state_names``, and the height of each bar represents
+        A separate bar plot is created for each row in ``probs``. The category
+        labels are taken from ``categories``, and the height of each bar represents
         the corresponding probability.
 
         Each subplot is labeled using the corresponding entry in ``index``. The
@@ -311,21 +311,21 @@ class CategoricalDistribution(BaseDistribution):
 
         Examples
         --------
-        >>> values = [[0.2, 0.4, 0.3, 0.1], [0.4, 0.4, 0.1, 0.1]]
-        >>> state_names = ["A", "B", "C", "D"]
+        >>> probs = [[0.2, 0.4, 0.3, 0.1], [0.4, 0.4, 0.1, 0.1]]
+        >>> categories = ["A", "B", "C", "D"]
         >>> index = ["studentA", "studentB"]
         >>> columns = ["grade"]
-        >>> dist = CategoricalDistribution(values=values, state_names=state_names, index=index, columns=columns)
+        >>> dist = CategoricalDistribution(probs=probs, categories=categories, index=index, columns=columns)
         >>> dist.plot(fun="pmf") # doctest: +SKIP
         <Figure ...>
         """
         _check_soft_dependencies("matplotlib", obj="distribution plot")
         import matplotlib.pyplot as plt
 
-        values = np.asarray(self.values, dtype=float)
-        states = np.asarray(self.state_names)
+        probs = np.asarray(self.probs, dtype=float)
+        states = np.asarray(self.categories)
 
-        n_rows, _ = values.shape
+        n_rows, _ = probs.shape
 
         if fun != "pmf":
             raise NotImplementedError("`Categorical` only supports `pmf` currently")
@@ -344,7 +344,7 @@ class CategoricalDistribution(BaseDistribution):
 
         for i in range(n_rows):
             current_ax = axes[i, 0]
-            current_ax.bar(states, values[i], **kwargs)
+            current_ax.bar(states, probs[i], **kwargs)
             current_ax.set_ylabel(str(self.index[i]))
             current_ax.set_ylim(0, 1)
 
@@ -361,23 +361,23 @@ class CategoricalDistribution(BaseDistribution):
         dict
 
         """
-        values = np.asarray(self.values, dtype=float)
-        state_names = np.asarray(self.state_names)
+        probs = np.asarray(self.probs, dtype=float)
+        categories = np.asarray(self.categories)
 
         if rowidx is not None:
-            values = values[rowidx, :]
+            probs = probs[rowidx, :]
 
-            if values.ndim == 1:
-                values = values.reshape(1, -1)
+            if probs.ndim == 1:
+                probs = probs.reshape(1, -1)
 
-            if state_names.ndim == 2:
-                state_names = state_names[rowidx, :]
-                if state_names.ndim == 1:
-                    state_names = state_names.reshape(1, -1)
+            if categories.ndim == 2:
+                categories = categories[rowidx, :]
+                if categories.ndim == 1:
+                    categories = categories.reshape(1, -1)
 
         return {
-            "values": values,
-            "state_names": state_names,
+            "probs": probs,
+            "categories": categories,
         }
 
     @classmethod
@@ -398,6 +398,6 @@ class CategoricalDistribution(BaseDistribution):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`
         """
-        params1 = {"values": [[0.1, 0.9], [0.7, 0.3]], "state_names": [1, 2]}
-        params2 = {"values": [[0.1, 0.7, 0.2], [0.5, 0.3, 0.2]], "state_names": [1, 2, 3]}
+        params1 = {"probs": [[0.1, 0.9], [0.7, 0.3]], "categories": [1, 2]}
+        params2 = {"probs": [[0.1, 0.7, 0.2], [0.5, 0.3, 0.2]], "categories": [1, 2, 3]}
         return [params1, params2]
