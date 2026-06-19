@@ -136,6 +136,25 @@ class TestTabularCPD:
 
     def test_predict_proba(self, discrete_data):
         X, y = discrete_data
+
+        # Case １: root node case
+        parameter = TabularCPD()
+        parameter.fit(y)
+        dist = parameter.predict_proba(y)
+
+        expected_CPT = np.array(
+            [
+                [56 / 100, 44 / 100],
+                [56 / 100, 44 / 100],
+                [56 / 100, 44 / 100],
+                [56 / 100, 44 / 100],
+                [56 / 100, 44 / 100],
+            ]
+        )
+
+        np.testing.assert_array_equal(dist.probs[:5], expected_CPT)
+
+        # Case ２: non-root node case
         parameter = TabularCPD()
         parameter.fit(X, y)
         dist = parameter.predict_proba(X)
