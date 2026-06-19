@@ -46,7 +46,7 @@ class TabularCPD(BaseParameter):
         super().__init__()
 
     def _fit(self, X, y=None, sample_weight=None):
-        if not hasattr(self, "classes_"):
+        if not hasattr(self, "state_names_"):
             self._label_binarizer = LabelBinarizer()
             if y is None:  # if root node
                 self._label_binarizer.fit(X)
@@ -67,6 +67,7 @@ class TabularCPD(BaseParameter):
         )
         self.values_ = np.asarray(self.estimator_.values_)
         self.columns_ = [y.name if getattr(y, "name", None) is not None else "variable"]
+        self.evidence_states_ = self.estimator_.evidence_states_
         self.is_fitted_ = True
 
         return self
@@ -76,9 +77,9 @@ class TabularCPD(BaseParameter):
         if not self.is_fitted_:
             raise RuntimeError("This TabularCPD instance is not fitted yet. Call 'fit' before calling 'predict_proba'.")
 
-        evidence_columns = self.estimator_.evidence_states_.names
+        evidence_columns = self.evidence_states_.names
         row_evidence = pd.MultiIndex.from_frame(X.loc[:, evidence_columns])
-        column_positions = self.estimator_.evidence_states_.get_indexer(row_evidence)
+        column_positions = self.evidence_states_.get_indexer(row_evidence)
         probabilities = self.values_[:, column_positions].T
 
         return CategoricalDistribution(
@@ -87,23 +88,20 @@ class TabularCPD(BaseParameter):
             columns=self.columns_,
         )  # (len(X), variable_card)
 
-    def set_values(
-        self,
-        values,
-        evidence_card=None,
-        state_names=None,
-        parent_order=None,
-    ):
-        self.values_ = ...
-        self.state_names_ = ...
-        self.columns_ = ...
+    def set_values(self, values, columns, state_names, evidence_states):
+        self.values_ = values
+        self.columns_ = columns
+        self.state_names_ = state_names
+        self.evidence_states_ = evidence_states
         self.is_fitted_ = True
         return self
 
     def get_values(self):
-        result = {
-            "values": self.values_,
-            "state_names": self.state_names_,
-            "columns": self.columns_,
+        attributes = {
+            "values": "values_",
+            "columns": "columns_",
+            "state_names": "state_names_",
+            "evidence_states": "evidence_states_",
         }
-        return result
+
+        return {key: getattr(self, attr_name) for key, attr_name in attributes.items() if hasattr(self, attr_name)}
