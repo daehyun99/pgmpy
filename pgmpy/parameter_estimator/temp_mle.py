@@ -10,7 +10,14 @@ class TempMLE:
         pass
 
     def fit(
-        self, X, y=None, sample_weight=None, categories=None, prior_type=None, equivalent_sample_size=10, pseudo_counts=None
+        self,
+        X,
+        y=None,
+        sample_weight=None,
+        categories=None,
+        prior_type=None,
+        equivalent_sample_size=10,
+        pseudo_counts=None,
     ):
         X = X.loc[:, sorted(X.columns)].copy()
 
@@ -19,19 +26,13 @@ class TempMLE:
         if y is None:
             feature_names = self.feature_names_in_.tolist()
 
-            counts = (
-                X.groupby(
-                    feature_names,
-                    observed=True,
-                    sort=True,
-                )
-                .size()
-            )
+            counts = X.groupby(
+                feature_names,
+                observed=True,
+                sort=True,
+            ).size()
 
-            self.CPT_ = (
-                counts.div(counts.sum())
-                .to_frame(name=0)
-            )
+            self.CPT_ = counts.div(counts.sum()).to_frame(name=0)
 
             self.evidence_names_ = np.asarray([], dtype=object)
             self.evidence_states_ = self.CPT_.columns
