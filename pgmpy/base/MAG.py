@@ -1,3 +1,5 @@
+from itertools import combinations
+
 from pgmpy.base._base import _CoreGraph
 
 
@@ -44,6 +46,43 @@ class MAG(_CoreGraph):
     """
 
     SUPPORTED_EDGE_TYPES = frozenset(["->", "<-", "<>", "--"])
+
+    def is_maximal(self) -> bool:
+        """
+        Check whether the graph is maximal.
+
+        An ancestral graph is maximal when no edge can be added without changing the implied
+        conditional-independence relations -- equivalently, when every pair of non-adjacent nodes
+        can be m-separated by some subset of the remaining nodes. By the characterization of
+        :cite:p:`zhang_2008` this holds exactly when no *primitive* inducing path (an inducing
+        path relative to the full vertex set: every intermediate node is a collider and an
+        ancestor of an endpoint) joins a non-adjacent pair. The ``latents`` role is ignored:
+        maximality is a property of the graph itself.
+
+        Returns
+        -------
+        bool
+            True if the graph is maximal, False otherwise.
+
+        See Also
+        --------
+        has_inducing_path : The underlying inducing-path query.
+        is_mseparated : The m-separation query maximality is defined through.
+
+        Examples
+        --------
+        >>> from pgmpy.base import MAG
+        >>> edges = [("A", "B", "<>"), ("A", "C", "<>"), ("B", "D", "<>"), ("A", "D", "->"), ("B", "C", "->")]
+        >>> MAG(edge_list=edges).is_maximal()  # C ... D joined by an inducing path
+        False
+        >>> MAG(edge_list=[*edges, ("C", "D", "<>")]).is_maximal()
+        True
+
+        """
+        nodes = set(self.nodes())
+        return not any(
+            not self.has_edge(u, v) and self.has_inducing_path(u, v, w=nodes) for u, v in combinations(self.nodes(), 2)
+        )
 
     def is_visible_edge(self, u, v):
         """

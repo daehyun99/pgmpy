@@ -1,6 +1,8 @@
+from itertools import combinations
+
 import pytest
 
-from pgmpy.base import ADMG, MAG, PDAG
+from pgmpy.base import ADMG, DAG, MAG, PDAG
 from pgmpy.base._base import _CoreGraph
 
 
@@ -85,284 +87,6 @@ class TestGraphAlgorithmMixin:
         # fails: node not in the graph
         with pytest.raises(ValueError):
             _CoreGraph().is_collider("T", "M", "O")
-
-    # @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
-    # def test_is_m_separator(self):
-    #     """
-    #     References
-    #     ----------
-    #     [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
-    #     "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
-    #     Artificial Intelligence 270 (2019): 1-40. Figure 3.
-    #     """
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "->")
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_separator("T", "O", "M") == True
-    #     assert graph.is_m_separator("T", "I", "M") == False
-    #     assert graph.is_m_separator("T", "B", "M") == False
-    #     assert graph.is_m_separator("T", "U", "M") == True
-
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "<-")
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_separator("T", "O", "M") == True
-    #     assert graph.is_m_separator("T", "I", "M") == True
-    #     assert graph.is_m_separator("T", "B", "M") == True
-    #     assert graph.is_m_separator("T", "U", "M") == True
-
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "<>")
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_separator("T", "O", "M") == True
-    #     assert graph.is_m_separator("T", "I", "M") == False
-    #     assert graph.is_m_separator("T", "B", "M") == False
-    #     assert graph.is_m_separator("T", "U", "M") == True
-
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "--")
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_separator("T", "O", "M") == True
-    #     assert graph.is_m_separator("T", "I", "M") == True
-    #     assert graph.is_m_separator("T", "B", "M") == True
-    #     assert graph.is_m_separator("T", "U", "M") == True
-
-    # @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
-    # def test_is_m_separator_with_latent(self):
-    #     """
-    #     References
-    #     ----------
-    #     [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
-    #     "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
-    #     Artificial Intelligence 270 (2019): 1-40. Figure 3.
-    #     """
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "->")
-    #     graph.latents = {"M"}
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_separator("T", "O", "M") == False
-    #     assert graph.is_m_separator("T", "I", "M") == True
-    #     assert graph.is_m_separator("T", "B", "M") == True
-    #     assert graph.is_m_separator("T", "U", "M") == False
-
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "<-")
-    #     graph.latents = {"M"}
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_separator("T", "O", "M") == False
-    #     assert graph.is_m_separator("T", "I", "M") == False
-    #     assert graph.is_m_separator("T", "B", "M") == False
-    #     assert graph.is_m_separator("T", "U", "M") == False
-
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "<>")
-    #     graph.latents = {"M"}
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_separator("T", "O", "M") == False
-    #     assert graph.is_m_separator("T", "I", "M") == True
-    #     assert graph.is_m_separator("T", "B", "M") == True
-    #     assert graph.is_m_separator("T", "U", "M") == False
-
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "--")
-    #     graph.latents = {"M"}
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_separator("T", "O", "M") == False
-    #     assert graph.is_m_separator("T", "I", "M") == False
-    #     assert graph.is_m_separator("T", "B", "M") == False
-    #     assert graph.is_m_separator("T", "U", "M") == False
-
-    # @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
-    # def test_is_m_connected(self):
-    #     """
-    #     References
-    #     ----------
-    #     [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
-    #     "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
-    #     Artificial Intelligence 270 (2019): 1-40. Figure 3.
-    #     """
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "->")
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_connected("T", "O", "M") == False
-    #     assert graph.is_m_connected("T", "I", "M") == True
-    #     assert graph.is_m_connected("T", "B", "M") == True
-    #     assert graph.is_m_connected("T", "U", "M") == False
-
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "<-")
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_connected("T", "O", "M") == False
-    #     assert graph.is_m_connected("T", "I", "M") == False
-    #     assert graph.is_m_connected("T", "B", "M") == False
-    #     assert graph.is_m_connected("T", "U", "M") == False
-
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "<>")
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_connected("T", "O", "M") == False
-    #     assert graph.is_m_connected("T", "I", "M") == True
-    #     assert graph.is_m_connected("T", "B", "M") == True
-    #     assert graph.is_m_connected("T", "U", "M") == False
-
-    #     graph = _CoreGraph()
-    #     graph.add_edge("T", "M", "--")
-
-    #     graph.add_edge("M", "O", "->")
-    #     graph.add_edge("M", "I", "<-")
-    #     graph.add_edge("M", "B", "<>")
-    #     graph.add_edge("M", "U", "--")
-
-    #     assert graph.is_m_connected("T", "O", "M") == False
-    #     assert graph.is_m_connected("T", "I", "M") == False
-    #     assert graph.is_m_connected("T", "B", "M") == False
-    #     assert graph.is_m_connected("T", "U", "M") == False
-
-    # @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
-    # def test_is_minimal_m_separator(self):
-    #     """
-    #     References
-    #     ----------
-    #     [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
-    #     "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
-    #     Artificial Intelligence 270 (2019): 1-40. Figure 1.
-    #     """
-    #     # TODO(@daehyun99): [#2384] Implement code logic and test code
-    #     ...
-
-    # @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
-    # def test_get_m_separator(self):
-    #     """
-    #     References
-    #     ----------
-    #     [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
-    #     "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
-    #     Artificial Intelligence 270 (2019): 1-40. Figure 1.
-    #     """
-    #     # TODO(@daehyun99): [#2384] Implement code logic and test code
-    #     ...
-
-    # @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
-    # def test_get_m_separator_with_latent(self):
-    #     """
-    #     References
-    #     ----------
-    #     [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
-    #     "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
-    #     Artificial Intelligence 270 (2019): 1-40. Figure 1.
-    #     """
-    #     # TODO(@daehyun99): [#2384] Implement code logic and test code
-    #     ...
-
-    # @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
-    # def test_get_minimal_m_separator(self):
-    #     """
-    #     References
-    #     ----------
-    #     [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
-    #     "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
-    #     Artificial Intelligence 270 (2019): 1-40. Figure 1.
-    #     """
-    #     # TODO(@daehyun99): [#2384] Implement code logic and test code
-    #     ...
-
-    # @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
-    # def test_get_m_separators(self):
-    #     """
-    #     References
-    #     ----------
-    #     [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
-    #     "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
-    #     Artificial Intelligence 270 (2019): 1-40. Figure 1.
-    #     """
-    #     # TODO(@daehyun99): [#2384] Implement code logic and test code
-    #     ...
-
-    # @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
-    # def test_get_m_separators_with_latent(self):
-    #     """
-    #     References
-    #     ----------
-    #     [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
-    #     "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
-    #     Artificial Intelligence 270 (2019): 1-40. Figure 1.
-    #     """
-    #     # TODO(@daehyun99): [#2384] Implement code logic and test code
-    #     ...
-
-    # @pytest.mark.skip(reason="Refactoring: Skip now, because focusing on refactoring ADMG, MAG class.")
-    # def test_get_minimal_m_separators(self):
-    #     """
-    #     References
-    #     ----------
-    #     [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
-    #     "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
-    #     Artificial Intelligence 270 (2019): 1-40. Figure 1.
-
-    #     [2] Takata, Ken.
-    #     "Space-optimal, backtracking algorithms to list the minimal vertex separators of a graph."
-    #     Discrete Applied Mathematics 158 (2010): 1660-1667. Figure 1.
-    #     """
-    #     graph = _CoreGraph()
-    #     graph.add_nodes_from(["A", "two", "three", "four", "five", "B"])
-
-    #     # TODO(@daehyun99): [#2384] Implement code logic and test code
-    #     ...
 
     def has_directed_cycle(self):
         """
@@ -521,6 +245,97 @@ class TestGraphAlgorithmMixin:
         # fails: endpoint not in the graph
         with pytest.raises(ValueError, match="not in graph"):
             _CoreGraph(edge_list=[("X", "Y", "->")]).has_inducing_path("X", "Q")
+
+    def test_get_mconnected_nodes(self):
+        """`get_mconnected_nodes(nodes, conditioning_set)`: all nodes reachable from `nodes` by an
+        m-connecting walk -- colliders on the walk must be in the conditioning set, non-colliders
+        must not be."""
+        # hub motif: T -> M with M -> O, M <- I, M <> B
+        g = _CoreGraph(edge_list=[("T", "M", "->"), ("M", "O", "->"), ("M", "I", "<-"), ("M", "B", "<>")])
+        # unconditioned: M is a non-collider towards O (open), a collider towards I and B (blocked)
+        assert g.get_mconnected_nodes("T") == {"T", "M", "O"}
+        # conditioning on M flips it: collider paths open, non-collider paths block
+        assert g.get_mconnected_nodes("T", {"M"}) == {"T", "M", "I", "B"}
+
+        # undirected (selection) edges are non-colliders: open unconditioned, blocked when conditioned
+        g = _CoreGraph(edge_list=[("X", "Z", "--"), ("Z", "Y", "--")])
+        assert g.get_mconnected_nodes("X") == {"X", "Z", "Y"}
+        assert g.get_mconnected_nodes("X", {"Z"}) == {"X", "Z"}
+
+        # conditioning on a collider's DESCENDANT opens the collider (walk goes down to D and back)
+        g = _CoreGraph(edge_list=[("X", "C", "->"), ("Y", "C", "->"), ("C", "D", "->")])
+        assert g.get_mconnected_nodes("X") == {"X", "C", "D"}
+        assert "Y" in g.get_mconnected_nodes("X", {"D"})
+
+        # multiple sources: the union of reachable sets
+        g = _CoreGraph(edge_list=[("A", "B", "->"), ("X", "Y", "->")])
+        assert g.get_mconnected_nodes(["A", "X"]) == {"A", "B", "X", "Y"}
+
+        # fails: missing node / source inside the conditioning set / circle marks (PAG) /
+        # non-ancestral graph (an undirected edge meeting an arrowhead, as in a PDAG)
+        with pytest.raises(ValueError, match="not in graph"):
+            g.get_mconnected_nodes("Q")
+        with pytest.raises(ValueError, match="disjoint"):
+            g.get_mconnected_nodes("A", {"A"})
+        pag = _CoreGraph(edge_list=[("A", "B", "o>")])
+        with pytest.raises(ValueError, match="circle"):
+            pag.get_mconnected_nodes("A")
+        non_ancestral = _CoreGraph(edge_list=[("T", "M", "->"), ("M", "U", "--")])
+        with pytest.raises(ValueError, match="ancestral"):
+            non_ancestral.get_mconnected_nodes("T")
+
+    def test_is_mseparated(self):
+        """`is_mseparated(u, v, conditioning_set)`: True iff no m-connecting walk joins u and v.
+
+        References
+        ----------
+        [1] Zander, Benito van der, Maciej Liskiewicz, and Johannes C. Textor.
+        "Separators and adjustment sets in causal graphs: Complete criteria and an algorithmic framework."
+        Artificial Intelligence 270 (2019): 1-40. Figure 3.
+        """
+        # hub motif (restores the dev-era is_m_connected corpus): T -> M with M -> O, M <- I, M <> B
+        g = _CoreGraph(edge_list=[("T", "M", "->"), ("M", "O", "->"), ("M", "I", "<-"), ("M", "B", "<>")])
+        # given {M}: the non-collider route (O) blocks, collider routes (I, B) open
+        assert g.is_mseparated("T", "O", {"M"}) is True
+        assert g.is_mseparated("T", "I", {"M"}) is False
+        assert g.is_mseparated("T", "B", {"M"}) is False
+        # given the empty set: exactly reversed
+        assert g.is_mseparated("T", "O") is False
+        assert g.is_mseparated("T", "I") is True
+        assert g.is_mseparated("T", "B") is True
+
+        # conditioning on a collider's descendant opens the collider
+        g = _CoreGraph(edge_list=[("X", "C", "->"), ("Y", "C", "->"), ("C", "D", "->")])
+        assert g.is_mseparated("X", "Y") is True
+        assert g.is_mseparated("X", "Y", {"C"}) is False
+        assert g.is_mseparated("X", "Y", {"D"}) is False
+
+        # MAG selection (undirected) edges are non-colliders; ADMG bidirected chains are colliders
+        mag = MAG(edge_list=[("X", "Z", "--"), ("Z", "Y", "--")])
+        assert mag.is_mseparated("X", "Y") is False
+        assert mag.is_mseparated("X", "Y", {"Z"}) is True
+        admg = ADMG(edge_list=[("X", "C", "<>"), ("C", "Y", "<>")])
+        assert admg.is_mseparated("X", "Y") is True
+        assert admg.is_mseparated("X", "Y", {"C"}) is False
+
+        # on a purely directed graph, m-separation == d-separation: exhaustive check against
+        # DAG.is_dconnected over all pairs and all conditioning subsets
+        edges = [("A", "B"), ("B", "C"), ("A", "D"), ("D", "C"), ("C", "E")]
+        dag = DAG(ebunch=edges)
+        core = _CoreGraph(edge_list=[(u, v, "->") for u, v in edges])
+        node_names = ["A", "B", "C", "D", "E"]
+        for u, v in combinations(node_names, 2):
+            others = [n for n in node_names if n not in (u, v)]
+            for r in range(len(others) + 1):
+                for z in combinations(others, r):
+                    observed = list(z) if z else None
+                    assert core.is_mseparated(u, v, set(z)) == (not dag.is_dconnected(u, v, observed=observed))
+
+        # fails: an endpoint inside the conditioning set / missing endpoint
+        with pytest.raises(ValueError, match="conditioning_set"):
+            core.is_mseparated("A", "B", {"A"})
+        with pytest.raises(ValueError, match="not in graph"):
+            core.is_mseparated("A", "Q")
 
     def test_check_new_unshielded_collider(self):
         graph = _CoreGraph()

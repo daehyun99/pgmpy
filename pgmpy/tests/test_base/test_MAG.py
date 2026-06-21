@@ -171,6 +171,29 @@ class TestMAG:
         assert m3.is_collider("X", "Z", "Y") is True
         assert m3.is_collider("X", "Z", "Y", shielded=False) is False
 
+    def test_is_maximal(self):
+        """A MAG is maximal iff no primitive inducing path joins a non-adjacent pair.
+
+        References
+        ----------
+        [1] Zhang, Jiji. "Causal Reasoning with Ancestral Graphs."
+        Journal of Machine Learning Research 9 (2008): 1437-1474. Figure 1.
+        """
+        # Zhang (2008) Fig. 1-(a): C and D are non-adjacent but joined by the primitive inducing
+        # path C <> A <> B <> D (colliders A, B are ancestors of the endpoints) -> not maximal
+        edges = [("A", "B", "<>"), ("A", "C", "<>"), ("B", "D", "<>"), ("A", "D", "->"), ("B", "C", "->")]
+        assert MAG(edge_list=edges).is_maximal() is False
+        # Fig. 1-(b): adding the C <> D edge makes it maximal
+        assert MAG(edge_list=[*edges, ("C", "D", "<>")]).is_maximal() is True
+
+        # maximality is a property of the graph itself: the latents role must not affect it
+        assert MAG(edge_list=edges, latents={"A"}).is_maximal() is False
+
+        # chain and collider: the non-adjacent pair has no inducing path (Y not a collider /
+        # Y a collider but not an ancestor of an endpoint) -> maximal
+        assert MAG(edge_list=[("X", "Y", "->"), ("Y", "Z", "->")]).is_maximal() is True
+        assert MAG(edge_list=[("X", "Y", "->"), ("Z", "Y", "->")]).is_maximal() is True
+
     def test_is_visible_edge(self):
         m = MAG(edge_list=[("A", "D", "->"), ("B", "C", "->"), ("X", "A", "->")])
         assert m.is_visible_edge("A", "D") is True

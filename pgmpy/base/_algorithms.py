@@ -1,3 +1,4 @@
+from collections import deque
 from collections.abc import Hashable, Iterable
 from itertools import pairwise
 
@@ -195,6 +196,154 @@ class _GraphAlgorithms:
             else:
                 return True
         return False
+
+    def get_mconnected_nodes(
+        self, nodes: Hashable | Iterable[Hashable], conditioning_set: Iterable[Hashable] | None = None
+    ) -> set[Hashable]:
+        """
+        Return all nodes m-connected to `nodes` given `conditioning_set`.
+
+        A walk m-connects two nodes given a conditioning set `Z` when every collider on the walk
+        (a node with an arrowhead on both the entering and the leaving edge) is in `Z`, and every
+        non-collider is not in `Z`. This walk criterion is equivalent to the standard path
+        criterion with colliders in ``An(Z)`` :cite:p:`richardson_2003`; conditioning on a
+        descendant of a collider opens it because the walk can detour down to the descendant and
+        back. On a purely directed graph this is exactly d-connection.
+
+        Parameters
+        ----------
+        nodes : Hashable or iterable of Hashable
+            A single source node, or a list/set of sources; the result is the union over the
+            collection. A ``str``, ``int`` or ``tuple`` is one node.
+
+        conditioning_set : iterable of Hashable, optional (default: empty)
+            The conditioned (observed) variables. Must be disjoint from `nodes`.
+
+        Returns
+        -------
+        connected : set
+            All m-connected nodes, including `nodes` themselves. Conditioned nodes appear when an
+            m-connecting walk ends at them.
+
+        Raises
+        ------
+        ValueError
+            If a node is missing from the graph, `nodes` and `conditioning_set` overlap, or the
+            graph is not ancestral: circle (``o``) endpoints (PAGs) and nodes carrying both an
+            undirected edge and an incoming arrowhead (e.g. PDAGs) leave the criterion undefined.
+
+        See Also
+        --------
+        is_mseparated : The pairwise separation query.
+
+        Examples
+        --------
+        >>> from pgmpy.base import ADMG
+        >>> admg = ADMG(edge_list=[("X", "C", "->"), ("Y", "C", "->")])
+        >>> sorted(admg.get_mconnected_nodes("X"))
+        ['C', 'X']
+        >>> sorted(admg.get_mconnected_nodes("X", conditioning_set={"C"}))
+        ['C', 'X', 'Y']
+
+        """
+        nodes = list(nodes) if isinstance(nodes, (list, set, frozenset)) else [nodes]
+        z = set() if conditioning_set is None else set(conditioning_set)
+
+        for node in [*nodes, *z]:
+            if node not in self.nodes():
+                raise ValueError(f"Node {node} not in graph.")
+        if overlap := (set(nodes) & z):
+            raise ValueError(f"`nodes` and `conditioning_set` must be disjoint. Got {sorted(overlap)} in both.")
+        if circle_types := (self.get_unique_edge_types() & {"o-", "o>", "oo"}):
+            raise ValueError(
+                "m-separation is undefined for graphs with circle endpoints (PAGs), where edge "
+                f"orientation is uncertain. Found circle edge types: {sorted(circle_types)}."
+            )
+
+        # The walk criterion below matches path-based m-separation only on ancestral graphs, where
+        # a node on an undirected edge has no arrowheads into it; reject anything else (e.g. a
+        # PDAG, whose `--` edges mean "unoriented", not "selection").
+        arrowhead_types = {"<-", "<>"} & self.SUPPORTED_EDGE_TYPES
+        for x, y, _ in self.get_edges(edge_types={"--"}):
+            for node in (x, y):
+                if self.get_neighbors(node, arrowhead_types):
+                    raise ValueError(
+                        f"m-separation requires an ancestral graph: node {node} has both an "
+                        "undirected edge and an incoming arrowhead."
+                    )
+
+        # BFS over states (node, mark at the node on the edge used to enter it). The walk may pass
+        # through a node w iff w-is-a-collider-here equals w-is-conditioned.
+        connected = set(nodes)
+        visited = set()
+        queue = deque()
+        for source in nodes:
+            for neighbor in self.neighbors(source):
+                for data in self.get_edge_data(source, neighbor).values():
+                    queue.append((neighbor, data[neighbor]))
+
+        while queue:
+            state = queue.popleft()
+            if state in visited:
+                continue
+            visited.add(state)
+            node, in_mark = state
+            connected.add(node)
+            for neighbor in self.neighbors(node):
+                for data in self.get_edge_data(node, neighbor).values():
+                    is_collider = in_mark == ">" and data[node] == ">"
+                    if is_collider == (node in z):
+                        queue.append((neighbor, data[neighbor]))
+        return connected
+
+    def is_mseparated(self, u: Hashable, v: Hashable, conditioning_set: Iterable[Hashable] | None = None) -> bool:
+        """
+        Check whether `u` and `v` are m-separated given `conditioning_set`.
+
+        `u` and `v` are m-separated when no m-connecting walk joins them (see
+        :meth:`get_mconnected_nodes` for the criterion). On a purely directed graph this is
+        exactly d-separation; on ADMGs/MAGs it additionally accounts for bidirected (latent
+        confounding) and undirected (selection) edges.
+
+        Parameters
+        ----------
+        u, v : Hashable
+            The nodes to test. Both must be present in the graph and outside `conditioning_set`.
+
+        conditioning_set : iterable of Hashable, optional (default: empty)
+            The conditioned (observed) variables.
+
+        Returns
+        -------
+        bool
+            True if `u` and `v` are m-separated, False if they are m-connected.
+
+        Raises
+        ------
+        ValueError
+            If `u` or `v` is missing from the graph or inside `conditioning_set`, or the graph
+            is not ancestral (circle endpoints, or an undirected edge meeting an arrowhead).
+
+        See Also
+        --------
+        get_mconnected_nodes : All nodes m-connected to a set of sources.
+
+        Examples
+        --------
+        >>> from pgmpy.base import ADMG
+        >>> admg = ADMG(edge_list=[("X", "C", "->"), ("Y", "C", "->")])
+        >>> admg.is_mseparated("X", "Y")
+        True
+        >>> admg.is_mseparated("X", "Y", conditioning_set={"C"})
+        False
+
+        """
+        z = set() if conditioning_set is None else set(conditioning_set)
+        if u in z or v in z:
+            raise ValueError(f"u and v must not be in conditioning_set. Got u={u!r}, v={v!r}, z={sorted(z)}.")
+        if v not in self.nodes():
+            raise ValueError(f"Node {v} not in graph.")
+        return v not in self.get_mconnected_nodes(u, conditioning_set=z)
 
     def has_path(self, source: Hashable, target: Hashable, edge_types: str | Iterable[str] | None = None) -> bool:
         """
