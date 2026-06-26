@@ -4,19 +4,14 @@ from sklearn.preprocessing import LabelBinarizer
 
 from pgmpy.distributions.categorical import CategoricalDistribution
 from pgmpy.parameter._base import BaseParameter
-from pgmpy.parameter_estimator import (
-    DiscreteBayesianEstimator,
-    DiscreteEM,
-    DiscreteMLE,
-)
-from pgmpy.parameter_estimator.temp_mle import TempMLE  # DiscreteMLE
+from pgmpy.parameter_estimator.base import get_parameter_estimator
 
-_ESTIMATOR_REGISTRY = {
-    "mle": DiscreteMLE,
-    "bayesian": DiscreteBayesianEstimator,
-    "em": DiscreteEM,
-    "temp": TempMLE,
-}
+# _ESTIMATOR_REGISTRY = {
+#     "mle": DiscreteMLE,
+#     "bayesian": DiscreteBayesianEstimator,
+#     "em": DiscreteEM,
+#     "temp": TempMLE,
+# }
 
 
 class TabularCPD(BaseParameter):
@@ -54,7 +49,9 @@ class TabularCPD(BaseParameter):
                 self._label_binarizer.fit(y)
             self.categories_ = self._label_binarizer.classes_
 
-        estimator_cls = _ESTIMATOR_REGISTRY[self.estimator.lower()]
+        # NOTE: Pseudo-code
+        estimator_cls = get_parameter_estimator(estimator=self.estimator)
+        # estimator_cls = _ESTIMATOR_REGISTRY[self.estimator.lower()]
         self.estimator_ = estimator_cls()
         self.estimator_.fit(
             X,
