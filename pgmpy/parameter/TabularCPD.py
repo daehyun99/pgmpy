@@ -44,10 +44,11 @@ class TabularCPD(BaseParameter):
             if self.categories is None:
                 self._y_transformer = LabelBinarizer()
                 self._y_transformer.fit(X)
-                self.categories_ = self._y_transformer.classes_
                 self.categories_ = {X.columns[0]: self._y_transformer.classes_}
+                self.evidences_ = self.evidences
             else:
                 self.categories_ = self.categories
+                self.evidences_ = self.evidences
         else:
             # Supervised Learning
             if self.categories is None:
@@ -130,9 +131,8 @@ class TabularCPD(BaseParameter):
         if not self._is_fitted:
             raise RuntimeError("This TabularCPD instance is not fitted yet. Call 'fit' before calling 'predict_proba'.")
 
-        evidence_names = self.evidence_names_
-
-        if evidence_names.size == 0:
+        if self.evidences_ is None:
+            # Unsupervised Learning
             probabilities = np.repeat(
                 np.asarray(self.CPT_).T,
                 repeats=len(X),
@@ -141,18 +141,21 @@ class TabularCPD(BaseParameter):
 
             return CategoricalDistribution(
                 probs=probabilities,
-                categories=self.categories_,
+                categories=self.categories_[self.columns_[0]],
                 columns=self.columns_,
             )
 
-        evidence_columns = self.evidence_states_.names
-        row_evidence = pd.MultiIndex.from_frame(X.loc[:, evidence_columns])
-        column_positions = self.evidence_states_.get_indexer(row_evidence)
+        row_evidence = pd.MultiIndex.from_frame(X.loc[:, self.evidences_.keys()])
+        cpt_column_index = pd.MultiIndex.from_product(
+            [self.evidences_[name] for name in list(self.evidences_.keys())],
+            names=list(self.evidences_.keys()),
+        )
+        column_positions = cpt_column_index.get_indexer(row_evidence)
         probabilities = self.CPT_[:, column_positions].T
 
         return CategoricalDistribution(
             probs=probabilities,
-            categories=self.categories_,
+            categories=self.categories_[self.columns_[0]],
             columns=self.columns_,
         )  # (len(X), variable_card)
 
