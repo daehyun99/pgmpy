@@ -21,7 +21,21 @@ def discrete_data():
     | y = 1   |     7     |     7     |    10     |     3     |     5     |    12     |
     +---------+-----------+-----------+-----------+-----------+-----------+-----------+
 
-    # Case 1: non-root node
+    # Case 1: root node with MLE case
+    # evidences : None
+    # variable: {y: (0, 1)}
+    +---------+-------------+
+    | y       | probability |
+    +---------+-------------+
+    | y = 0   |    0.56     |
+    +---------+-------------+
+    | y = 1   |    0.44     |
+    +---------+-------------+
+
+    # Case 2: root node with MLE, sample_weight case
+    ...
+
+    # Case 3: not root node with MLE case
     # evidences: {x1: (0, 1, 2), x2: (0, 1)}
     # variable: {y: (0, 1)}
     +---------+-----------------------+-----------------------+-----------------------+
@@ -34,16 +48,22 @@ def discrete_data():
     | y = 1   |   0.5     | 0.538462  | 0.47619   |   0.25    |  0.3125   |   0.5     |
     +---------+-----------+-----------+-----------+-----------+-----------+-----------+
 
-    # Case 2: root node
-    # evidences : None
-    # variable: {y: (0, 1)}
-    +---------+-------------+
-    | y       | probability |
-    +---------+-------------+
-    | y = 0   |    0.56     |
-    +---------+-------------+
-    | y = 1   |    0.44     |
-    +---------+-------------+
+    # Case 4: not root node with MLE, sample_weight case
+    ...
+
+    # Case 5: root node with Bayesian estimate case
+    ...
+
+    # Case 6: root node with Bayesian estimate, sample_weight case
+    ...
+
+    # Case 7: not root node with Bayesian estimate case
+    ...
+
+    # Case 8: not root node with Bayesian estimate, sample_weight case
+    ...
+
+
     """
     rng = np.random.default_rng(seed=42)
     n_samples = 100
@@ -75,13 +95,13 @@ class TestTabularCPD:
         assert parameter.get_class_tag("python_dependencies") == ("skpro")
 
     def test_fit(self, discrete_data):
-        # Case 1: root node case
+        # Case 1: root node with MLE case
         _, y = discrete_data
         parameter = TabularCPD()
         parameter.fit(y)
 
-        assert parameter.is_fitted_ is True
-        assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
+        assert parameter.is_fitted is True
+        assert parameter._y_transformer.__class__.__name__ == "LabelBinarizer"
         np.testing.assert_allclose(
             parameter.CPT_,
             np.array(
@@ -91,10 +111,13 @@ class TestTabularCPD:
                 ]
             ),
         )
-        assert list(parameter.categories_) == [0, 1]
-        assert parameter.columns_ == ["variable"]
+        np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
+        assert parameter.columns_ == ["y"]
 
-        # Case 2: not root node case
+        # Case 2: root node with MLE, sample_weight case
+        ...
+
+        # Case 3: not root node with MLE case
         X, y = discrete_data
         parameter = TabularCPD()
 
@@ -121,16 +144,31 @@ class TestTabularCPD:
             ]
         )
 
-        assert parameter.is_fitted_ is True
-        assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
+        assert parameter.is_fitted is True
+        assert parameter._y_transformer.__class__.__name__ == "LabelBinarizer"
         np.testing.assert_allclose(
             parameter.CPT_,
             expected_CPT,
             rtol=1e-7,
             atol=1e-8,
         )
-        assert list(parameter.categories_) == [0, 1]
-        assert parameter.columns_ == ["variable"]
+        np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
+        assert parameter.columns_ == ["y"]
+
+        # Case 4: not root node with MLE, sample_weight case
+        ...
+
+        # Case 5: root node with Bayesian estimate case
+        ...
+
+        # Case 6: root node with Bayesian estimate, sample_weight case
+        ...
+
+        # Case 7: not root node with Bayesian estimate case
+        ...
+
+        # Case 8: not root node with Bayesian estimate, sample_weight case
+        ...
 
     def test_predict_proba(self, discrete_data):
         X, y = discrete_data
@@ -170,7 +208,7 @@ class TestTabularCPD:
         np.testing.assert_array_equal(dist.probs[:5], expected_probs)
         assert dist.__class__.__name__ == "CategoricalDistribution"
         assert list(dist.categories) == [0, 1]
-        assert list(dist.columns) == ["variable"]
+        assert list(dist.columns) == ["y"]
 
         with pytest.raises(RuntimeError):
             parameter = TabularCPD()
@@ -182,35 +220,32 @@ class TestTabularCPD:
         assert hasattr(parameter, "CPT_") is False
         assert hasattr(parameter, "categories_") is False
         assert hasattr(parameter, "columns_") is False
-        assert parameter.is_fitted_ is False
+        assert hasattr(parameter, "evidences_") is False
+        assert parameter.is_fitted is False
+
+        CPT = np.array(
+            [
+                [0.2, 0.3],
+                [0.8, 0.7],
+            ]
+        )
+        columns = ["grade"]
+        categories = ["P", "F"]
+        evidences = {"x1": np.array([0, 1, 2]), "x2": np.array([0, 1])}
 
         parameter.set_values(
-            CPT=np.array(
-                [
-                    [0.2, 0.3],
-                    [0.8, 0.7],
-                ]
-            ),
-            columns=["grade"],
-            categories=["P", "F"],
-            evidence_states=pd.MultiIndex.from_tuples(
-                [
-                    (0, 0),
-                    (0, 1),
-                    (1, 0),
-                    (1, 1),
-                ],
-                names=["x1", "x2"],
-            ),
-            evidence_names=["x1", "x2"],
+            CPT=CPT,
+            columns=columns,
+            categories=categories,
+            evidences=evidences,
+            is_fitted=True,
         )
 
         assert hasattr(parameter, "CPT_")
         assert hasattr(parameter, "categories_")
         assert hasattr(parameter, "columns_")
-        assert hasattr(parameter, "evidence_states_")
-        assert hasattr(parameter, "evidence_names_")
-        assert parameter.is_fitted_ is True
+        assert hasattr(parameter, "evidences_")
+        assert parameter.is_fitted is True
 
     def test_get_values(self):
         parameter = TabularCPD()
@@ -223,23 +258,14 @@ class TestTabularCPD:
         )
         columns = ["grade"]
         categories = ["P", "F"]
-        evidence_states = pd.MultiIndex.from_tuples(
-            [
-                (0, 0),
-                (0, 1),
-                (1, 0),
-                (1, 1),
-            ],
-            names=["x1", "x2"],
-        )
-        evidence_names = ["x1", "x2"]
+        evidences = {"x1": np.array([0, 1, 2]), "x2": np.array([0, 1])}
 
         parameter.set_values(
             CPT=CPT,
             columns=columns,
             categories=categories,
-            evidence_states=evidence_states,
-            evidence_names=evidence_names,
+            evidences=evidences,
+            is_fitted=True,
         )
 
         result = parameter.get_values()
@@ -247,8 +273,5 @@ class TestTabularCPD:
         np.testing.assert_array_equal(result["CPT"], CPT)
         assert result["columns"] == columns
         assert result["categories"] == categories
-        pd.testing.assert_index_equal(
-            result["evidence_states"],
-            evidence_states,
-        )
-        assert result["evidence_names"] == evidence_names
+        assert result["evidences"] == evidences
+        assert result["is_fitted"] == True
