@@ -208,7 +208,7 @@ class TestTabularCPD:
         np.testing.assert_array_equal(dist.probs[:5], expected_probs)
         assert dist.__class__.__name__ == "CategoricalDistribution"
         assert list(dist.categories) == [0, 1]
-        assert list(dist.columns) == ["variable"]
+        assert list(dist.columns) == ["y"]
 
         with pytest.raises(RuntimeError):
             parameter = TabularCPD()
@@ -220,35 +220,31 @@ class TestTabularCPD:
         assert hasattr(parameter, "CPT_") is False
         assert hasattr(parameter, "categories_") is False
         assert hasattr(parameter, "columns_") is False
+        assert hasattr(parameter, "evidences_") is False
         assert parameter.is_fitted is False
 
+        CPT = np.array(
+            [
+                [0.2, 0.3],
+                [0.8, 0.7],
+            ]
+        )
+        columns = ["grade"]
+        categories = ["P", "F"]
+        evidences = {"x1": np.array([0, 1, 2]), "x2": np.array([0, 1])}
+
         parameter.set_values(
-            CPT=np.array(
-                [
-                    [0.2, 0.3],
-                    [0.8, 0.7],
-                ]
-            ),
-            columns=["grade"],
-            categories=["P", "F"],
-            evidence_states=pd.MultiIndex.from_tuples(
-                [
-                    (0, 0),
-                    (0, 1),
-                    (1, 0),
-                    (1, 1),
-                ],
-                names=["x1", "x2"],
-            ),
-            evidence_names=["x1", "x2"],
+            CPT=CPT,
+            columns=columns,
+            categories=categories,
+            evidences=evidences,
             is_fitted=True,
         )
 
         assert hasattr(parameter, "CPT_")
         assert hasattr(parameter, "categories_")
         assert hasattr(parameter, "columns_")
-        assert hasattr(parameter, "evidence_states_")
-        assert hasattr(parameter, "evidence_names_")
+        assert hasattr(parameter, "evidences_")
         assert parameter.is_fitted is True
 
     def test_get_values(self):
@@ -262,23 +258,13 @@ class TestTabularCPD:
         )
         columns = ["grade"]
         categories = ["P", "F"]
-        evidence_states = pd.MultiIndex.from_tuples(
-            [
-                (0, 0),
-                (0, 1),
-                (1, 0),
-                (1, 1),
-            ],
-            names=["x1", "x2"],
-        )
-        evidence_names = ["x1", "x2"]
+        evidences = {"x1": np.array([0, 1, 2]), "x2": np.array([0, 1])}
 
         parameter.set_values(
             CPT=CPT,
             columns=columns,
             categories=categories,
-            evidence_states=evidence_states,
-            evidence_names=evidence_names,
+            evidences=evidences,
             is_fitted=True,
         )
 
@@ -287,8 +273,5 @@ class TestTabularCPD:
         np.testing.assert_array_equal(result["CPT"], CPT)
         assert result["columns"] == columns
         assert result["categories"] == categories
-        pd.testing.assert_index_equal(
-            result["evidence_states"],
-            evidence_states,
-        )
-        assert result["evidence_names"] == evidence_names
+        assert result["evidences"] == evidences
+        assert result["is_fitted"] == True
