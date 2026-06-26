@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import LabelBinarizer, OneHotEncoder
 
 from pgmpy.distributions.categorical import CategoricalDistribution
 from pgmpy.parameter._base import BaseParameter
@@ -20,70 +20,84 @@ class TabularCPD(BaseParameter):
 
     def __init__(
         self,
+        # variable_card=None,
+        # evidence_card=None,
+        categories=None,
+        evidences=None,
         prior_type=None,
         equivalent_sample_size=None,
         pseudo_counts=None,
     ):
+        # self.variable_card = variable_card
+        # self.evidence_card = evidence_card
+        self.categories = categories
+        self.evidences = evidences
         self.prior_type = prior_type
         self.equivalent_sample_size = equivalent_sample_size
         self.pseudo_counts = pseudo_counts
-        self.is_fitted_ = False
+        self._is_fitted = False
         super().__init__()
 
     def _fit(self, X, y=None, sample_weight=None):
-        if not hasattr(self, "categories_"):
-            self._label_binarizer = LabelBinarizer()
-            if y is None:  # if root node
-                self._label_binarizer.fit(X)
+        if y is None:
+            # Unsupervised Learning
+            if self.categories is None:
+                self._y_transformer = LabelBinarizer()
+                self._y_transformer.fit(X)
+                self.categories_ = self._y_transformer.classes_
+                self.categories_ = {X.columns[0]: self._y_transformer.classes_}
             else:
-                self._label_binarizer.fit(y)
-            self.categories_ = self._label_binarizer.classes_
+                self.categories_ = self.categories
+        else:
+            # Supervised Learning
+            if self.categories is None:
+                self._y_transformer = LabelBinarizer()
+                self._y_transformer.fit(y)
+                self.categories_ = {y.columns[0]: self._y_transformer.classes_}
+            else:
+                self.categories_ = self.categories
 
-        X = X.loc[:, sorted(X.columns)].copy()
-
-        feature_names_in_ = np.asarray(
-            X.columns,
-            dtype=object,
-        )
+            if self.evidences is None:
+                self._X_transformer = OneHotEncoder(
+                    categories="auto",
+                    handle_unknown="ignore",
+                )
+                self._X_transformer.fit(X)
+                self.evidences_ = {
+                    column: categories.tolist()
+                    for column, categories in zip(
+                        X.columns,
+                        self._X_transformer.categories_,
+                    )
+                }
+            else:
+                self.evidences_ = self.evidences
 
         if y is None:
             # Unsupervised Learning: Root node
-            feature_names = feature_names_in_.tolist()
-
             counts = X.groupby(
-                feature_names,
+                list(X.columns),
                 observed=True,
                 sort=True,
             ).size()
 
-            if self.categories_ is not None:
-                counts = counts.reindex(
-                    self.categories_,
-                    fill_value=0,
-                )
-
-            self.CPT_ = counts.div(counts.sum()).to_frame(name=0)
-
-            self.evidence_names_ = np.asarray(
-                [],
-                dtype=object,
+            counts = counts.reindex(
+                self.categories_[X.columns[0]],
+                fill_value=0,
             )
-            self.evidence_states_ = self.CPT_.columns
+
+            self.columns_ = [X.columns[0]]
+            self.CPT_ = counts.div(counts.sum()).to_frame(name="prob")
 
         else:
             # Supervised Learning
-            target_name = "__target__"
+            df = pd.concat([X, y], axis=1)
 
-            while target_name in X.columns:
-                target_name = f"_{target_name}"
-
-            X[target_name] = np.asarray(y)
-
-            evidence_names = feature_names_in_.tolist()
+            evidence_names = list(X.columns)
 
             counts = (
-                X.groupby(
-                    [target_name, *evidence_names],
+                df.groupby(
+                    [y.columns[0], *evidence_names],
                     observed=True,
                     sort=True,
                     dropna=False,
@@ -94,34 +108,26 @@ class TabularCPD(BaseParameter):
                     fill_value=0,
                 )
                 .reindex(
-                    index=self.categories_,
+                    index=self.categories_[y.columns[0]],
                     fill_value=0,
                 )
                 .rename_axis(index=None)
             )
 
+            self.columns_ = [y.columns[0]]
             self.CPT_ = counts.div(
                 counts.sum(axis=0),
                 axis=1,
             )
 
-            self.evidence_names_ = np.asarray(
-                evidence_names,
-                dtype=object,
-            )
-            self.evidence_states_ = self.CPT_.columns
-
         self.CPT_ = np.asarray(self.CPT_)
-
-        self.columns_ = [y.name if getattr(y, "name", None) is not None else "variable"]
-
-        self.is_fitted_ = True
+        self._is_fitted = True
 
         return self
 
     def _predict_proba(self, X):
 
-        if not self.is_fitted_:
+        if not self._is_fitted:
             raise RuntimeError("This TabularCPD instance is not fitted yet. Call 'fit' before calling 'predict_proba'.")
 
         evidence_names = self.evidence_names_
@@ -150,13 +156,13 @@ class TabularCPD(BaseParameter):
             columns=self.columns_,
         )  # (len(X), variable_card)
 
-    def set_values(self, CPT, columns, categories, evidence_states, evidence_names):
+    def set_values(self, CPT, columns, categories, evidence_states, evidence_names, is_fitted):
         self.CPT_ = CPT
         self.columns_ = columns
         self.categories_ = categories
         self.evidence_states_ = evidence_states
         self.evidence_names_ = evidence_names
-        self.is_fitted_ = True
+        self._is_fitted = is_fitted
         return self
 
     def get_values(self):

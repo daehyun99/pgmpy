@@ -100,8 +100,8 @@ class TestTabularCPD:
         parameter = TabularCPD()
         parameter.fit(y)
 
-        assert parameter.is_fitted_ is True
-        assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
+        assert parameter.is_fitted is True
+        assert parameter._y_transformer.__class__.__name__ == "LabelBinarizer"
         np.testing.assert_allclose(
             parameter.CPT_,
             np.array(
@@ -111,8 +111,8 @@ class TestTabularCPD:
                 ]
             ),
         )
-        assert list(parameter.categories_) == [0, 1]
-        assert parameter.columns_ == ["variable"]
+        np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
+        assert parameter.columns_ == ["y"]
 
         # Case 2: root node with MLE, sample_weight case
         ...
@@ -144,16 +144,16 @@ class TestTabularCPD:
             ]
         )
 
-        assert parameter.is_fitted_ is True
-        assert parameter._label_binarizer.__class__.__name__ == "LabelBinarizer"
+        assert parameter.is_fitted is True
+        assert parameter._y_transformer.__class__.__name__ == "LabelBinarizer"
         np.testing.assert_allclose(
             parameter.CPT_,
             expected_CPT,
             rtol=1e-7,
             atol=1e-8,
         )
-        assert list(parameter.categories_) == [0, 1]
-        assert parameter.columns_ == ["variable"]
+        np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
+        assert parameter.columns_ == ["y"]
 
         # Case 4: not root node with MLE, sample_weight case
         ...
@@ -220,7 +220,7 @@ class TestTabularCPD:
         assert hasattr(parameter, "CPT_") is False
         assert hasattr(parameter, "categories_") is False
         assert hasattr(parameter, "columns_") is False
-        assert parameter.is_fitted_ is False
+        assert parameter.is_fitted is False
 
         parameter.set_values(
             CPT=np.array(
@@ -241,6 +241,7 @@ class TestTabularCPD:
                 names=["x1", "x2"],
             ),
             evidence_names=["x1", "x2"],
+            is_fitted=True,
         )
 
         assert hasattr(parameter, "CPT_")
@@ -248,7 +249,7 @@ class TestTabularCPD:
         assert hasattr(parameter, "columns_")
         assert hasattr(parameter, "evidence_states_")
         assert hasattr(parameter, "evidence_names_")
-        assert parameter.is_fitted_ is True
+        assert parameter.is_fitted is True
 
     def test_get_values(self):
         parameter = TabularCPD()
@@ -278,6 +279,7 @@ class TestTabularCPD:
             categories=categories,
             evidence_states=evidence_states,
             evidence_names=evidence_names,
+            is_fitted=True,
         )
 
         result = parameter.get_values()
