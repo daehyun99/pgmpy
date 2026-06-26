@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import numpy as np
 from skbase.base import BaseEstimator
-from skbase.lookup import all_objects
 
 from pgmpy.base import DAG
 from pgmpy.models import DiscreteBayesianNetwork, LinearGaussianBayesianNetwork
@@ -250,28 +249,3 @@ class GaussianParameterEstimator(BaseParameterEstimator):
         model, _ = self._validate_inputs(model, data, sample_weight=sample_weight)
         self._model = model
         self._data = data
-
-
-def get_parameter_estimator(estimator=None):
-    """ """
-    if estimator is None:
-        raise ValueError("Cannot determine parameter estimator.")
-
-    if not isinstance(estimator, str):
-        raise ValueError(f"Invalid `estimator` argument: {estimator!r}")
-
-    filter_tags = {"name": estimator.lower()}
-
-    # TODO: Need modify parameterEstimator's tag system
-    estimators = all_objects(
-        object_types=BaseParameterEstimator,
-        package_name="pgmpy.parameter_estimator",
-        return_names=False,
-        filter_tags=filter_tags,
-    )
-
-    if estimators:
-        cls = estimators[0]
-        if cls.get_class_tag("requires_data", tag_value_default=True):
-            return cls()
-    raise ValueError(f"Unknown Parameter estimator: {estimator!r}")
