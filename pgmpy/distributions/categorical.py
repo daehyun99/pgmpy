@@ -82,16 +82,18 @@ class CategoricalDistribution(BaseDistribution):
 
         # Validate shape of state_name and probs.
         if len(categories) != len(set(categories)):
-            raise ValueError(f"categories must contain unique probs: {categories}")
+            raise ValueError(f"""Categories must contain unique probs: {categories}""")
 
         if len(probs[0]) != len(categories):
-            raise ValueError(f"mismatch between the shape of categories and probs: {len(probs[0])}, {len(categories)}")
+            raise ValueError(
+                f"""mismatch between the shape of categories and probs : {len(probs[0])}, {len(categories)}"""
+            )
 
         # Validate index, columns.
         if index is None:
             index = pd.RangeIndex(len(probs))
         elif len(index) != len(probs):
-            raise ValueError(f"The length of index must match the number of rows in probs: {len(index)}, {len(probs)}")
+            raise ValueError(f"The length of index must match the number of rows in probs : {len(index)}, {len(probs)}")
         if columns is None:
             columns = ["variable"]
         elif len(columns) != 1:
@@ -111,11 +113,8 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray
 
         """
-        probs = self.probs
-        categories = self.categories
-
-        probs = np.asarray(probs, dtype=float)
-        categories = np.asarray(categories)
+        probs = np.asarray(self.probs, dtype=float)
+        categories = np.asarray(self.categories)
 
         matches = x == categories
 
@@ -157,11 +156,8 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray
 
         """
-        probs = self.probs
-        categories = self.categories
-
-        probs = np.asarray(probs, dtype=float)
-        categories = np.asarray(categories)
+        probs = np.asarray(self.probs, dtype=float)
+        categories = np.asarray(self.categories)
 
         res = np.empty(probs.shape[0], dtype=float)
 
@@ -190,11 +186,8 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray
 
         """
-        probs = self.probs
-        categories = self.categories
-
-        probs = np.asarray(probs, dtype=float)
-        categories = np.asarray(categories)
+        probs = np.asarray(self.probs, dtype=float)
+        categories = np.asarray(self.categories)
 
         if np.any((p < 0) | (p > 1)):
             raise ValueError("p values must be between 0 and 1.")

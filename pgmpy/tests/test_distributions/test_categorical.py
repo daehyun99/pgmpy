@@ -214,6 +214,16 @@ class TestCategoricalDistribution:
         expected = pd.DataFrame({"variable": [0.1, 0.5]})
         pd.testing.assert_frame_equal(dist.cdf(x), expected)
 
+        # Case 6 : some `x` values is not exist in `categories`
+        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        categories = [1, 2, 3]
+        x = [[1], [4]]
+
+        dist = CategoricalDistribution(probs=probs, categories=categories)
+
+        expected = pd.DataFrame({"variable": [0.1, 0.0]})
+        pd.testing.assert_frame_equal(dist.cdf(x), expected)
+
     def test_ppf(self):
         """test"""
         # Case 1: p: float
