@@ -3,6 +3,7 @@ import numpy as np
 
 class TempMLE:
     _tags = {
+        "name": "temp",
         "allow_variable_type": "discrete",
     }
 
