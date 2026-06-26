@@ -252,28 +252,15 @@ class GaussianParameterEstimator(BaseParameterEstimator):
         self._data = data
 
 
-def get_parameter_estimator(estimator=None, data=None, use_cache=True):
+def get_parameter_estimator(estimator=None):
     """ """
-
-    from pgmpy.utils import get_dataset_type
-
-    if isinstance(estimator, BaseParameterEstimator):
-        return estimator
-
-    if callable(estimator):
-        return estimator
-
     if estimator is None:
-        if data is None:
-            raise ValueError("Cannot determine parameter estimator: both `estimator` and `data` are None.")
+        raise ValueError("Cannot determine parameter estimator.")
 
-        var_type = get_dataset_type(data)
-        filter_tags = {"default_for": var_type}
-
-    elif isinstance(estimator, str):
-        filter_tags = {"name": estimator.lower()}
-    else:
+    if not isinstance(estimator, str):
         raise ValueError(f"Invalid `estimator` argument: {estimator!r}")
+
+    filter_tags = {"name": estimator.lower()}
 
     # TODO: Need modify parameterEstimator's tag system
     estimators = all_objects(
@@ -286,9 +273,5 @@ def get_parameter_estimator(estimator=None, data=None, use_cache=True):
     if estimators:
         cls = estimators[0]
         if cls.get_class_tag("requires_data", tag_value_default=True):
-            if data is None:
-                raise ValueError(f"Parameter estimator '{cls.__name__}' requires data, but data is None.")
-            return cls(data=data, use_cache=use_cache)
-        else:
-            return cls(use_cache=use_cache)
+            return cls()
     raise ValueError(f"Unknown Parameter estimator: {estimator!r}")
