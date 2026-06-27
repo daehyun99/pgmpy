@@ -76,11 +76,22 @@ class TabularCPD(BaseParameter):
 
         if y is None:
             # Unsupervised Learning: Root node
-            counts = X.groupby(
-                list(X.columns),
-                observed=True,
-                sort=True,
-            ).size()
+            if sample_weight is None:
+                counts = X.groupby(
+                    list(X.columns),
+                    observed=True,
+                    sort=True,
+                ).size()
+            else:
+                weights = pd.Series(
+                    np.asarray(sample_weight),
+                    index=X.index,
+                )
+                counts = weights.groupby(
+                    [X[column] for column in list(X.columns)],
+                    observed=True,
+                    sort=True,
+                ).sum()
 
             counts = counts.reindex(
                 self.categories_[X.columns[0]],
@@ -96,15 +107,28 @@ class TabularCPD(BaseParameter):
 
             evidence_names = list(X.columns)
 
-            counts = (
-                df.groupby(
+            if sample_weight is None:
+                counts = df.groupby(
                     [y.columns[0], *evidence_names],
                     observed=True,
                     sort=True,
                     dropna=False,
+                ).size()
+            else:
+                weights = pd.Series(
+                    sample_weight,
+                    index=df.index,
                 )
-                .size()
-                .unstack(
+
+                counts = weights.groupby(
+                    [df[column] for column in [y.columns[0], *evidence_names]],
+                    observed=True,
+                    sort=True,
+                    dropna=False,
+                ).sum()
+
+            counts = (
+                counts.unstack(
                     evidence_names,
                     fill_value=0,
                 )
