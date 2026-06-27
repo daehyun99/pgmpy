@@ -33,7 +33,18 @@ def discrete_data():
     +---------+-------------+
 
     # Case 2: root node with MLE, sample_weight case
-    ...
+    # evidences : None
+    # variable: {y: (0, 1)}
+    # sample_weight
+    # # if y == 0: sample_weight = 0.44
+    # # if y == 1: sample_weight = 0.56
+    +---------+-------------+
+    | y       | probability |
+    +---------+-------------+
+    | y = 0   |    0.50     |
+    +---------+-------------+
+    | y = 1   |    0.50     |
+    +---------+-------------+
 
     # Case 3: not root node with MLE case
     # evidences: {x1: (0, 1, 2), x2: (0, 1)}
@@ -49,7 +60,42 @@ def discrete_data():
     +---------+-----------+-----------+-----------+-----------+-----------+-----------+
 
     # Case 4: not root node with MLE, sample_weight case
-    ...
+    # evidences: {x1: (0, 1, 2), x2: (0, 1)}
+    # variable: {y: (0, 1)}
+    # sample_weight
+    #
+    # if x1 == 0 and x2 == 0:
+    #     if y == 0: sample_weight = 0.5
+    #     if y == 1: sample_weight = 0.5
+    #
+    # if x1 == 0 and x2 == 1:
+    #     if y == 0: sample_weight = 0.538462
+    #     if y == 1: sample_weight = 0.461538
+    #
+    # if x1 == 1 and x2 == 0:
+    #     if y == 0: sample_weight = 0.476190
+    #     if y == 1: sample_weight = 0.523810
+    #
+    # if x1 == 1 and x2 == 1:
+    #     if y == 0: sample_weight = 0.25
+    #     if y == 1: sample_weight = 0.75
+    #
+    # if x1 == 2 and x2 == 0:
+    #     if y == 0: sample_weight = 0.3125
+    #     if y == 1: sample_weight = 0.6875
+    #
+    # if x1 == 2 and x2 == 1:
+    #     if y == 0: sample_weight = 0.5
+    #     if y == 1: sample_weight = 0.5
+    +---------+-----------------------+-----------------------+-----------------------+
+    | x1      |           0           |           1           |           2           |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
+    | x2      |     0     |     1     |     0     |     1     |     0     |     1     |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
+    | y = 0   |    0.5    |    0.5    |    0.5    |    0.5    |    0.5    |    0.5    |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
+    | y = 1   |    0.5    |    0.5    |    0.5    |    0.5    |    0.5    |    0.5    |
+    +---------+-----------+-----------+-----------+-----------+-----------+-----------+
 
     # Case 5: root node with Bayesian estimate case
     ...
@@ -115,7 +161,23 @@ class TestTabularCPD:
         assert parameter.columns_ == ["y"]
 
         # Case 2: root node with MLE, sample_weight case
-        ...
+        _, y = discrete_data
+        parameter = TabularCPD()
+        parameter.fit(y)
+
+        assert parameter.is_fitted is True
+        assert parameter._y_transformer.__class__.__name__ == "LabelBinarizer"
+        np.testing.assert_allclose(
+            parameter.CPT_,
+            np.array(
+                [
+                    [0.50],
+                    [0.50],
+                ]
+            ),
+        )
+        np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
+        assert parameter.columns_ == ["y"]
 
         # Case 3: not root node with MLE case
         X, y = discrete_data
@@ -156,7 +218,42 @@ class TestTabularCPD:
         assert parameter.columns_ == ["y"]
 
         # Case 4: not root node with MLE, sample_weight case
-        ...
+        X, y = discrete_data
+        parameter = TabularCPD()
+
+        parameter.fit(X, y)
+
+        expected_CPT = np.array(
+            [
+                [
+                    1 / 2,
+                    1 / 2,
+                    1 / 2,
+                    1 / 2,
+                    1 / 2,
+                    1 / 2,
+                ],
+                [
+                    1 / 2,
+                    1 / 2,
+                    1 / 2,
+                    1 / 2,
+                    1 / 2,
+                    1 / 2,
+                ],
+            ]
+        )
+
+        assert parameter.is_fitted is True
+        assert parameter._y_transformer.__class__.__name__ == "LabelBinarizer"
+        np.testing.assert_allclose(
+            parameter.CPT_,
+            expected_CPT,
+            rtol=1e-7,
+            atol=1e-8,
+        )
+        np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
+        assert parameter.columns_ == ["y"]
 
         # Case 5: root node with Bayesian estimate case
         ...
