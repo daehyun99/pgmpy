@@ -10,15 +10,16 @@ class BaseParameter(_BaseEstimator):
         "is_linear_gaussian": bool,
         "missing": bool,
         "supports_fit_joint": bool,
+        "can_be_root": bool,
         "python_dependencies": tuple,
     }
 
-    def fit(self, X, y):
+    def fit(self, X, y=None, sample_weight=None):
         """API docs"""
-        self._check_data(X, y)
-        return self._fit(X, y)
+        self._check_data(X, y, sample_weight)
+        return self._fit(X, y, sample_weight)
 
-    def _fit(self, X, y):
+    def _fit(self, X, y, sample_weight):
         """Fit parameter to training data.
 
         Writes to self:
@@ -64,10 +65,13 @@ class BaseParameter(_BaseEstimator):
         """
         raise NotImplementedError
 
-    def _check_data(self, X, y=None):
+    def _check_data(self, X, y=None, sample_weight=None):
         """check train data with tag"""
         # TODO: Implement when #3455
         # Is this data pd.DataFrame?
         # Is this produces factor?
         # Is data format match with tag(`variable_type`)?
+        pass
+
+    def _check_is_fitted(self):
         pass
