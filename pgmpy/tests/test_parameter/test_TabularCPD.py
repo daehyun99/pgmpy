@@ -162,8 +162,13 @@ class TestTabularCPD:
 
         # Case 2: root node with MLE, sample_weight case
         _, y = discrete_data
+        sample_weight = np.where(
+            y["y"].to_numpy() == 0,
+            0.44,
+            0.56,
+        )
         parameter = TabularCPD()
-        parameter.fit(y)
+        parameter.fit(y, sample_weight=sample_weight)
 
         assert parameter.is_fitted is True
         assert parameter._y_transformer.__class__.__name__ == "LabelBinarizer"
@@ -219,9 +224,35 @@ class TestTabularCPD:
 
         # Case 4: not root node with MLE, sample_weight case
         X, y = discrete_data
+        sample_weight_map = {
+            (0, 0, 0): 1 / 2,
+            (0, 0, 1): 1 / 2,
+            (0, 1, 0): 7 / 13,
+            (0, 1, 1): 6 / 13,
+            (1, 0, 0): 10 / 21,
+            (1, 0, 1): 11 / 21,
+            (1, 1, 0): 1 / 4,
+            (1, 1, 1): 3 / 4,
+            (2, 0, 0): 5 / 16,
+            (2, 0, 1): 11 / 16,
+            (2, 1, 0): 1 / 2,
+            (2, 1, 1): 1 / 2,
+        }
+
+        sample_weight = np.array(
+            [
+                sample_weight_map[(x1, x2, target)]
+                for x1, x2, target in zip(
+                    X["x1"].to_numpy(),
+                    X["x2"].to_numpy(),
+                    y["y"].to_numpy(),
+                )
+            ],
+            dtype=float,
+        )
         parameter = TabularCPD()
 
-        parameter.fit(X, y)
+        parameter.fit(X, y, sample_weight)
 
         expected_CPT = np.array(
             [
