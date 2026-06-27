@@ -35,7 +35,3 @@ class TestBaseParameter:
 
         with pytest.raises(NotImplementedError):
             parameter.predict_proba(X)
-
-    def test_get_parameter_estimator(self):
-        """Test `get_parameter_estimator`"""
-        ...
