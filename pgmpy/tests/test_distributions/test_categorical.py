@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -21,12 +23,16 @@ class TestCategoricalDistribution:
         assert dist.get_class_tag("distr:paramtype") == "parametric"
         assert dist.get_class_tag("capabilities:approx") == []
         assert dist.get_class_tag("capabilities:exact") == [
-            "log_pmf",
             "pmf",
-            "cdf",
-            "ppf",
+            "log_pmf",
         ]
         assert dist.get_class_tag("broadcast_init") == "off"
+
+    def test_public_import(self):
+        """The class is importable from the package, not just the module."""
+        from pgmpy.distributions import CategoricalDistribution as PublicCat
+
+        assert PublicCat is CategoricalDistribution
 
     def test_interface_compatibility(self):
         """ensure interface compatibility by skpro.utils.estimator_checks.check_estimator"""
@@ -40,10 +46,10 @@ class TestCategoricalDistribution:
         dist = CategoricalDistribution(probs=probs, categories=[1, 2, 3])
         check_estimator(dist, raise_exceptions=True, verbose=False)
 
-        # # NOTE: An error occurs when `categories` contains strings.
-        # probs = [[0.1, 0.9], [0.7, 0.3]]
-        # dist = CategoricalDistribution(probs=probs, categories=["A", "B"])
-        # check_estimator(dist, raise_exceptions=True, verbose=False)
+        # Nominal categories with string labels must also pass the interface checks.
+        probs = [[0.1, 0.9], [0.7, 0.3]]
+        dist = CategoricalDistribution(probs=probs, categories=["A", "B"])
+        check_estimator(dist, raise_exceptions=True, verbose=False)
 
     def test_init(self):
         """test"""
@@ -51,8 +57,10 @@ class TestCategoricalDistribution:
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
         categories = [1, 2, "C"]
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError) as exc:
             dist = CategoricalDistribution(probs=probs, categories=categories)
+        # message must refer to categories, not the renamed `probs` parameter
+        assert "probs" not in str(exc.value)
 
         # Case 1: probs: list
         probs = [[0.1, 0.9], [0.7, 0.3]]
@@ -125,12 +133,14 @@ class TestCategoricalDistribution:
         with pytest.raises(ValueError):
             dist = CategoricalDistribution(probs=probs, categories=categories)
 
-        # Case 8: wrong categories
-        probs = [[0.1, 0.2, 0.8], [0.5, 0.3, 0.2]]
-        categories = [1, 1, 1]
+        # Case 8: wrong categories (non-unique)
+        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
+        categories = [1, 1, 2]
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError) as exc:
             dist = CategoricalDistribution(probs=probs, categories=categories)
+        # message must refer to categories, not the renamed `probs` parameter
+        assert "probs" not in str(exc.value)
 
         # Case 9: wrong index
         probs = [[0.1, 0.2, 0.8], [0.5, 0.3, 0.2]]
@@ -162,120 +172,27 @@ class TestCategoricalDistribution:
         with pytest.raises(ValueError):
             dist = CategoricalDistribution(probs=probs, categories=categories)
 
-    def test_cdf(self):
-        """test"""
-        # Case 1: x: int
+        # Case 15: random_state is stored verbatim and exposed via get_params
+        dist = CategoricalDistribution(probs=[[0.1, 0.9]], categories=[1, 2], random_state=42)
+        assert dist.random_state == 42
+        assert dist.get_params()["random_state"] == 42
+
+    def test_nominal_methods_unsupported(self):
+        """Order- and arithmetic-based methods are undefined for nominal categoricals."""
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
         categories = [1, 2, 3]
-        x = [[1], [1]]
-
         dist = CategoricalDistribution(probs=probs, categories=categories)
 
-        expected = pd.DataFrame({"variable": [0.1, 0.5]})
-        pd.testing.assert_frame_equal(dist.cdf(x), expected)
-
-        # Case 2: x: str
-        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        categories = ["A", "B", "C"]
-        x = [["A"], ["C"]]
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
-        expected = pd.DataFrame({"variable": [0.1, 1]})
-        pd.testing.assert_frame_equal(dist.cdf(x), expected)
-
-        # Case 3: wrong x's ndim
-        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        categories = [1, 2, 3]
-        x = [1, 1]
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
-        with pytest.raises(ValueError):
-            dist.cdf(x)
-
-        # Case 4: wrong x's value
-        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        categories = [1, 2, 3]
-        x = [["A"], ["B"]]
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
-        expected = pd.DataFrame({"variable": [0.0, 0.0]})
-        pd.testing.assert_frame_equal(dist.cdf(x), expected)
-
-        # Case 5: broadcasting
-        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        categories = [1, 2, 3]
-        x = [[1]]
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
-        expected = pd.DataFrame({"variable": [0.1, 0.5]})
-        pd.testing.assert_frame_equal(dist.cdf(x), expected)
-
-        # Case 6 : some `x` values is not exist in `categories`
-        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        categories = [1, 2, 3]
-        x = [[1], [4]]
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
-        expected = pd.DataFrame({"variable": [0.1, 0.0]})
-        pd.testing.assert_frame_equal(dist.cdf(x), expected)
-
-    def test_ppf(self):
-        """test"""
-        # Case 1: p: float
-        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        categories = [1, 2, 3]
-        p = [[0.1], [0.9]]
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
-        expected = pd.DataFrame({"variable": [1, 3]})
-        pd.testing.assert_frame_equal(dist.ppf(p), expected)
-
-        # Case 2: p: np.float
-        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        categories = [1, 2, 3]
-        p = [[0.1], [0.9]]
-        p = np.asarray(p, dtype=float)
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
-        expected = pd.DataFrame({"variable": [1, 3]})
-        pd.testing.assert_frame_equal(dist.ppf(p), expected)
-
-        # Case 3: wrong p's ndim
-        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        categories = [1, 2, 3]
-        p = [0.1, 0.9]
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
-        with pytest.raises(ValueError):
-            dist.ppf(p)
-
-        # Case 4: wrong p's value
-        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        categories = [1, 2, 3]
-        p = [[-0.1], [1.1]]
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
-        with pytest.raises(ValueError):
-            dist.ppf(p)
-
-        # Case 5: broadcasting
-        probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
-        categories = [1, 2, 3]
-        p = [[0.1]]
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
-        expected = pd.DataFrame({"variable": [1, 1]})
-        pd.testing.assert_frame_equal(dist.ppf(p), expected)
+        with pytest.raises(NotImplementedError):
+            dist.cdf([[1], [2]])
+        with pytest.raises(NotImplementedError):
+            dist.ppf([[0.5], [0.5]])
+        with pytest.raises(NotImplementedError):
+            dist.mean()
+        with pytest.raises(NotImplementedError):
+            dist.var()
+        with pytest.raises(NotImplementedError):
+            dist.energy()
 
     def test_pmf(self):
         """test"""
@@ -368,8 +285,12 @@ class TestCategoricalDistribution:
 
         dist = CategoricalDistribution(probs=probs, categories=categories)
 
-        expected = pd.DataFrame({"variable": np.log([0, 0])})
-        pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
+        # unknown categories -> -inf, and no spurious divide-by-zero warning
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            res = dist.log_pmf(x)
+        expected = pd.DataFrame({"variable": [-np.inf, -np.inf]})
+        pd.testing.assert_frame_equal(res, expected)
 
         # Case 5: broadcasting
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
@@ -382,68 +303,46 @@ class TestCategoricalDistribution:
         pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
 
     def test_sample(self):
-        """test"""
-        # Case 1: n_samples
-        np.random.seed(42)
-
+        """Sampling is reproducible across runs when ``random_state`` is set."""
         probs = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
         categories = [1, 2, 3]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        # Same seed on independent instances -> identical samples (reproducible
+        # across runs/processes), for both the single- and multi-sample paths.
+        d1 = CategoricalDistribution(probs=probs, categories=categories, random_state=42)
+        d2 = CategoricalDistribution(probs=probs, categories=categories, random_state=42)
+        pd.testing.assert_frame_equal(d1.sample(), d2.sample())
+        pd.testing.assert_frame_equal(d1.sample(3), d2.sample(3))
 
-        expected = pd.DataFrame({"variable": [2, 3]})
-        pd.testing.assert_frame_equal(dist.sample(), expected)
+        # Repeated calls on a seeded instance are deterministic.
+        pd.testing.assert_frame_equal(d1.sample(3), d1.sample(3))
 
-        # Case 2: n_samples
-        np.random.seed(42)
+        # Different seeds produce different draws (the seed is actually used).
+        d3 = CategoricalDistribution(probs=probs, categories=categories, random_state=123)
+        assert not d1.sample(20).equals(d3.sample(20))
 
-        probs = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
-        categories = [1, 2, 3]
+        # Sampling does not depend on the global NumPy RNG.
+        first = d1.sample(3)
+        np.random.seed(0)
+        np.random.random(10)  # perturb the global RNG
+        pd.testing.assert_frame_equal(first, d1.sample(3))
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        # Single-sample structure: one row per distribution, with self's index/columns.
+        single = d1.sample()
+        assert single.shape == (2, 1)
+        assert list(single.columns) == ["variable"]
 
-        expected = pd.DataFrame(
-            {"variable": [2, 3, 3, 1, 2, 1]},
-            index=pd.MultiIndex.from_tuples(
-                [
-                    (0, 0),
-                    (0, 1),
-                    (1, 0),
-                    (1, 1),
-                    (2, 0),
-                    (2, 1),
-                ],
-                names=["sample", None],
-            ),
-        )
-
-        pd.testing.assert_frame_equal(dist.sample(3), expected)
-
-        # Case 3: n_samples shape
-        np.random.seed(42)
-
-        probs = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
-        categories = [1, 2, 3]
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
-        res = dist.sample(3)
-
+        # Multi-sample structure and validity.
+        res = d1.sample(3)
         assert res.shape == (6, 1)
         assert list(res.columns) == ["variable"]
         assert isinstance(res.index, pd.MultiIndex)
         assert res.index.names == ["sample", None]
+        assert set(np.unique(res.values)).issubset(set(categories))
 
-        # Case 4: wrong n_samples value
-        np.random.seed(42)
-
-        probs = [[0.1, 0.8, 0.1], [0.2, 0.2, 0.6]]
-        categories = [1, 2, 3]
-
-        dist = CategoricalDistribution(probs=probs, categories=categories)
-
+        # Wrong n_samples value.
         with pytest.raises(TypeError):
-            dist.sample("A")
+            d1.sample("A")
 
     @pytest.mark.skipif(
         not _check_soft_dependencies("matplotlib", severity="none"),

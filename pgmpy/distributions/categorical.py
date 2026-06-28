@@ -11,6 +11,11 @@ class CategoricalDistribution(BaseDistribution):
     finite set of discrete states. Each row of ``probs`` defines the
     probability mass assigned to the states specified by ``categories``.
 
+    The categories are treated as *nominal* (unordered, non-numeric) labels.
+    Consequently, order- or arithmetic-based summaries are undefined and raise
+    ``NotImplementedError``: ``cdf``, ``ppf``, ``mean``, ``var`` and ``energy``.
+    The supported methods are ``pmf``, ``log_pmf``, ``sample`` and ``plot``.
+
     Parameters
     ----------
     probs : array-like of shape (n_instances, n_states)
@@ -21,6 +26,12 @@ class CategoricalDistribution(BaseDistribution):
         Names or labels of the possible discrete states. The order of
         ``categories`` corresponds to the order of probabilities in
         each row of ``probs``. State names must be unique.
+    random_state : int, np.random.Generator, or None, optional, default = None
+        Controls sampling in :meth:`sample`. An ``int`` produces reproducible
+        draws that are identical on every call and across runs/processes. A
+        ``numpy.random.Generator`` is used as-is, advancing across calls.
+        ``None`` draws fresh, non-reproducible samples. Other methods are
+        unaffected.
     index : pd.Index, optional, default = RangeIndex
     columns : pd.Index, optional, default = ["variable"]
 
@@ -42,14 +53,15 @@ class CategoricalDistribution(BaseDistribution):
         "distr:measuretype": "discrete",
         "distr:paramtype": "parametric",
         "capabilities:approx": [],
-        "capabilities:exact": ["log_pmf", "pmf", "cdf", "ppf"],
+        "capabilities:exact": ["pmf", "log_pmf"],
         "broadcast_init": "off",
     }
 
-    def __init__(self, probs, categories, index=None, columns=None):
+    def __init__(self, probs, categories, random_state=None, index=None, columns=None):
 
         self.probs = probs
         self.categories = categories
+        self.random_state = random_state
 
         # Validate probs.
         probs_for_check = np.asarray(probs, dtype=float)
@@ -75,14 +87,14 @@ class CategoricalDistribution(BaseDistribution):
 
         if mismatched_items:
             raise TypeError(
-                "All probs in categories must have the same type; "
+                "All categories must have the same type; "
                 f"expected {expected_type.__name__}, "
-                f"but found mismatched probs: {mismatched_items}"
+                f"but found mismatched categories: {mismatched_items}"
             )
 
-        # Validate shape of state_name and probs.
+        # Validate shape of categories and probs.
         if len(categories) != len(set(categories)):
-            raise ValueError(f"""Categories must contain unique probs: {categories}""")
+            raise ValueError(f"Categories must contain unique values: {categories}")
 
         if len(probs[0]) != len(categories):
             raise ValueError(
@@ -101,6 +113,32 @@ class CategoricalDistribution(BaseDistribution):
 
         super().__init__(index=index, columns=columns)
 
+    def _select_probs(self, x):
+        """Look up the probability of each queried value.
+
+        Parameters
+        ----------
+        x : 2D np.ndarray
+
+        Returns
+        -------
+        valid : 1D np.ndarray of bool
+            Whether each queried value matches one of ``categories``.
+        selected : 1D np.ndarray of float
+            Probability of the matched category. The value at non-matching
+            positions is arbitrary and is masked out by the callers.
+
+        """
+        probs = np.asarray(self.probs, dtype=float)
+        categories = np.asarray(self.categories)
+
+        matches = x == categories
+        valid = matches.any(axis=1)
+        state_idx = matches.argmax(axis=1)
+        row_idx = np.arange(probs.shape[0])
+
+        return valid, probs[row_idx, state_idx]
+
     def _pmf(self, x):
         """Probability mass function.
 
@@ -113,39 +151,15 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray
 
         """
-        probs = np.asarray(self.probs, dtype=float)
-        categories = np.asarray(self.categories)
-
-        matches = x == categories
-
-        valid = matches.any(axis=1)
-
-        state_idx = matches.argmax(axis=1)
-        row_idx = np.arange(probs.shape[0])
-
-        res = probs[row_idx, state_idx]
-
-        res = np.where(valid, res, 0.0)
-
+        valid, selected = self._select_probs(x)
+        res = np.where(valid, selected, 0.0)
         return res.reshape(-1, 1)
 
     def _log_pmf(self, x):
         """Logarithmic probability mass function.
 
-        Parameters
-        ----------
-        x : 2D np.ndarray
-
-        Returns
-        -------
-        2D np.ndarray
-
-        """
-        pmf = self._pmf(x)
-        return np.log(pmf)
-
-    def _cdf(self, x):
-        """Cumulative distribution function.
+        Values that do not match any category, or that match a
+        zero-probability category, map to ``-inf``.
 
         Parameters
         ----------
@@ -156,56 +170,83 @@ class CategoricalDistribution(BaseDistribution):
         2D np.ndarray
 
         """
-        probs = np.asarray(self.probs, dtype=float)
-        categories = np.asarray(self.categories)
-
-        res = np.empty(probs.shape[0], dtype=float)
-
-        for i, xi in enumerate(x):
-            target = xi[0]
-
-            idx_arr = np.where(categories == target)[0]
-
-            if len(idx_arr) == 0:
-                res[i] = 0.0
-            else:
-                idx = idx_arr[0]
-                res[i] = probs[i, : idx + 1].sum()
-
+        valid, selected = self._select_probs(x)
+        with np.errstate(divide="ignore"):
+            log_selected = np.log(selected)
+        res = np.where(valid, log_selected, -np.inf)
         return res.reshape(-1, 1)
 
-    def _ppf(self, p):
-        """Quantile function = percent point function = inverse cdf.
+    def cdf(self, x):
+        """Not defined for a nominal categorical distribution.
 
-        Parameters
-        ----------
-        p : 2D np.ndarray
+        Categories have no inherent order, so the cumulative distribution
+        function is undefined.
 
-        Returns
-        -------
-        2D np.ndarray
+        Raises
+        ------
+        NotImplementedError
 
         """
-        probs = np.asarray(self.probs, dtype=float)
-        categories = np.asarray(self.categories)
+        raise NotImplementedError(
+            "cdf is not defined for a nominal CategoricalDistribution: categories have no inherent order."
+        )
 
-        if np.any((p < 0) | (p > 1)):
-            raise ValueError("p values must be between 0 and 1.")
+    def ppf(self, p):
+        """Not defined for a nominal categorical distribution.
 
-        res = np.empty(probs.shape[0], dtype=categories.dtype)
+        Categories have no inherent order, so the quantile (inverse-cdf)
+        function is undefined.
 
-        for i, pi in enumerate(p):
-            prob = pi[0]
+        Raises
+        ------
+        NotImplementedError
 
-            cum_probs = np.cumsum(probs[i])
-            idx = np.searchsorted(cum_probs, prob, side="left")
+        """
+        raise NotImplementedError(
+            "ppf is not defined for a nominal CategoricalDistribution: categories have no inherent order."
+        )
 
-            if idx >= probs.shape[1]:
-                idx = probs.shape[1] - 1
+    def mean(self):
+        """Not defined for a nominal categorical distribution.
 
-            res[i] = categories[idx]
+        Categories are not numeric, so the expectation is undefined.
 
-        return res.reshape(-1, 1)
+        Raises
+        ------
+        NotImplementedError
+
+        """
+        raise NotImplementedError(
+            "mean is not defined for a nominal CategoricalDistribution: categories are not numeric."
+        )
+
+    def var(self):
+        """Not defined for a nominal categorical distribution.
+
+        Categories are not numeric, so the variance is undefined.
+
+        Raises
+        ------
+        NotImplementedError
+
+        """
+        raise NotImplementedError(
+            "var is not defined for a nominal CategoricalDistribution: categories are not numeric."
+        )
+
+    def energy(self, x=None):
+        """Not defined for a nominal categorical distribution.
+
+        Categories have no metric, so the energy distance is undefined.
+
+        Raises
+        ------
+        NotImplementedError
+
+        """
+        raise NotImplementedError(
+            "energy is not defined for a nominal CategoricalDistribution: categories have no metric."
+        )
 
     def _sample(self, n_samples=None):
         """Sample from the distribution.
@@ -219,11 +260,10 @@ class CategoricalDistribution(BaseDistribution):
         pd.DataFrame
 
         """
-        probs = self.probs
-        categories = self.categories
+        probs = np.asarray(self.probs, dtype=float)
+        categories = np.asarray(self.categories)
 
-        probs = np.asarray(probs, dtype=float)
-        categories = np.asarray(categories)
+        rng = np.random.default_rng(self.random_state)
 
         if n_samples is None:
             n_samples = 1
@@ -236,7 +276,7 @@ class CategoricalDistribution(BaseDistribution):
         sampled = np.empty((n_samples, n_rows), dtype=categories.dtype)
 
         for i in range(n_rows):
-            sampled[:, i] = np.random.choice(
+            sampled[:, i] = rng.choice(
                 categories,
                 size=n_samples,
                 p=probs[i],
