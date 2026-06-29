@@ -384,7 +384,9 @@ class GES(_ScoreMixin, BaseCausalDiscovery):
         # Step 4: Turning phase. Iteratively reorient edges till score stops improving.
         while True:
             potential_turns = []
-            for u, v, edge_type in current_model.get_edges(data=True):
+            # sorted() gives a stable, canonical tie-break (matching the deletion phase) so the turn
+            # chosen among equally-scored candidates does not depend on internal edge insertion order.
+            for u, v, edge_type in sorted(current_model.get_edges(data=True)):
                 potential_turns.append((v, u))
                 if edge_type == "--":
                     potential_turns.append((u, v))

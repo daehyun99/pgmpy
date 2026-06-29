@@ -277,10 +277,12 @@ class PDAG(_CoreGraph):
                     "PDAG). Remaining undirected PDAG edges oriented arbitrarily."
                 )
                 for x, y in pdag.get_edges(data=False):
-                    if not dag.has_edge(y, x):
-                        try:
-                            dag.add_edge(x, y)
-                        except ValueError:
-                            pass
+                    if dag.has_edge(x, y) or dag.has_edge(y, x):
+                        continue
+                    try:
+                        dag.add_edge(x, y)
+                    except ValueError:
+                        # x -> y would close a cycle; the reverse is acyclic, so keep the edge as y -> x
+                        dag.add_edge(y, x)
                 break
         return dag

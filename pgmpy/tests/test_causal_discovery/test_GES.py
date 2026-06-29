@@ -55,6 +55,14 @@ def titanic_data_categorical(titanic_data):
     return titanic_data[["Survived", "Sex", "Pclass"]].astype("category")
 
 
+def test_ges_turn_phase_deterministic(rand_data):
+    # The turning phase sorts its candidate edges, so GES returns a stable CPDAG that does not depend
+    # on internal edge insertion order; two fits on identical data must give identical edges.
+    g1 = GES(scoring_method=K2(rand_data), return_type="pdag").fit(rand_data).causal_graph_
+    g2 = GES(scoring_method=K2(rand_data), return_type="pdag").fit(rand_data).causal_graph_
+    assert set(g1.get_edges(data=True)) == set(g2.get_edges(data=True))
+
+
 # Optional manual parity check against `causal-learn==0.1.4.5`.
 # This is intentionally kept as documentation instead of an executable test,
 # because `causal-learn` is an optional dependency.

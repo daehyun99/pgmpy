@@ -494,6 +494,19 @@ class TestPDAG:
         assert ("a", "b") not in out.directed_edges
         assert out.directed_edges == {("c", "b"), ("d", "b")}
 
+    def test_to_dag_preserves_skeleton_on_nonextendable_pdag(self):
+        # A chordless 4-cycle has no faithful extension, so to_dag's fallback orients edges
+        # arbitrarily; it must still keep every edge (never silently drop a cycle-closing one).
+        pdag = PDAG(edge_list=[("A", "B", "--"), ("B", "C", "--"), ("C", "D", "--"), ("D", "A", "--")])
+        dag = pdag.to_dag()
+        assert {frozenset(e) for e in dag.edges()} == {
+            frozenset(("A", "B")),
+            frozenset(("B", "C")),
+            frozenset(("C", "D")),
+            frozenset(("D", "A")),
+        }
+        assert len(dag.edges()) == 4  # acyclic orientation, nothing dropped
+
     def test_pdag_equality(self):
         """
         Test the `__eq__` method
