@@ -62,6 +62,7 @@ class NominalDistribution(BaseDistribution):
         self.probs = probs
         self.categories = categories
         self.random_state = random_state
+        self.rng_ = np.random.default_rng(self.random_state)
 
         # Validate probs.
         probs_for_check = np.asarray(probs, dtype=float)
@@ -263,8 +264,6 @@ class NominalDistribution(BaseDistribution):
         probs = np.asarray(self.probs, dtype=float)
         categories = np.asarray(self.categories)
 
-        rng = np.random.default_rng(self.random_state)
-
         if n_samples is None:
             n_samples = 1
             single_sample = True
@@ -276,7 +275,7 @@ class NominalDistribution(BaseDistribution):
         sampled = np.empty((n_samples, n_rows), dtype=categories.dtype)
 
         for i in range(n_rows):
-            sampled[:, i] = rng.choice(
+            sampled[:, i] = self.rng_.choice(
                 categories,
                 size=n_samples,
                 p=probs[i],
