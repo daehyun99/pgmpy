@@ -5,18 +5,18 @@ import pandas as pd
 import pytest
 from skbase.utils.dependencies import _check_soft_dependencies
 
-from pgmpy.distributions.categorical import CategoricalDistribution
+from pgmpy.distributions.nominal import NominalDistribution
 
 
-class TestCategoricalDistribution:
-    """Tests for Categorical distributions."""
+class TestNominalDistribution:
+    """Tests for Nominal distributions."""
 
     def test_default(self):
         probs = [[0.1, 0.9], [0.7, 0.3]]
         categories = ["A", "B"]
-        dist = CategoricalDistribution(probs, categories)
+        dist = NominalDistribution(probs, categories)
 
-        assert dist.name == "CategoricalDistribution"
+        assert dist.name == "NominalDistribution"
         assert dist.get_class_tag("python_version") is None
         assert dist.get_class_tag("python_dependencies") is None
         assert dist.get_class_tag("distr:measuretype") == "discrete"
@@ -30,25 +30,25 @@ class TestCategoricalDistribution:
 
     def test_public_import(self):
         """The class is importable from the package, not just the module."""
-        from pgmpy.distributions import CategoricalDistribution as PublicCat
+        from pgmpy.distributions import NominalDistribution as PublicCat
 
-        assert PublicCat is CategoricalDistribution
+        assert PublicCat is NominalDistribution
 
     def test_interface_compatibility(self):
         """ensure interface compatibility by skpro.utils.estimator_checks.check_estimator"""
         from skpro.utils.estimator_checks import check_estimator
 
         probs = [[0.1, 0.9], [0.7, 0.3]]
-        dist = CategoricalDistribution(probs=probs, categories=[1, 2])
+        dist = NominalDistribution(probs=probs, categories=[1, 2])
         check_estimator(dist, raise_exceptions=True, verbose=False)
 
         probs = [[0.1, 0.7, 0.2], [0.6, 0.3, 0.1], [0.6, 0.3, 0.1], [0.6, 0.3, 0.1]]
-        dist = CategoricalDistribution(probs=probs, categories=[1, 2, 3])
+        dist = NominalDistribution(probs=probs, categories=[1, 2, 3])
         check_estimator(dist, raise_exceptions=True, verbose=False)
 
         # Nominal categories with string labels must also pass the interface checks.
         probs = [[0.1, 0.9], [0.7, 0.3]]
-        dist = CategoricalDistribution(probs=probs, categories=["A", "B"])
+        dist = NominalDistribution(probs=probs, categories=["A", "B"])
         check_estimator(dist, raise_exceptions=True, verbose=False)
 
     def test_init(self):
@@ -58,7 +58,7 @@ class TestCategoricalDistribution:
         categories = [1, 2, "C"]
 
         with pytest.raises(TypeError) as exc:
-            dist = CategoricalDistribution(probs=probs, categories=categories)
+            dist = NominalDistribution(probs=probs, categories=categories)
         # message must refer to categories, not the renamed `probs` parameter
         assert "probs" not in str(exc.value)
 
@@ -66,7 +66,7 @@ class TestCategoricalDistribution:
         probs = [[0.1, 0.9], [0.7, 0.3]]
         categories = [1, 2]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         assert dist.probs == probs
         assert dist.categories == categories
@@ -77,7 +77,7 @@ class TestCategoricalDistribution:
         probs = np.asarray(probs, dtype=float)
         categories = [1, 2]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         assert dist.categories == categories
         assert dist.columns == ["variable"]
@@ -86,7 +86,7 @@ class TestCategoricalDistribution:
         probs = [[0.1, 0.9], [0.7, 0.3]]
         categories = ["A", "B"]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         assert dist.probs == probs
         assert dist.categories == categories
@@ -96,7 +96,7 @@ class TestCategoricalDistribution:
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
         categories = [1, 2, 3]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         assert dist.probs == probs
         assert dist.categories == categories
@@ -106,7 +106,7 @@ class TestCategoricalDistribution:
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
         categories = ["A", "B", "C"]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories, index=["studentA", "studentB"])
+        dist = NominalDistribution(probs=probs, categories=categories, index=["studentA", "studentB"])
 
         assert dist.probs == probs
         assert dist.categories == categories
@@ -117,7 +117,7 @@ class TestCategoricalDistribution:
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
         categories = ["A", "B", "C"]
 
-        dist = CategoricalDistribution(
+        dist = NominalDistribution(
             probs=probs, categories=categories, index=["studentA", "studentB"], columns=["grade"]
         )
 
@@ -131,14 +131,14 @@ class TestCategoricalDistribution:
         categories = [1, 2, 3]
 
         with pytest.raises(ValueError):
-            dist = CategoricalDistribution(probs=probs, categories=categories)
+            dist = NominalDistribution(probs=probs, categories=categories)
 
         # Case 8: wrong categories (non-unique)
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
         categories = [1, 1, 2]
 
         with pytest.raises(ValueError) as exc:
-            dist = CategoricalDistribution(probs=probs, categories=categories)
+            dist = NominalDistribution(probs=probs, categories=categories)
         # message must refer to categories, not the renamed `probs` parameter
         assert "probs" not in str(exc.value)
 
@@ -148,7 +148,7 @@ class TestCategoricalDistribution:
         index = ["A", "B", "C"]
 
         with pytest.raises(ValueError):
-            dist = CategoricalDistribution(probs=probs, categories=categories, index=index)
+            dist = NominalDistribution(probs=probs, categories=categories, index=index)
 
         # Case 10: wrong columns
         probs = [[0.1, 0.2, 0.8], [0.5, 0.3, 0.2]]
@@ -156,24 +156,24 @@ class TestCategoricalDistribution:
         columns = ["A", "B", "C"]
 
         with pytest.raises(ValueError):
-            dist = CategoricalDistribution(probs=probs, categories=categories, columns=columns)
+            dist = NominalDistribution(probs=probs, categories=categories, columns=columns)
 
         # Case 13: wrong shape(probs, categories)
         probs = [[0.1, 0.2], [0.5, 0.3]]
         categories = [1, 2, 3]
 
         with pytest.raises(ValueError):
-            dist = CategoricalDistribution(probs=probs, categories=categories)
+            dist = NominalDistribution(probs=probs, categories=categories)
 
         # Case 14: wrong probs(negative)
         probs = [[0.1, 0.2], [-0.5, 0.3]]
         categories = [1, 2]
 
         with pytest.raises(ValueError):
-            dist = CategoricalDistribution(probs=probs, categories=categories)
+            dist = NominalDistribution(probs=probs, categories=categories)
 
         # Case 15: random_state is stored verbatim and exposed via get_params
-        dist = CategoricalDistribution(probs=[[0.1, 0.9]], categories=[1, 2], random_state=42)
+        dist = NominalDistribution(probs=[[0.1, 0.9]], categories=[1, 2], random_state=42)
         assert dist.random_state == 42
         assert dist.get_params()["random_state"] == 42
 
@@ -181,7 +181,7 @@ class TestCategoricalDistribution:
         """Order- and arithmetic-based methods are undefined for nominal categoricals."""
         probs = [[0.1, 0.2, 0.7], [0.5, 0.3, 0.2]]
         categories = [1, 2, 3]
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         with pytest.raises(NotImplementedError):
             dist.cdf([[1], [2]])
@@ -201,7 +201,7 @@ class TestCategoricalDistribution:
         categories = [1, 2, 3]
         x = [[1], [1]]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.1, 0.5]})
         pd.testing.assert_frame_equal(dist.pmf(x), expected)
@@ -211,7 +211,7 @@ class TestCategoricalDistribution:
         categories = ["A", "B", "C"]
         x = [["A"], ["C"]]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.1, 0.2]})
         pd.testing.assert_frame_equal(dist.pmf(x), expected)
@@ -221,7 +221,7 @@ class TestCategoricalDistribution:
         categories = [1, 2, 3]
         x = [1, 1]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         with pytest.raises(ValueError):
             dist.pmf(x)
@@ -231,7 +231,7 @@ class TestCategoricalDistribution:
         categories = [1, 2, 3]
         x = [["A"], ["B"]]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.0, 0.0]})
         pd.testing.assert_frame_equal(dist.pmf(x), expected)
@@ -241,7 +241,7 @@ class TestCategoricalDistribution:
         categories = [1, 2, 3]
         x = [[1]]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": [0.1, 0.5]})
         pd.testing.assert_frame_equal(dist.pmf(x), expected)
@@ -253,7 +253,7 @@ class TestCategoricalDistribution:
         categories = [1, 2, 3]
         x = [[1], [1]]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": np.log([0.1, 0.5])})
         pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
@@ -263,7 +263,7 @@ class TestCategoricalDistribution:
         categories = ["A", "B", "C"]
         x = [["A"], ["C"]]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": np.log([0.1, 0.2])})
         pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
@@ -273,7 +273,7 @@ class TestCategoricalDistribution:
         categories = [1, 2, 3]
         x = [1, 1]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         with pytest.raises(ValueError):
             dist.log_pmf(x)
@@ -283,7 +283,7 @@ class TestCategoricalDistribution:
         categories = [1, 2, 3]
         x = [["A"], ["B"]]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         # unknown categories -> -inf, and no spurious divide-by-zero warning
         with warnings.catch_warnings():
@@ -297,7 +297,7 @@ class TestCategoricalDistribution:
         categories = [1, 2, 3]
         x = [[1]]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories)
+        dist = NominalDistribution(probs=probs, categories=categories)
 
         expected = pd.DataFrame({"variable": np.log([0.1, 0.5])})
         pd.testing.assert_frame_equal(dist.log_pmf(x), expected)
@@ -309,8 +309,8 @@ class TestCategoricalDistribution:
 
         # Same seed on independent instances -> identical samples (reproducible
         # across runs/processes), for both the single- and multi-sample paths.
-        d1 = CategoricalDistribution(probs=probs, categories=categories, random_state=42)
-        d2 = CategoricalDistribution(probs=probs, categories=categories, random_state=42)
+        d1 = NominalDistribution(probs=probs, categories=categories, random_state=42)
+        d2 = NominalDistribution(probs=probs, categories=categories, random_state=42)
         pd.testing.assert_frame_equal(d1.sample(), d2.sample())
         pd.testing.assert_frame_equal(d1.sample(3), d2.sample(3))
 
@@ -318,7 +318,7 @@ class TestCategoricalDistribution:
         pd.testing.assert_frame_equal(d1.sample(3), d1.sample(3))
 
         # Different seeds produce different draws (the seed is actually used).
-        d3 = CategoricalDistribution(probs=probs, categories=categories, random_state=123)
+        d3 = NominalDistribution(probs=probs, categories=categories, random_state=123)
         assert not d1.sample(20).equals(d3.sample(20))
 
         # Sampling does not depend on the global NumPy RNG.
@@ -360,7 +360,7 @@ class TestCategoricalDistribution:
         index = ["studentA", "studentB"]
         columns = ["grade"]
 
-        dist = CategoricalDistribution(probs=probs, categories=categories, index=index, columns=columns)
+        dist = NominalDistribution(probs=probs, categories=categories, index=index, columns=columns)
         fig, axes = dist.plot(fun="pmf")
         try:
             assert isinstance(fig, plt.Figure)

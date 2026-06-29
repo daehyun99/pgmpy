@@ -1,3 +1,3 @@
-from pgmpy.distributions.categorical import CategoricalDistribution
+from pgmpy.distributions.nominal import NominalDistribution
 
-__all__ = ["CategoricalDistribution"]
+__all__ = ["NominalDistribution"]

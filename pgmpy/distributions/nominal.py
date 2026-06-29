@@ -4,7 +4,7 @@ from skbase.utils.dependencies import _check_soft_dependencies
 from skpro.distributions.base import BaseDistribution
 
 
-class CategoricalDistribution(BaseDistribution):
+class NominalDistribution(BaseDistribution):
     """Categorical distribution for discrete random variables.
 
     Represents one or more categorical probability distributions over a
@@ -37,13 +37,13 @@ class CategoricalDistribution(BaseDistribution):
 
     Examples
     --------
-    >>> from pgmpy.distributions.categorical import CategoricalDistribution
+    >>> from pgmpy.distributions.nominal import NominalDistribution
 
     >>> probs = [[0.2, 0.4, 0.3, 0.1], [0.4, 0.4, 0.1, 0.1]]
     >>> categories = ["A", "B", "C", "D"]
     >>> index=["studentA", "studentB"]
     >>> columns = ["grade"]
-    >>> dist = CategoricalDistribution(probs=probs, categories=categories, index=index, columns=columns)
+    >>> dist = NominalDistribution(probs=probs, categories=categories, index=index, columns=columns)
 
     """
 
@@ -188,7 +188,7 @@ class CategoricalDistribution(BaseDistribution):
 
         """
         raise NotImplementedError(
-            "cdf is not defined for a nominal CategoricalDistribution: categories have no inherent order."
+            "cdf is not defined for a nominal NominalDistribution: categories have no inherent order."
         )
 
     def ppf(self, p):
@@ -203,7 +203,7 @@ class CategoricalDistribution(BaseDistribution):
 
         """
         raise NotImplementedError(
-            "ppf is not defined for a nominal CategoricalDistribution: categories have no inherent order."
+            "ppf is not defined for a nominal NominalDistribution: categories have no inherent order."
         )
 
     def mean(self):
@@ -217,7 +217,7 @@ class CategoricalDistribution(BaseDistribution):
 
         """
         raise NotImplementedError(
-            "mean is not defined for a nominal CategoricalDistribution: categories are not numeric."
+            "mean is not defined for a nominal NominalDistribution: categories are not numeric."
         )
 
     def var(self):
@@ -231,7 +231,7 @@ class CategoricalDistribution(BaseDistribution):
 
         """
         raise NotImplementedError(
-            "var is not defined for a nominal CategoricalDistribution: categories are not numeric."
+            "var is not defined for a nominal NominalDistribution: categories are not numeric."
         )
 
     def energy(self, x=None):
@@ -245,7 +245,7 @@ class CategoricalDistribution(BaseDistribution):
 
         """
         raise NotImplementedError(
-            "energy is not defined for a nominal CategoricalDistribution: categories have no metric."
+            "energy is not defined for a nominal NominalDistribution: categories have no metric."
         )
 
     def _sample(self, n_samples=None):
@@ -344,7 +344,7 @@ class CategoricalDistribution(BaseDistribution):
         >>> categories = ["A", "B", "C", "D"]
         >>> index = ["studentA", "studentB"]
         >>> columns = ["grade"]
-        >>> dist = CategoricalDistribution(probs=probs, categories=categories, index=index, columns=columns)
+        >>> dist = NominalDistribution(probs=probs, categories=categories, index=index, columns=columns)
         >>> dist.plot(fun="pmf") # doctest: +SKIP
         <Figure ...>
         """
