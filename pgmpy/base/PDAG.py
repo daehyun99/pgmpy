@@ -185,7 +185,12 @@ class PDAG(_CoreGraph):
                 if len(undirected_nbs) < 3:
                     continue
                 for y, z, w in itertools.permutations(undirected_nbs, 3):
-                    if pdag.has_edge(y, w, "->") and pdag.has_edge(z, w, "->"):
+                    if (
+                        pdag.has_edge(y, w, "->")
+                        and pdag.has_edge(z, w, "->")
+                        and not pdag.has_edge(y, z)  # the two parents of w must be non-adjacent
+                        and not nx.has_path(pdag.get_directed_graph(), w, x)  # x->w must not close a cycle
+                    ):
                         pdag.orient_undirected_edge(x, w, inplace=True)
                         changed = True
                         if debug:
@@ -204,6 +209,8 @@ class PDAG(_CoreGraph):
                                 pdag.get_neighbors(d, "--"),
                             )
                             for a in cand:
+                                if nx.has_path(pdag.get_directed_graph(), b, a):
+                                    continue  # orienting a -> b would close a directed cycle
                                 pdag.orient_undirected_edge(a, b, inplace=True)
                                 changed = True
                                 break

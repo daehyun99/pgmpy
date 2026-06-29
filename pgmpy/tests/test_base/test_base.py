@@ -484,6 +484,22 @@ class TestCoreGraph:
             graph.remove_edge("A", "B", "<>")
         check_graph_status(graph, 3, 2, set(), set(), set(), {})
 
+        # no edge at all between the pair (or absent nodes) -> ValueError, not AttributeError
+        graph = _CoreGraph(edge_list=edges)
+        with pytest.raises(ValueError, match="not in graph"):
+            graph.remove_edge("A", "C", "->")  # A and C present but non-adjacent
+        with pytest.raises(ValueError, match="not in graph"):
+            graph.remove_edge("X", "Y", "->")  # nodes absent from the graph
+
+    def test_edge_list_accepts_generator(self):
+        """edge_list given as a one-shot generator must not be silently exhausted by validation."""
+        g = _CoreGraph(edge_list=(e for e in [("A", "B", "->"), ("B", "C", "->")]))
+        assert set(g.get_edges(data=True)) == {("A", "B", "->"), ("B", "C", "->")}
+        g.add_edges_from(e for e in [("C", "D", "->")])
+        assert ("C", "D", "->") in g.get_edges(data=True)
+        g.remove_edges_from(e for e in [("A", "B", "->")])
+        assert ("A", "B", "->") not in g.get_edges(data=True)
+
     def test_remove_edges_from(self):
         """Test removing edges of a `_CoreGraph`."""
         # removing every edge of a chain leaves the graph edge-free, across all edge types

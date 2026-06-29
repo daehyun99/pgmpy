@@ -163,6 +163,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
     ):
         super().__init__()
         if edge_list:
+            edge_list = list(edge_list)  # materialize: _validate_edges below would exhaust a generator
             self._validate_edges(edge_list=edge_list)
             for u, v, edge_type in edge_list:
                 self.add_edge(u, v, edge_type=edge_type)
@@ -261,6 +262,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         [('A', 'B', '->'), ('B', 'C', '->')]
 
         """
+        edge_list = list(edge_list)  # materialize: _validate_edges below would exhaust a generator
         self._validate_edges(edge_list=edge_list)
         for u, v, edge_type in edge_list:
             self.add_edge(u, v, edge_type)
@@ -305,7 +307,8 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         self._validate_edges(edge_list=[(u, v, edge_type)])
 
         markers = self._to_markers(edge=(u, v, edge_type))
-        for key, data in self.get_edge_data(u, v).items():
+        # get_edge_data returns None when the pair has no edge (or a node is absent); treat as "not in graph".
+        for key, data in (self.get_edge_data(u, v) or {}).items():
             if data[u] == markers[u] and data[v] == markers[v]:
                 super().remove_edge(u, v, key=key)
                 return
@@ -342,6 +345,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         [('A', 'B', '->')]
 
         """
+        edge_list = list(edge_list)  # materialize: _validate_edges below would exhaust a generator
         self._validate_edges(edge_list=edge_list)
         for u, v, edge_type in edge_list:
             self.remove_edge(u, v, edge_type)

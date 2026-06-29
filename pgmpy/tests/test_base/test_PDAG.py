@@ -446,6 +446,54 @@ class TestPDAG:
             ("D", "A", "->"),
         }
 
+    def test_meeks_rules_skip_cycle_creating_orientation(self):
+        # On an inconsistent PDAG a Meek orientation can close a directed cycle. orient_undirected_edge
+        # now refuses that (raises); R3/R4 must skip such orientations (as R1 already does), not crash.
+        # R3: x--{w,y,z}, y->w<-z would orient x->w, but w->A->B->x already exists.
+        out = PDAG(
+            edge_list=[
+                ("x", "w", "--"),
+                ("x", "y", "--"),
+                ("x", "z", "--"),
+                ("y", "w", "->"),
+                ("z", "w", "->"),
+                ("w", "A", "->"),
+                ("A", "B", "->"),
+                ("B", "x", "->"),
+            ]
+        ).apply_meeks_rules()
+        assert ("x", "w") not in out.directed_edges
+        # R4: d->c->b, a--{b,c,d}, b not adj d would orient a->b, but b->P->Q->a already exists.
+        out4 = PDAG(
+            edge_list=[
+                ("d", "c", "->"),
+                ("c", "b", "->"),
+                ("a", "b", "--"),
+                ("a", "c", "--"),
+                ("a", "d", "--"),
+                ("b", "P", "->"),
+                ("P", "Q", "->"),
+                ("Q", "a", "->"),
+            ]
+        ).apply_meeks_rules(apply_r4=True)
+        assert ("a", "b") not in out4.directed_edges
+
+    def test_meeks_rule3_requires_nonadjacent_parents(self):
+        # R3 compels x->w only when w's two parents are non-adjacent. Here c--d are adjacent, so
+        # a->b is not compelled and must stay undirected.
+        out = PDAG(
+            edge_list=[
+                ("a", "b", "--"),
+                ("a", "c", "--"),
+                ("a", "d", "--"),
+                ("c", "b", "->"),
+                ("d", "b", "->"),
+                ("c", "d", "--"),
+            ]
+        ).apply_meeks_rules()
+        assert ("a", "b") not in out.directed_edges
+        assert out.directed_edges == {("c", "b"), ("d", "b")}
+
     def test_pdag_equality(self):
         """
         Test the `__eq__` method
