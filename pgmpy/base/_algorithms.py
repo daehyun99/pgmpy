@@ -88,8 +88,7 @@ class _GraphAlgorithms:
 
         References
         ----------
-        .. [1] Richardson, Thomas. "Markov Properties for Acyclic Directed Mixed Graphs." Scandinavian Journal of
-               Statistics 30.1 (2003): 145-157. https://doi.org/10.1111/1467-9469.00323
+        - :cite:p:`richardson_2003`
         """
         if not self.SUPPORTED_EDGE_TYPES <= {"->", "<-", "<>"}:
             raise TypeError(
@@ -461,8 +460,7 @@ class _GraphAlgorithms:
 
         References
         ----------
-        .. [1] Richardson, T. S. (2003). Markov Properties for Acyclic Directed Mixed Graphs.
-               Scandinavian Journal of Statistics, 30(1), 145-157.
+        - :cite:p:`richardson_2003`
 
         Examples
         --------
