@@ -217,9 +217,7 @@ class NominalDistribution(BaseDistribution):
         NotImplementedError
 
         """
-        raise NotImplementedError(
-            "mean is not defined for a nominal NominalDistribution: categories are not numeric."
-        )
+        raise NotImplementedError("mean is not defined for a nominal NominalDistribution: categories are not numeric.")
 
     def var(self):
         """Not defined for a nominal categorical distribution.
@@ -231,9 +229,7 @@ class NominalDistribution(BaseDistribution):
         NotImplementedError
 
         """
-        raise NotImplementedError(
-            "var is not defined for a nominal NominalDistribution: categories are not numeric."
-        )
+        raise NotImplementedError("var is not defined for a nominal NominalDistribution: categories are not numeric.")
 
     def energy(self, x=None):
         """Not defined for a nominal categorical distribution.
@@ -245,9 +241,7 @@ class NominalDistribution(BaseDistribution):
         NotImplementedError
 
         """
-        raise NotImplementedError(
-            "energy is not defined for a nominal NominalDistribution: categories have no metric."
-        )
+        raise NotImplementedError("energy is not defined for a nominal NominalDistribution: categories have no metric.")
 
     def _sample(self, n_samples=None):
         """Sample from the distribution.
