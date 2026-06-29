@@ -237,8 +237,10 @@ class TestGraphAlgorithmMixin:
         )
         assert g.has_inducing_path("X", "Y") is True
 
-        # a direct edge has no intermediate node and does not count; disconnected nodes -> False
-        assert _CoreGraph(edge_list=[("X", "Y", "->")]).has_inducing_path("X", "Y") is False
+        # a direct edge is a trivial inducing path (no intermediate node can block it), any edge type
+        for et in ("->", "<>", "--"):
+            assert _CoreGraph(edge_list=[("X", "Y", et)]).has_inducing_path("X", "Y") is True
+        # disconnected, non-adjacent nodes -> False
         g = _CoreGraph(edge_list=[("X", "A", "->"), ("B", "Y", "->")])
         assert g.has_inducing_path("X", "Y") is False
 

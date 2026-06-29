@@ -128,12 +128,15 @@ class _GraphAlgorithms:
         Check if there exists an inducing path between `u` and `v` relative to `w`.
 
         `w` is the pool of variables available for conditioning. An inducing path between `u` and
-        `v` relative to `w` is a path with at least one intermediate node such that:
+        `v` relative to `w` is a path such that:
 
         - every intermediate node in `w` is a collider on the path (an intermediate outside `w`
           can never be conditioned on, so it only blocks the path if it is a collider), and
         - every collider on the path is an ancestor of `u` or `v` (which keeps it open under
           every conditioning set drawn from `w`).
+
+        A direct edge between `u` and `v` has no intermediate nodes, so it is (vacuously) an inducing
+        path: adjacent nodes are always joined by one, matching the standard definition.
 
         Such a path is a dependence between `u` and `v` that no subset of `w` can block: `u` and
         `v` cannot be m-separated using only variables from `w`. With the default
@@ -186,8 +189,6 @@ class _GraphAlgorithms:
         ancestors = self.get_ancestors([u, v])
 
         for path in nx.all_simple_edge_paths(self, u, v):
-            if len(path) < 2:  # a single edge has no intermediate node
-                continue
             for into_edge, out_of_edge in pairwise(path):
                 mid = into_edge[1]
                 is_collider = self.edges[into_edge][mid] == ">" and self.edges[out_of_edge][mid] == ">"
