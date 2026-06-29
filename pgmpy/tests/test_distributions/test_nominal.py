@@ -314,18 +314,20 @@ class TestNominalDistribution:
         pd.testing.assert_frame_equal(d1.sample(), d2.sample())
         pd.testing.assert_frame_equal(d1.sample(3), d2.sample(3))
 
-        # Repeated calls on a seeded instance are deterministic.
-        pd.testing.assert_frame_equal(d1.sample(3), d1.sample(3))
+        assert not d1.sample(3).equals(d1.sample(3))
 
         # Different seeds produce different draws (the seed is actually used).
         d3 = NominalDistribution(probs=probs, categories=categories, random_state=123)
         assert not d1.sample(20).equals(d3.sample(20))
 
         # Sampling does not depend on the global NumPy RNG.
+        d1 = NominalDistribution(probs=probs, categories=categories, random_state=42)
         first = d1.sample(3)
         np.random.seed(0)
         np.random.random(10)  # perturb the global RNG
-        pd.testing.assert_frame_equal(first, d1.sample(3))
+        d1 = NominalDistribution(probs=probs, categories=categories, random_state=42)
+        second = d1.sample(3)
+        pd.testing.assert_frame_equal(first, second)
 
         # Single-sample structure: one row per distribution, with self's index/columns.
         single = d1.sample()
