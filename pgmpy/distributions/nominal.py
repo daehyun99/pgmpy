@@ -7,7 +7,7 @@ from skpro.distributions.base import BaseDistribution
 class NominalDistribution(BaseDistribution):
     """Nominal distribution for discrete random variables.
 
-    Represents one or more categorical probability distributions over a
+    Represents one or more nominal categorical probability distributions over a
     finite set of discrete states. Each row of ``probs`` defines the
     probability mass assigned to the states specified by ``categories``.
 
@@ -20,7 +20,7 @@ class NominalDistribution(BaseDistribution):
     ----------
     probs : array-like of shape (n_instances, n_states)
         Probability masses for each state. Each row represents one
-        categorical distribution and must contain non-negative probs
+        nominal categorical distribution and must contain non-negative probs
         that sum to 1.
     categories : array-like of shape (n_states,)
         Names or labels of the possible discrete states. The order of
