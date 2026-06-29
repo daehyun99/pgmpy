@@ -5,7 +5,7 @@ from skpro.distributions.base import BaseDistribution
 
 
 class NominalDistribution(BaseDistribution):
-    """Categorical distribution for discrete random variables.
+    """Nominal distribution for discrete random variables.
 
     Represents one or more categorical probability distributions over a
     finite set of discrete states. Each row of ``probs`` defines the
@@ -300,7 +300,7 @@ class NominalDistribution(BaseDistribution):
         return res
 
     def plot(self, fun="pmf", ax=None, **kwargs):
-        """Plot the categorical probability mass function.
+        """Plot the nominal probability mass function.
 
         A separate bar plot is created for each row in ``probs``. The category
         labels are taken from ``categories``, and the height of each bar represents
@@ -350,7 +350,7 @@ class NominalDistribution(BaseDistribution):
         n_rows, _ = probs.shape
 
         if fun != "pmf":
-            raise NotImplementedError("`Categorical` only supports `pmf` currently")
+            raise NotImplementedError("`NominalDistribution` only supports `pmf` currently")
 
         if ax is None:
             fig, axes = plt.subplots(
