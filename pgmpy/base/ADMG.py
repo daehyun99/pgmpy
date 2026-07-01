@@ -37,39 +37,3 @@ class ADMG(_CoreGraph):
     """
 
     SUPPORTED_EDGE_TYPES = frozenset(["->", "<-", "<>"])
-
-    def get_district(self, nodes):
-        """
-        Return the district of `nodes`: the maximal set of nodes connected via bidirected
-        (``"<>"``) edges, including the input nodes themselves.
-
-        Parameters
-        ----------
-        nodes : Hashable or iterable of Hashable
-            A node or a collection of nodes. Nodes not in the graph are ignored.
-
-        Returns
-        -------
-        district : set
-            All nodes in the same bidirected-connected component(s) as `nodes`.
-
-        See Also
-        --------
-        get_spouses : Nodes joined to a node by a single bidirected edge.
-        get_reachable_nodes : Nodes reachable via a given edge type.
-
-        Examples
-        --------
-        >>> from pgmpy.base import ADMG
-        >>> admg = ADMG(edge_list=[("X", "Y", "->"), ("X", "Z", "<>")])
-        >>> sorted(admg.get_district("X"))
-        ['X', 'Z']
-        >>> admg.get_district("Y")
-        {'Y'}
-        """
-        nodes_set = {nodes} if isinstance(nodes, str) else set(nodes)
-        district = set()
-        for node in nodes_set:
-            if node in self.nodes():
-                district |= self.get_reachable_nodes(node, "<>")
-        return district

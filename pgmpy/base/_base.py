@@ -1288,6 +1288,44 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
                 queue.extend(self.get_neighbors(current, edge_types))
         return reachable
 
+    def get_district(self, nodes: Hashable | Iterable[Hashable]) -> set[Hashable]:
+        """
+        Returns the district of `nodes`: the maximal set of nodes connected to them through
+        bidirected (``"<>"``) edges, including the input node(s) themselves.
+
+        The district -- a *c-component* / confounded component -- groups variables that share latent
+        confounding, directly or transitively through a chain of bidirected edges. A node with no
+        bidirected edges (e.g. in a DAG or PDAG) is its own district.
+
+        Parameters
+        ----------
+        nodes : Hashable or iterable of Hashable
+            A single node, or a list/set of nodes; districts are unioned over the collection. A
+            ``str``, ``int`` or ``tuple`` is one node; a list, set or frozenset is a collection.
+
+        Returns
+        -------
+        nodes : set
+            All nodes in the same bidirected-connected component(s) as `nodes`, including `nodes`.
+
+        See Also
+        --------
+        get_spouses : Nodes joined to a node by a single bidirected edge.
+        get_reachable_nodes : Nodes reachable from a node via a given edge type.
+
+        Examples
+        --------
+        >>> from pgmpy.base import ADMG
+        >>> admg = ADMG(edge_list=[("X", "Y", "->"), ("X", "Z", "<>")])
+        >>> sorted(admg.get_district("X"))
+        ['X', 'Z']
+        >>> admg.get_district("Y")
+        {'Y'}
+
+        """
+        nodes = list(nodes) if isinstance(nodes, (list, set, frozenset)) else [nodes]
+        return set().union(*(self.get_reachable_nodes(node=n, edge_types="<>") for n in nodes))
+
     def to_adjacency(self, encoding: str = "edge_type", nodelist=None) -> pd.DataFrame:
         """
         Return the adjacency matrix of the graph as a ``pandas.DataFrame``.

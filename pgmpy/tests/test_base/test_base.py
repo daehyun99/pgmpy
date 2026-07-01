@@ -788,6 +788,21 @@ class TestCoreGraph:
         no_edges.add_nodes_from(["A", "B"])
         assert no_edges.get_reachable_nodes("A", "->") == {"A"}
         check_graph_status(no_edges, 2, 0, set(), set(), set(), {})
+
+    def test_get_district(self):
+        """`get_district`: the bidirected-connected component, available on the `_CoreGraph` base."""
+        g = _CoreGraph(edge_list=[("A", "B", "->"), ("A", "C", "<>"), ("C", "D", "<>"), ("E", "F", "->")])
+        # transitive closure over bidirected edges, including the node itself
+        assert g.get_district("A") == {"A", "C", "D"}
+        assert g.get_district("E") == {"E"}  # no bidirected edge -> just the node
+        # union over a collection; a list/set is a collection, str/int/tuple is a single node
+        assert g.get_district(["A", "F"]) == {"A", "C", "D", "F"}
+        # non-string single node is treated as one node (matches the other relation accessors)
+        gi = _CoreGraph(edge_list=[(1, 2, "<>"), (2, 3, "<>")])
+        assert gi.get_district(1) == {1, 2, 3}
+        # missing node raises ValueError, like the other accessors
+        with pytest.raises(ValueError, match="not in graph"):
+            g.get_district("Z")
         with pytest.raises(TypeError):
             _CoreGraph().get_reachable_nodes()
         with pytest.raises(ValueError):
