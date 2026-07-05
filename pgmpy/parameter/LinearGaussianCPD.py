@@ -7,7 +7,7 @@ class LinearGaussianCPD(BaseParameter):
     """LinearGaussianCPD"""
 
     _tags = {
-        "variable_type": "continues",
+        "variable_type": "continous",
         "produces_factor": False,
         "is_linear_gaussian": True,
         "missing": False,
