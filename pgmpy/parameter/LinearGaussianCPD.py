@@ -7,7 +7,7 @@ class LinearGaussianCPD(BaseParameter):
     """LinearGaussianCPD"""
 
     _tags = {
-        "variable_type": "continous",
+        "variable_type": "continuous",
         "produces_factor": False,
         "is_linear_gaussian": True,
         "missing": False,
@@ -16,7 +16,7 @@ class LinearGaussianCPD(BaseParameter):
         "python_dependencies": (),
     }
 
-    def __init__(self): ...
+    def __init__(self, estimator="mle"): ...
 
     def _fit(self, X, y=None, sample_weight=None): ...
 

@@ -53,7 +53,7 @@ class TestLinearGaussianCPD:
         parameter = LinearGaussianCPD()
 
         assert parameter.__class__.__name__ == "LinearGaussianCPD"
-        assert parameter.get_class_tag("variable_type") == "continous"
+        assert parameter.get_class_tag("variable_type") == "continuous"
         assert parameter.get_class_tag("produces_factor") is False
         assert parameter.get_class_tag("missing") is False
         assert parameter.get_class_tag("is_linear_gaussian") is True
@@ -63,7 +63,7 @@ class TestLinearGaussianCPD:
     def test_fit(self, continue_data):
         # Case 1-1: root node with MLE case
         _, y = continue_data
-        parameter = LinearGaussianCPD()
+        parameter = LinearGaussianCPD(estimator="mle")
         parameter.fit(y)
 
         assert np.isclose(y["y"].mean(), parameter.beta_)
@@ -71,7 +71,7 @@ class TestLinearGaussianCPD:
 
         # Case 1-2: root node with Unbias case
         _, y = continue_data
-        parameter = LinearGaussianCPD()
+        parameter = LinearGaussianCPD(estimator="unbias")
         parameter.fit(y)
 
         assert np.isclose(y["y"].mean(), parameter.beta_)
@@ -80,7 +80,7 @@ class TestLinearGaussianCPD:
         # Case 2-1: root node with MLE, sample_weight case
         _, y = continue_data
         # sample_weight =
-        parameter = LinearGaussianCPD()
+        parameter = LinearGaussianCPD(estimator="mle")
         parameter.fit(y, sample_weight=sample_weight)
 
         s = y["y"].to_numpy()
@@ -95,33 +95,32 @@ class TestLinearGaussianCPD:
         # Case 2-2: root node with Unbias, sample_weight case
         _, y = continue_data
         # sample_weight =
-        parameter = LinearGaussianCPD()
+        parameter = LinearGaussianCPD(estimator="unbias")
         parameter.fit(y, sample_weight=sample_weight)
 
         # Case 3-1: not root node with MLE case
         X, y = continue_data
-        parameter = LinearGaussianCPD()
+        parameter = LinearGaussianCPD(estimator="mle")
 
         parameter.fit(X, y)
 
         # Case 3-2: not root node with Unbias case
         _, y = continue_data
-        parameter = LinearGaussianCPD()
+        parameter = LinearGaussianCPD(estimator="unbias")
 
         parameter.fit(X, y)
-
 
         # Case 4-1: not root node with MLE, sample_weight case
         _, y = continue_data
         # sample_weight =
-        parameter = LinearGaussianCPD()
+        parameter = LinearGaussianCPD(estimator="mle")
 
         parameter.fit(X, y, sample_weight)
 
         # Case 4-2: not root node with Unbias, sample_weight case
         _, y = continue_data
         # sample_weight =
-        parameter = LinearGaussianCPD()
+        parameter = LinearGaussianCPD(estimator="unbias")
 
         parameter.fit(X, y, sample_weight)
 
