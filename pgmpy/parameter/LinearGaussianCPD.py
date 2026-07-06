@@ -16,9 +16,16 @@ class LinearGaussianCPD(BaseParameter):
         "python_dependencies": (),
     }
 
-    def __init__(self, estimator="mle"): ...
+    def __init__(self, estimator="mle"):
+        self.estimator = estimator
 
-    def _fit(self, X, y=None, sample_weight=None): ...
+    def _fit(self, X, y=None, sample_weight=None):
+        if y is None:
+            # Unsupervised Learning
+            if sample_weight is None:
+                ddof = 0 if self.estimator == "mle" else 1
+                self.beta_ = [X.mean()]
+                self.std_ = X.std(ddof=ddof)
 
     def _predict_proba(self, X):
         ...
