@@ -90,19 +90,8 @@ class BaseParameter(_BaseEstimator):
                 raise ValueError(f"{self.__class__.__name__} cannot deal with missing values.")
 
         if y is None:
-            # Unsupervised Learning
-            if not self.get_tag("can_be_root"):
-                raise ValueError(f"{self.__class__.__name__} cannot be fitted as a root node.")
-
-            if X.shape[1] != 1:
-                raise ValueError(
-                    f"For unsupervised/root-node fitting, X must contain exactly one column. Got {X.shape[1]} columns."
-                )
-
             n_samples = len(X)
-
         else:
-            # Supervised learning
             if isinstance(y, pd.Series):
                 y = y.to_frame()
 
@@ -115,7 +104,7 @@ class BaseParameter(_BaseEstimator):
             if y.shape[1] == 0:
                 raise ValueError("y must have at least one column.")
 
-            if not self.get_tag("missing"):
+            if self.get_tag("missing") is not True:
                 if y.isna().any().any():
                     raise ValueError(f"{self.__class__.__name__} cannot deal with missing values.")
 

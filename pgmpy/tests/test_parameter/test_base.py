@@ -116,25 +116,6 @@ class TestBaseParameter:
         assert out_y is None
         np.testing.assert_array_equal(out_weight, np.ones(3))
 
-        # Case 8: root fitting can be disabled
-        parameter = make_parameter(can_be_root=False)
-        X = pd.DataFrame({"x": [1.0, 2.0, 3.0]})
-
-        with pytest.raises(ValueError, match="cannot be fitted as a root node"):
-            parameter._check_data(X)
-
-        # Case 9: root fitting requires one X column
-        parameter = make_parameter()
-        X = pd.DataFrame(
-            {
-                "x1": [1.0, 2.0, 3.0],
-                "x2": [4.0, 5.0, 6.0],
-            }
-        )
-
-        with pytest.raises(ValueError, match="X must contain exactly"):
-            parameter._check_data(X)
-
         # Case 10: valid supervised data
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
