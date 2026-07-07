@@ -21,7 +21,7 @@ class BaseParameter(_BaseEstimator):
 
     def fit(self, X, y=None, sample_weight=None):
         """API docs"""
-        self._check_data(X, y, sample_weight)
+        X, y, sample_weight = self._check_data(X, y, sample_weight)
         return self._fit(X, y, sample_weight)
 
     def _fit(self, X, y, sample_weight):
@@ -45,7 +45,7 @@ class BaseParameter(_BaseEstimator):
 
     def predict_proba(self, X):
         """API docs"""
-        self._check_data(X)
+        X, y, sample_weight = self._check_data(X)
         y_pred = self._predict_proba(X)
         return y_pred
 
