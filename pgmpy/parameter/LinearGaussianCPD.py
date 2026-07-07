@@ -23,23 +23,43 @@ class LinearGaussianCPD(BaseParameter):
 
     def _fit(self, X, y=None, sample_weight=None):
         if y is None:
+            x_arr = X.to_numpy(dtype=float).reshape(-1)
+            y_arr = None
+            if self.estimator == "mle":
+                ddof = 0
+            elif self.estimator == "unbias":
+                ddof = 1
+        else:
+            x_arr = X.to_numpy(dtype=float).reshape(-1)
+            y_arr = y.to_numpy(dtype=float).reshape(-1)
+            if self.estimator == "mle":
+                ddof = 0
+            elif self.estimator == "unbias":
+                ddof = 1 + X.shape[1]
+
+        if sample_weight is None:
+            w = np.ones(len(X), dtype=float)
+        else:
+            w = np.asarray(sample_weight, dtype=float).reshape(-1)
+
+        if y_arr is None:
             # Unsupervised Learning
-            if sample_weight is None:
-                ddof = 0 if self.estimator == "mle" else 1
-                self.beta_ = [X.mean()]
-                self.std_ = X.std(ddof=ddof)
+            w_mean = np.sum(w * x_arr) / np.sum(w)
+            w_var = np.sum(w * (x_arr - w_mean) ** 2) / (np.sum(w) - ddof)
+
+            self.beta_ = [w_mean]
+            self.std_ = np.sqrt(w_var)
         else:
             # Supervised Learning
-            lm = LinearRegression().fit(X, y)
-            residuals = y.to_numpy() - lm.predict(X)
-            ddof = 0 if self.estimator == "mle" else 1 + X.shape[1]
+            lm = LinearRegression().fit(X, y_arr, w)
+            residuals = y_arr - lm.predict(X).reshape(-1)
             self.beta_ = np.concatenate(
                 [
                     np.ravel(lm.intercept_),
                     np.ravel(lm.coef_),
                 ]
             )
-            self.std_ = np.sqrt(np.sum(residuals**2) / (len(residuals) - ddof))
+            self.std_ = np.sqrt(np.sum(w * residuals**2) / (np.sum(w) - ddof))
         return self
 
     def _predict_proba(self, X):
