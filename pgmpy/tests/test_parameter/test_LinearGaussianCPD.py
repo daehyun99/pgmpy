@@ -79,24 +79,29 @@ class TestLinearGaussianCPD:
 
         # Case 2-1: root node with MLE, sample_weight case
         _, y = continue_data
-        # sample_weight =
+        sample_weight = np.zeros(len(y), dtype=float)
+        sample_weight[:5] = 1.0
         parameter = LinearGaussianCPD(estimator="mle")
         parameter.fit(y, sample_weight=sample_weight)
 
-        s = y["y"].to_numpy()
-        w = np.asarray(sample_weight, dtype=float)
-
-        expected_mean = np.sum(w * s) / np.sum(w)
-        expected_std = np.sqrt(np.sum(w * (s - expected_mean) ** 2) / np.sum(w))
-
-        assert np.isclose(parameter.beta_[0], expected_mean)
-        assert np.isclose(parameter.std_, expected_std)
+        y_arr = y["y"].to_numpy(dtype=float)
+        expected_mean = np.sum(sample_weight * y_arr) / np.sum(sample_weight)
+        expected_std = np.sqrt(np.sum(sample_weight * (y_arr - expected_mean) ** 2) / np.sum(sample_weight))
+        assert np.isclose(expected_mean, y_arr[:5].mean())
+        assert np.isclose(expected_std, y_arr[:5].std(ddof=0))
 
         # Case 2-2: root node with Unbias, sample_weight case
         _, y = continue_data
-        # sample_weight =
+        sample_weight = np.zeros(len(y), dtype=float)
+        sample_weight[:5] = 1.0
         parameter = LinearGaussianCPD(estimator="unbias")
         parameter.fit(y, sample_weight=sample_weight)
+
+        expected_mean = np.sum(sample_weight * y_arr) / np.sum(sample_weight)
+        expected_std = np.sqrt(np.sum(sample_weight * (y_arr - expected_mean) ** 2) / (np.sum(sample_weight) - 1))
+
+        assert np.isclose(np.ravel(parameter.beta_)[0], expected_mean)
+        assert np.isclose(np.ravel(parameter.std_)[0], expected_std)
 
         # Case 3-1: not root node with MLE case
         X, y = continue_data
@@ -128,17 +133,59 @@ class TestLinearGaussianCPD:
 
         # Case 4-1: not root node with MLE, sample_weight case
         _, y = continue_data
-        # sample_weight =
+        sample_weight = np.zeros(len(y), dtype=float)
+        sample_weight[:5] = 1.0
         parameter = LinearGaussianCPD(estimator="mle")
 
         parameter.fit(X, y, sample_weight)
 
+        expected_lm = LinearRegression().fit(
+            X,
+            y_arr,
+            sample_weight=sample_weight,
+        )
+
+        expected_beta = np.concatenate(
+            [
+                np.ravel(expected_lm.intercept_),
+                np.ravel(expected_lm.coef_),
+            ]
+        )
+
+        residuals = y_arr - expected_lm.predict(X)
+        expected_std = np.sqrt(np.sum(sample_weight * residuals**2) / np.sum(sample_weight))
+
+        np.testing.assert_allclose(parameter.beta_, expected_beta)
+        assert np.isclose(parameter.std_, expected_std)
+
         # Case 4-2: not root node with Unbias, sample_weight case
-        _, y = continue_data
-        # sample_weight =
+        X, y = continue_data
+        y_arr = y.to_numpy(dtype=float).reshape(-1)
+        sample_weight = np.zeros(len(y), dtype=float)
+        sample_weight[:5] = 1.0
         parameter = LinearGaussianCPD(estimator="unbias")
 
         parameter.fit(X, y, sample_weight)
+
+        expected_lm = LinearRegression().fit(
+            X,
+            y_arr,
+            sample_weight=sample_weight,
+        )
+
+        expected_beta = np.concatenate(
+            [
+                np.ravel(expected_lm.intercept_),
+                np.ravel(expected_lm.coef_),
+            ]
+        )
+
+        residuals = y_arr - expected_lm.predict(X).reshape(-1)
+
+        expected_std = np.sqrt(np.sum(sample_weight * residuals**2) / (np.sum(sample_weight) - (1 + X.shape[1])))
+
+        np.testing.assert_allclose(parameter.beta_, expected_beta)
+        assert np.isclose(parameter.std_, expected_std)
 
         # Case 5: root node with Bayesian estimate case
         # Case 6: root node with Bayesian estimate, sample_weight case
