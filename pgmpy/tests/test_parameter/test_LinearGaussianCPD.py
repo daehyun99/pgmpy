@@ -100,9 +100,25 @@ class TestLinearGaussianCPD:
 
         # Case 3-1: not root node with MLE case
         X, y = continue_data
-        parameter = LinearGaussianCPD(estimator="mle")
+        from sklearn.linear_model import LinearRegression
 
+        lm = LinearRegression().fit(X, y)
+        y_pred = lm.predict(X)
+        residuals = y.to_numpy() - y_pred
+        ddof = 0  # MLE
+        expected_beta = np.concatenate(
+            [
+                np.ravel(lm.intercept_),
+                np.ravel(lm.coef_),
+            ]
+        )
+        expected_std = np.sqrt(np.sum(residuals**2) / (len(residuals) - ddof))
+
+        parameter = LinearGaussianCPD(estimator="mle")
         parameter.fit(X, y)
+
+        assert np.allclose(parameter.beta_, expected_beta)
+        assert np.isclose(parameter.std_, expected_std)
 
         # Case 3-2: not root node with Unbias case
         _, y = continue_data
