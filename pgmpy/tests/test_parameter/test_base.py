@@ -51,11 +51,10 @@ class TestBaseParameter:
                 }
 
                 def __init__(self, missing=False, can_be_root=True):
-                    self._tags["missing"] = missing
-                    self._tags["can_be_root"] = can_be_root
                     super().__init__()
+                    self.set_tags(missing=missing, can_be_root=can_be_root)
 
-            parameter = TempParameter(missing, can_be_root)  # TODO: replace with your actual class
+            parameter = TempParameter(missing, can_be_root)
             return parameter
 
         # Case 1: valid unsupervised data

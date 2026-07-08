@@ -22,7 +22,9 @@ class BaseParameter(_BaseEstimator):
     def fit(self, X, y=None, sample_weight=None):
         """API docs"""
         X, y, sample_weight = self._check_data(X, y, sample_weight)
-        return self._fit(X, y, sample_weight)
+        self._fit(X, y, sample_weight)
+        self._is_fitted = True
+        return self
 
     def _fit(self, X, y, sample_weight):
         """Fit parameter to training data.
@@ -49,7 +51,7 @@ class BaseParameter(_BaseEstimator):
             raise RuntimeError(
                 f"This {self.__class__.__name__} instance is not fitted yet. Call 'fit' before calling 'predict_proba'."
             )
-        X, y, sample_weight = self._check_data(X)
+        X, _, _ = self._check_data(X)
         y_pred = self._predict_proba(X)
         return y_pred
 
