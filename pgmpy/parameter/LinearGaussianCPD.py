@@ -6,7 +6,71 @@ from pgmpy.parameter._base import BaseParameter
 
 
 class LinearGaussianCPD(BaseParameter):
-    """LinearGaussianCPD"""
+    """
+    Estimates a linear Gaussian conditional probability distribution.
+
+    When fit without a target, this estimator learns the marginal Gaussian
+    distribution of a root variable. When fit with a target, it learns a
+    conditional Gaussian distribution whose mean is a linear function of the
+    evidence variables.
+
+    Parameters
+    ----------
+    estimator: str, default="mle"
+        Estimation method used for the variance. If `"mle"`, maximum likelihood
+        estimation is used. If `"unbias"`, an unbiased variance estimate is
+        used.
+
+    evidences: list, optional
+        Ordered list of evidence variable names. If specified, regression
+        coefficients in `beta_` are stored in this order. If unspecified, the
+        evidence order is inferred from the columns of `X`.
+
+    Attributes
+    ----------
+    beta_ : numpy.ndarray or list
+        Learned parameters of the linear Gaussian distribution. For a root
+        variable, this contains only the learned mean. For a conditional
+        distribution, the first value is the intercept and the remaining values
+        are regression coefficients ordered by `evidences_`. Populated by `fit`.
+
+    std_ : float
+        Learned standard deviation of the root variable or of the regression
+        residuals. Populated by `fit`.
+
+    evidences_ : list or None
+        Ordered list of evidence variables used during fitting and prediction.
+        Set to `None` for root-variable distributions. Populated by `fit`.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from pgmpy.parameter.LinearGaussianCPD import LinearGaussianCPD
+    >>> rng = np.random.default_rng(seed=42)
+    >>> n = 1000
+    >>> A = rng.normal(size=n)
+    >>> B = rng.normal(size=n)
+    >>> C = rng.normal(size=n)
+    >>> mean_y = 1 + 2 * A + 5 * B + 7 * C
+    >>> X = pd.DataFrame(
+    ...     {
+    ...         "A": A,
+    ...         "B": B,
+    ...         "C": C,
+    ...     }
+    ... )
+    >>> y = pd.DataFrame({"y": rng.normal(loc=mean_y, scale=3)})
+    >>> cpd = LinearGaussianCPD()
+    >>> cpd.fit(X, y)
+    LinearGaussianCPD()
+    >>> cpd.get_fitted_params()
+    {'beta': array([0.98772016, 2.0190682 , 4.94262391, 7.11229676]),
+     'std': np.float64(2.924631090988226),
+     'evidences': ['A', 'B', 'C']}
+    >>> dist = cpd.predict_proba(X[:5])
+
+    """
 
     _tags = {
         "variable_type": "continuous",
