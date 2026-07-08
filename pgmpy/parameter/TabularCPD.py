@@ -35,7 +35,6 @@ class TabularCPD(BaseParameter):
         self.prior_type = prior_type
         self.equivalent_sample_size = equivalent_sample_size
         self.pseudo_counts = pseudo_counts
-        self._is_fitted = False
         super().__init__()
 
     def _fit(self, X, y=None, sample_weight=None):
@@ -76,22 +75,15 @@ class TabularCPD(BaseParameter):
 
         if y is None:
             # Unsupervised Learning: Root node
-            if sample_weight is None:
-                counts = X.groupby(
-                    list(X.columns),
-                    observed=True,
-                    sort=True,
-                ).size()
-            else:
-                weights = pd.Series(
-                    np.asarray(sample_weight),
-                    index=X.index,
-                )
-                counts = weights.groupby(
-                    [X[column] for column in list(X.columns)],
-                    observed=True,
-                    sort=True,
-                ).sum()
+            weights = pd.Series(
+                np.asarray(sample_weight),
+                index=X.index,
+            )
+            counts = weights.groupby(
+                [X[column] for column in list(X.columns)],
+                observed=True,
+                sort=True,
+            ).sum()
 
             counts = counts.reindex(
                 self.categories_[X.columns[0]],
@@ -107,25 +99,17 @@ class TabularCPD(BaseParameter):
 
             evidence_names = list(X.columns)
 
-            if sample_weight is None:
-                counts = df.groupby(
-                    [y.columns[0], *evidence_names],
-                    observed=True,
-                    sort=True,
-                    dropna=False,
-                ).size()
-            else:
-                weights = pd.Series(
-                    sample_weight,
-                    index=df.index,
-                )
+            weights = pd.Series(
+                sample_weight,
+                index=df.index,
+            )
 
-                counts = weights.groupby(
-                    [df[column] for column in [y.columns[0], *evidence_names]],
-                    observed=True,
-                    sort=True,
-                    dropna=False,
-                ).sum()
+            counts = weights.groupby(
+                [df[column] for column in [y.columns[0], *evidence_names]],
+                observed=True,
+                sort=True,
+                dropna=False,
+            ).sum()
 
             counts = (
                 counts.unstack(
@@ -151,10 +135,6 @@ class TabularCPD(BaseParameter):
         return self
 
     def _predict_proba(self, X):
-
-        if not self._is_fitted:
-            raise RuntimeError("This TabularCPD instance is not fitted yet. Call 'fit' before calling 'predict_proba'.")
-
         if self.evidences_ is None:
             # Unsupervised Learning
             probabilities = np.repeat(
