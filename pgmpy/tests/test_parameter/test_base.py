@@ -34,7 +34,7 @@ class TestBaseParameter:
         X = pd.DataFrame(X_arr[:, 0].reshape(-1, 1), columns=["x"])
         parameter = BaseParameter()
 
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(RuntimeError):
             parameter.predict_proba(X)
 
     def test_check_data(self):
