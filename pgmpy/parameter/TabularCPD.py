@@ -161,21 +161,10 @@ class TabularCPD(BaseParameter):
             columns=self.columns_,
         )  # (len(X), variable_card)
 
-    def set_values(self, CPT, columns, categories, evidences, is_fitted):
+    def set_fitted_params(self, CPT, columns, categories, evidences, is_fitted):
         self.CPT_ = CPT
         self.columns_ = columns
         self.categories_ = categories
         self.evidences_ = evidences
         self._is_fitted = is_fitted
         return self
-
-    def get_values(self):
-        attributes = {
-            "CPT": "CPT_",
-            "columns": "columns_",
-            "categories": "categories_",
-            "evidences": "evidences_",
-            "is_fitted": "_is_fitted",
-        }
-
-        return {key: getattr(self, attr_name) for key, attr_name in attributes.items() if hasattr(self, attr_name)}
