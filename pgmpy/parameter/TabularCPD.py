@@ -7,7 +7,65 @@ from pgmpy.parameter._base import BaseParameter
 
 
 class TabularCPD(BaseParameter):
-    """TabularCPD"""
+    """
+    Estimates a tabular conditional probability distribution for discrete variables.
+
+    When fit without a target, this estimator learns the marginal distribution of
+    a root variable. When fit with a target, it learns the conditional probability
+    table of the target variable given the evidence variables.
+
+    Parameters
+    ----------
+    categories: dict, optional
+        Mapping from variable name to the discrete states that the variable can
+        take. If unspecified, categories are inferred from the data passed to
+        `fit`.
+
+    evidences: dict, optional
+        Mapping from evidence variable name to the discrete states that the
+        evidence variable can take. If unspecified, evidence states are inferred
+        from `X` when fitting a conditional distribution.
+
+    Attributes
+    ----------
+    CPT_ : numpy.ndarray
+        Learned conditional probability table. For a root variable, the table
+        contains marginal probabilities. For a conditional distribution, rows
+        correspond to target states and columns correspond to evidence-state
+        configurations.
+
+    columns_ : list
+        Name of the variable whose distribution is represented by the learned
+        table. Populated by `fit`.
+
+    categories_ : dict
+        Mapping from the target variable name to its learned or supplied states.
+        Populated by `fit`.
+
+    evidences_ : dict or None
+        Mapping from evidence variable names to their learned or supplied states.
+        Set to `None` for root-variable distributions. Populated by `fit`.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from pgmpy.parameter.TabularCPD import TabularCPD
+    >>> rng = np.random.default_rng(seed=42)
+    >>> n_samples = 100
+    >>> X = pd.DataFrame(
+    ...     {
+    ...         "x1": rng.integers(0, 3, size=n_samples),
+    ...         "x2": rng.integers(0, 2, size=n_samples),
+    ...     }
+    ... )
+    >>> y = pd.DataFrame({"y": rng.integers(0, 2, size=n_samples)})
+    >>> cpd = TabularCPD()
+    >>> cpd.fit(X, y)
+    TabularCPD()
+    >>> dist = cpd.predict_proba(X[:5])
+
+    """
 
     _tags = {
         "variable_type": "discrete",
@@ -20,21 +78,11 @@ class TabularCPD(BaseParameter):
 
     def __init__(
         self,
-        # variable_card=None,
-        # evidence_card=None,
         categories=None,
         evidences=None,
-        prior_type=None,
-        equivalent_sample_size=None,
-        pseudo_counts=None,
     ):
-        # self.variable_card = variable_card
-        # self.evidence_card = evidence_card
         self.categories = categories
         self.evidences = evidences
-        self.prior_type = prior_type
-        self.equivalent_sample_size = equivalent_sample_size
-        self.pseudo_counts = pseudo_counts
         super().__init__()
 
     def _fit(self, X, y=None, sample_weight=None):

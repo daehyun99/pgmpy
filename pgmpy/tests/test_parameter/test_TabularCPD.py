@@ -96,20 +96,6 @@ def discrete_data():
     +---------+-----------+-----------+-----------+-----------+-----------+-----------+
     | y = 1   |    0.5    |    0.5    |    0.5    |    0.5    |    0.5    |    0.5    |
     +---------+-----------+-----------+-----------+-----------+-----------+-----------+
-
-    # Case 5: root node with Bayesian estimate case
-    ...
-
-    # Case 6: root node with Bayesian estimate, sample_weight case
-    ...
-
-    # Case 7: not root node with Bayesian estimate case
-    ...
-
-    # Case 8: not root node with Bayesian estimate, sample_weight case
-    ...
-
-
     """
     rng = np.random.default_rng(seed=42)
     n_samples = 100
@@ -285,18 +271,6 @@ class TestTabularCPD:
         )
         np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
         assert parameter.columns_ == ["y"]
-
-        # Case 5: root node with Bayesian estimate case
-        ...
-
-        # Case 6: root node with Bayesian estimate, sample_weight case
-        ...
-
-        # Case 7: not root node with Bayesian estimate case
-        ...
-
-        # Case 8: not root node with Bayesian estimate, sample_weight case
-        ...
 
     def test_predict_proba(self, discrete_data):
         X, y = discrete_data
