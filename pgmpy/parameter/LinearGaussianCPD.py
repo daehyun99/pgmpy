@@ -18,24 +18,29 @@ class LinearGaussianCPD(BaseParameter):
         "python_dependencies": (),
     }
 
-    def __init__(self, estimator="mle"):
+    def __init__(self, estimator="mle", evidences=None):
         self.estimator = estimator
+        self.evidences = evidences
 
     def _fit(self, X, y=None, sample_weight=None):
         if y is None:
             x_arr = X.to_numpy(dtype=float).reshape(-1)
             y_arr = None
+            self.evidences_ = None
             if self.estimator == "mle":
                 ddof = 0
             elif self.estimator == "unbias":
                 ddof = 1
         else:
-            x_arr = X.to_numpy(dtype=float).reshape(-1)
             y_arr = y.to_numpy(dtype=float).reshape(-1)
+            if self.evidences is not None:
+                self.evidences_ = list(self.evidences)
+            else:
+                self.evidences_ = list(X.columns)
             if self.estimator == "mle":
                 ddof = 0
             elif self.estimator == "unbias":
-                ddof = 1 + X.shape[1]
+                ddof = 1 + len(self.evidences_)
 
         if y_arr is None:
             # Unsupervised Learning
@@ -46,8 +51,10 @@ class LinearGaussianCPD(BaseParameter):
             self.std_ = np.sqrt(w_var)
         else:
             # Supervised Learning
-            lm = LinearRegression().fit(X, y_arr, sample_weight)
-            residuals = y_arr - lm.predict(X).reshape(-1)
+            X_fit = X.loc[:, self.evidences_]
+
+            lm = LinearRegression().fit(X_fit, y_arr, sample_weight)
+            residuals = y_arr - lm.predict(X_fit).reshape(-1)
             self.beta_ = np.concatenate(
                 [
                     np.ravel(lm.intercept_),
@@ -55,6 +62,7 @@ class LinearGaussianCPD(BaseParameter):
                 ]
             )
             self.std_ = np.sqrt(np.sum(sample_weight * residuals**2) / (np.sum(sample_weight) - ddof))
+
         return self
 
     def _predict_proba(self, X):
@@ -67,12 +75,13 @@ class LinearGaussianCPD(BaseParameter):
             # Supervised
             intercept = self.beta_[0]
             coef = self.beta_[1:]
-            mu = intercept + X.to_numpy() @ coef
+            mu = intercept + X.loc[:, self.evidences_].to_numpy() @ coef
             mu = np.asarray(mu, dtype=float).reshape(-1, 1)
         return Normal(mu=mu, sigma=self.std_, index=X.index)
 
-    def set_fitted_params(self, beta, std, is_fitted):
+    def set_fitted_params(self, beta, std, evidences, is_fitted):
         self.beta_ = beta
         self.std_ = std
+        self.evidences_ = evidences
         self._is_fitted = is_fitted
         return self
