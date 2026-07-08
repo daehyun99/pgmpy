@@ -334,7 +334,7 @@ class TestTabularCPD:
         )
 
         np.testing.assert_array_equal(dist.probs[:5], expected_probs)
-        assert dist.__class__.__name__ == "CategoricalDistribution"
+        assert dist.__class__.__name__ == "NominalDistribution"
         assert list(dist.categories) == [0, 1]
         assert list(dist.columns) == ["y"]
 
