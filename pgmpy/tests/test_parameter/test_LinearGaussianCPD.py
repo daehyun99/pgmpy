@@ -9,21 +9,6 @@ from pgmpy.parameter.LinearGaussianCPD import LinearGaussianCPD
 def continue_data():
     """
     # P( Y | A, B, C ) = N( 1 + 2A + 5B + 7C, 3 )
-    # MLE result
-
-    # Case 1-1: root node with MLE case
-    # Case 1-2: root node with Unbias case
-    # Case 2-1: root node with MLE, sample_weight case
-    # Case 2-1: root node with Unbias, sample_weight case
-    # Case 3-1: not root node with MLE case
-    # Case 3-2: not root node with Unbias case
-    # Case 4-1: not root node with MLE, sample_weight case
-    # Case 4-2: not root node with Unbias, sample_weight case
-    # Case 5: root node with Bayesian estimate case
-    # Case 6: root node with Bayesian estimate, sample_weight case
-    # Case 7: not root node with Bayesian estimate case
-    # Case 8: not root node with Bayesian estimate, sample_weight case
-
     """
     rng = np.random.default_rng(seed=42)
     n = 1000
@@ -187,12 +172,37 @@ class TestLinearGaussianCPD:
         np.testing.assert_allclose(parameter.beta_, expected_beta)
         assert np.isclose(parameter.std_, expected_std)
 
-        # Case 5: root node with Bayesian estimate case
-        # Case 6: root node with Bayesian estimate, sample_weight case
-        # Case 7: not root node with Bayesian estimate case
-        # Case 8: not root node with Bayesian estimate, sample_weight case
+        # Case 5: not root node with inferred evidences order
+        X, y = continue_data
+        parameter = LinearGaussianCPD(estimator="mle")
+
+        parameter.fit(X, y)
+
+        assert parameter.evidences_ == list(X.columns)
+
+        # Case 6: not root node with specified evidences order
+        X, y = continue_data
+        evidences = ["C", "A", "B"]
+        X_evidence = X.loc[:, evidences]
+        y_arr = y.to_numpy(dtype=float).reshape(-1)
+
+        expected_lm = LinearRegression().fit(X_evidence, y_arr)
+        expected_beta = np.concatenate(
+            [
+                np.ravel(expected_lm.intercept_),
+                np.ravel(expected_lm.coef_),
+            ]
+        )
+
+        parameter = LinearGaussianCPD(estimator="mle", evidences=evidences)
+
+        parameter.fit(X, y)
+
+        assert parameter.evidences_ == evidences
+        np.testing.assert_allclose(parameter.beta_, expected_beta)
 
     def test_predict_proba(self, continue_data):
+        # Case 1: default
         X, y = continue_data
         parameter = LinearGaussianCPD()
 
@@ -209,6 +219,24 @@ class TestLinearGaussianCPD:
         np.testing.assert_allclose(pred_mu, expected_mu.to_numpy(), atol=0.5)
         np.testing.assert_allclose(parameter.beta_, np.array([1, 2, 5, 7]), atol=0.3)
         assert np.isclose(parameter.std_, 3, atol=0.3)
+
+        # Case 2: evidences
+        evidences = ["C", "A", "B"]
+        parameter = LinearGaussianCPD(evidences=evidences)
+
+        parameter.fit(X, y)
+
+        shuffled_X = X.loc[:, ["B", "C", "A"]]
+        pred = parameter.predict_proba(shuffled_X)
+
+        assert isinstance(pred, Normal)
+        assert pred.index.equals(shuffled_X.index)
+        assert parameter.evidences_ == evidences
+
+        expected_mu = parameter.beta_[0] + X.loc[:, evidences].to_numpy() @ parameter.beta_[1:]
+        pred_mu = np.asarray(pred.mean()).reshape(-1)
+
+        np.testing.assert_allclose(pred_mu, expected_mu)
 
     def test_set_fitted_params(self):
         parameter = LinearGaussianCPD()
