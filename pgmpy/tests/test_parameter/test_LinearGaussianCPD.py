@@ -242,13 +242,20 @@ class TestLinearGaussianCPD:
         parameter = LinearGaussianCPD()
 
         assert hasattr(parameter, "beta_") is False
+        assert hasattr(parameter, "std_") is False
+        assert hasattr(parameter, "evidences_") is False
+        assert parameter.evidences is None
+        assert parameter.is_fitted is False
         beta = np.array([0, 1, 2])
         std = np.array(3)
+        evidences = ["A", "B"]
         parameter.set_fitted_params(
             beta=beta,
             std=std,
+            evidences=evidences,
             is_fitted=True,
         )
         assert hasattr(parameter, "beta_")
         assert hasattr(parameter, "std_")
+        assert hasattr(parameter, "evidences")
         assert parameter.is_fitted is True

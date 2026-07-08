@@ -26,16 +26,21 @@ class LinearGaussianCPD(BaseParameter):
         if y is None:
             x_arr = X.to_numpy(dtype=float).reshape(-1)
             y_arr = None
+            self.evidences_ = None
             if self.estimator == "mle":
                 ddof = 0
             elif self.estimator == "unbias":
                 ddof = 1
         else:
             y_arr = y.to_numpy(dtype=float).reshape(-1)
+            if self.evidences is not None:
+                self.evidences_ = list(self.evidences)
+            else:
+                self.evidences_ = list(X.columns)
             if self.estimator == "mle":
                 ddof = 0
             elif self.estimator == "unbias":
-                ddof = 1 + X.shape[1]
+                ddof = 1 + len(self.evidences_)
 
         if y_arr is None:
             # Unsupervised Learning
@@ -44,14 +49,8 @@ class LinearGaussianCPD(BaseParameter):
 
             self.beta_ = [w_mean]
             self.std_ = np.sqrt(w_var)
-            self.evidences_ = None
         else:
             # Supervised Learning
-            if self.evidences is not None:
-                self.evidences_ = list(self.evidences)
-            else:
-                self.evidences_ = list(X.columns)
-
             X_fit = X.loc[:, self.evidences_]
 
             lm = LinearRegression().fit(X_fit, y_arr, sample_weight)
@@ -80,8 +79,9 @@ class LinearGaussianCPD(BaseParameter):
             mu = np.asarray(mu, dtype=float).reshape(-1, 1)
         return Normal(mu=mu, sigma=self.std_, index=X.index)
 
-    def set_fitted_params(self, beta, std, is_fitted):
+    def set_fitted_params(self, beta, std, evidences, is_fitted):
         self.beta_ = beta
         self.std_ = std
+        self.evidences_ = evidences
         self._is_fitted = is_fitted
         return self
