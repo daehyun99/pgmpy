@@ -72,7 +72,7 @@ class BaseParameter(_BaseEstimator):
 
     def _check_data(self, X, y=None, sample_weight=None):
         """check train data with tag"""
-        # Common checks
+        # Check X
         if isinstance(X, pd.Series):
             X = X.to_frame()
 
@@ -92,6 +92,7 @@ class BaseParameter(_BaseEstimator):
         if y is None:
             n_samples = len(X)
         else:
+            # Check y
             if isinstance(y, pd.Series):
                 y = y.to_frame()
 
@@ -119,10 +120,9 @@ class BaseParameter(_BaseEstimator):
 
             n_samples = len(y)
 
-        # sample_weight
+        # Check sample_weight
         if sample_weight is None:
             sample_weight = np.ones(n_samples, dtype=float)
-
         else:
             sample_weight = np.asarray(sample_weight, dtype=float).reshape(-1)
 

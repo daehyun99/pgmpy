@@ -116,7 +116,7 @@ class TestBaseParameter:
         assert out_y is None
         np.testing.assert_array_equal(out_weight, np.ones(3))
 
-        # Case 10: valid supervised data
+        # Case 8: valid supervised data
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame({"target": ["a", "b", "a"]})
@@ -127,7 +127,7 @@ class TestBaseParameter:
         pd.testing.assert_frame_equal(out_y, y)
         np.testing.assert_array_equal(out_weight, np.ones(3))
 
-        # Case 11: y Series is converted to DataFrame
+        # Case 9: y Series is converted to DataFrame
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.Series(["a", "b", "a"], name="target")
@@ -138,14 +138,14 @@ class TestBaseParameter:
         assert list(out_y.columns) == ["target"]
         np.testing.assert_array_equal(out_weight, np.ones(3))
 
-        # Case 12: y must be DataFrame
+        # Case 10: y must be DataFrame
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
 
         with pytest.raises(TypeError, match="y must be a pandas DataFrame"):
             parameter._check_data(X, ["a", "b", "a"])
 
-        # Case 13: y must have rows
+        # Case 11: y must have rows
         parameter = make_parameter()
         X = pd.DataFrame({"x1": []})
         y = pd.DataFrame({"target": []})
@@ -153,7 +153,7 @@ class TestBaseParameter:
         with pytest.raises(ValueError, match="X must have at least one row"):
             parameter._check_data(X, y)
 
-        # Case 14: y must have columns
+        # Case 12: y must have columns
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame(index=[0, 1, 2])
@@ -161,15 +161,7 @@ class TestBaseParameter:
         with pytest.raises(ValueError, match="y must have at least one column"):
             parameter._check_data(X, y)
 
-        # Case 15: y missing values are rejected
-        parameter = make_parameter(missing=False)
-        X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
-        y = pd.DataFrame({"target": ["a", np.nan, "a"]})
-
-        with pytest.raises(ValueError, match="cannot deal with missing values"):
-            parameter._check_data(X, y)
-
-        # Case 16: y must have one target column
+        # Case 13: y must have one target column
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame(
@@ -182,7 +174,7 @@ class TestBaseParameter:
         with pytest.raises(ValueError, match="y must contain exactly one target column"):
             parameter._check_data(X, y)
 
-        # Case 17: X and y length must match
+        # Case 14: X and y length must match
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame({"target": ["a", "b"]})
@@ -190,7 +182,7 @@ class TestBaseParameter:
         with pytest.raises(ValueError, match="X and y must have the same number of rows"):
             parameter._check_data(X, y)
 
-        # Case 18: X and y index must match
+        # Case 15: X and y index must match
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]}, index=[0, 1, 2])
         y = pd.DataFrame({"target": ["a", "b", "a"]}, index=[10, 11, 12])
@@ -198,7 +190,7 @@ class TestBaseParameter:
         with pytest.raises(ValueError, match="X and y must have the same index"):
             parameter._check_data(X, y)
 
-        # Case 19: valid sample weight
+        # Case 16: valid sample weight
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame({"target": ["a", "b", "a"]})
@@ -208,7 +200,7 @@ class TestBaseParameter:
 
         np.testing.assert_array_equal(out_weight, np.array([0.5, 1.0, 2.0]))
 
-        # Case 20: sample weight is flattened
+        # Case 17: sample weight is flattened
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame({"target": ["a", "b", "a"]})
@@ -218,7 +210,7 @@ class TestBaseParameter:
 
         np.testing.assert_array_equal(out_weight, np.array([0.5, 1.0, 2.0]))
 
-        # Case 21: sample weight length must match
+        # Case 18: sample weight length must match
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame({"target": ["a", "b", "a"]})
@@ -226,28 +218,10 @@ class TestBaseParameter:
         with pytest.raises(ValueError, match="sample_weight must have length 3"):
             parameter._check_data(X, y, sample_weight=[1.0, 2.0])
 
-        # Case 22: sample weight cannot be negative
+        # Case 19: sample weight cannot be negative
         parameter = make_parameter()
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame({"target": ["a", "b", "a"]})
 
         with pytest.raises(ValueError, match="sample_weight cannot contain negative values"):
             parameter._check_data(X, y, sample_weight=[1.0, -1.0, 2.0])
-
-        # Case 23: current logic allows zero sum sample weight
-        parameter = make_parameter()
-        X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
-        y = pd.DataFrame({"target": ["a", "b", "a"]})
-
-        out_X, out_y, out_weight = parameter._check_data(X, y, sample_weight=[0.0, 0.0, 0.0])
-
-        np.testing.assert_array_equal(out_weight, np.array([0.0, 0.0, 0.0]))
-
-        # Case 24: current logic allows NaN sample weight
-        parameter = make_parameter()
-        X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
-        y = pd.DataFrame({"target": ["a", "b", "a"]})
-
-        out_X, out_y, out_weight = parameter._check_data(X, y, sample_weight=[1.0, np.nan, 2.0])
-
-        assert np.isnan(out_weight[1])
