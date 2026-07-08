@@ -192,7 +192,23 @@ class TestLinearGaussianCPD:
         # Case 7: not root node with Bayesian estimate case
         # Case 8: not root node with Bayesian estimate, sample_weight case
 
-    def test_predict_proba(self, continue_data): ...
+    def test_predict_proba(self, continue_data):
+        X, y = continue_data
+        parameter = LinearGaussianCPD()
+
+        parameter.fit(X, y)
+        pred = parameter.predict_proba(X)
+        from skpro.distributions.normal import Normal
+
+        assert isinstance(pred, Normal)
+        assert pred.index.equals(X.index)
+
+        expected_mu = 1 + 2 * X["A"] + 5 * X["B"] + 7 * X["C"]
+
+        pred_mu = np.asarray(pred.mean()).reshape(-1)
+        np.testing.assert_allclose(pred_mu, expected_mu.to_numpy(), atol=0.5)
+        np.testing.assert_allclose(parameter.beta_, np.array([1, 2, 5, 7]), atol=0.3)
+        assert np.isclose(parameter.std_, 3, atol=0.3)
 
     def test_set_fitted_params(self):
         parameter = LinearGaussianCPD()
