@@ -45,6 +45,10 @@ class BaseParameter(_BaseEstimator):
 
     def predict_proba(self, X):
         """API docs"""
+        if not self._is_fitted:
+            raise RuntimeError(
+                f"This {self.__class__.__name__} instance is not fitted yet. Call 'fit' before calling 'predict_proba'."
+            )
         X, y, sample_weight = self._check_data(X)
         y_pred = self._predict_proba(X)
         return y_pred
