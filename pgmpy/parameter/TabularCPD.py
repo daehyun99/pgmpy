@@ -76,7 +76,7 @@ class TabularCPD(BaseParameter):
         if y is None:
             # Unsupervised Learning: Root node
             weights = pd.Series(
-                np.asarray(sample_weight),
+                sample_weight,
                 index=X.index,
             )
             counts = weights.groupby(
@@ -130,8 +130,6 @@ class TabularCPD(BaseParameter):
             )
 
         self.CPT_ = np.asarray(self.CPT_)
-        self._is_fitted = True
-
         return self
 
     def _predict_proba(self, X):
