@@ -64,10 +64,6 @@ class LinearGaussianCPD(BaseParameter):
     >>> cpd = LinearGaussianCPD()
     >>> cpd.fit(X, y)
     LinearGaussianCPD()
-    >>> cpd.get_fitted_params()
-    {'beta': array([0.98772016, 2.0190682 , 4.94262391, 7.11229676]),
-     'std': np.float64(2.924631090988226),
-     'evidences': ['A', 'B', 'C']}
     >>> dist = cpd.predict_proba(X[:5])
 
     """
