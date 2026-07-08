@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelBinarizer, OneHotEncoder
 
-from pgmpy.distributions.categorical import CategoricalDistribution
+from pgmpy.distributions.nominal import NominalDistribution
 from pgmpy.parameter._base import BaseParameter
 
 
@@ -141,7 +141,7 @@ class TabularCPD(BaseParameter):
                 axis=0,
             )
 
-            return CategoricalDistribution(
+            return NominalDistribution(
                 probs=probabilities,
                 categories=self.categories_[self.columns_[0]],
                 columns=self.columns_,
@@ -155,7 +155,7 @@ class TabularCPD(BaseParameter):
         column_positions = cpt_column_index.get_indexer(row_evidence)
         probabilities = self.CPT_[:, column_positions].T
 
-        return CategoricalDistribution(
+        return NominalDistribution(
             probs=probabilities,
             categories=self.categories_[self.columns_[0]],
             columns=self.columns_,
