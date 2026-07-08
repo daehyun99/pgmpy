@@ -342,7 +342,7 @@ class TestTabularCPD:
             parameter = TabularCPD()
             parameter.predict_proba(X)
 
-    def test_set_values(self):
+    def test_set_fitted_params(self):
         parameter = TabularCPD()
 
         assert hasattr(parameter, "CPT_") is False
@@ -361,7 +361,7 @@ class TestTabularCPD:
         categories = ["P", "F"]
         evidences = {"x1": np.array([0, 1, 2]), "x2": np.array([0, 1])}
 
-        parameter.set_values(
+        parameter.set_fitted_params(
             CPT=CPT,
             columns=columns,
             categories=categories,
@@ -374,32 +374,3 @@ class TestTabularCPD:
         assert hasattr(parameter, "columns_")
         assert hasattr(parameter, "evidences_")
         assert parameter.is_fitted is True
-
-    def test_get_values(self):
-        parameter = TabularCPD()
-
-        CPT = np.array(
-            [
-                [0.2, 0.3],
-                [0.8, 0.7],
-            ]
-        )
-        columns = ["grade"]
-        categories = ["P", "F"]
-        evidences = {"x1": np.array([0, 1, 2]), "x2": np.array([0, 1])}
-
-        parameter.set_values(
-            CPT=CPT,
-            columns=columns,
-            categories=categories,
-            evidences=evidences,
-            is_fitted=True,
-        )
-
-        result = parameter.get_values()
-
-        np.testing.assert_array_equal(result["CPT"], CPT)
-        assert result["columns"] == columns
-        assert result["categories"] == categories
-        assert result["evidences"] == evidences
-        assert result["is_fitted"] == True
