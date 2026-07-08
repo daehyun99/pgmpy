@@ -194,4 +194,17 @@ class TestLinearGaussianCPD:
 
     def test_predict_proba(self, continue_data): ...
 
-    def test_set_values(self): ...
+    def test_set_fitted_params(self):
+        parameter = LinearGaussianCPD()
+
+        assert hasattr(parameter, "beta_") is False
+        beta = np.array([0, 1, 2])
+        std = np.array(3)
+        parameter.set_fitted_params(
+            beta=beta,
+            std=std,
+            is_fitted=True,
+        )
+        assert hasattr(parameter, "beta_")
+        assert hasattr(parameter, "std_")
+        assert parameter.is_fitted is True

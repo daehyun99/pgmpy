@@ -71,4 +71,8 @@ class LinearGaussianCPD(BaseParameter):
             mu = np.asarray(mu, dtype=float).reshape(-1, 1)
         return Normal(mu=mu, sigma=self.std_, index=X.index)
 
-    def set_values(self, beta, std, is_fitted): ...
+    def set_fitted_params(self, beta, std, is_fitted):
+        self.beta_ = beta
+        self.std_ = std
+        self._is_fitted = is_fitted
+        return self
