@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from skbase.utils.dependencies import _check_soft_dependencies
 from skpro.distributions.normal import Normal
 from skpro.regression.gam import GAMRegressor
 
@@ -59,6 +60,10 @@ def nonlinear_data():
 
 
 @pytest.fixture(scope="module")
+@pytest.mark.skipif(
+    not _check_soft_dependencies("pygam", severity="none"),
+    reason="execute only if required dependency present",
+)
 def fitted_parameter(nonlinear_data):
     X_train, y_train, _, _ = nonlinear_data
 
@@ -73,6 +78,10 @@ def fitted_parameter(nonlinear_data):
     return parameter
 
 
+@pytest.mark.skipif(
+    not _check_soft_dependencies("pygam", severity="none"),
+    reason="execute only if required dependency present",
+)
 class TestSkproAdapter:
     def test_base_parameter_metadata(self):
         estimator = GAMRegressor()
