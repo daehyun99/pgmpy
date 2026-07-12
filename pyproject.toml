@@ -51,6 +51,7 @@ optional = [
   "xgboost>=2.0.3",
   "litellm>=1.61.15",
   "pygraphviz",
+  "matplotlib",
 ]
 tests = [
   "xdoctest>=0.11.0",
