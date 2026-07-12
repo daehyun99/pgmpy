@@ -16,6 +16,10 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
     }
 
     def __init__(self, estimator):
+        if is_regressor(estimator):
+            self.set_tags({"variable_type": "continous"})
+        elif is_classifier(estimator):
+            self.set_tags({"variable_type": "discrete"})
         self.estimator = estimator
         self.estimator_ = estimator
         super().__init__()
@@ -33,8 +37,10 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
             from skpro.distributions.normal import Normal
 
             mu = estimator.predict(X)
-            sigma = 1.0
+            sigma = 1.0  # TODO: Change this value
             return Normal(mu, sigma)
 
         elif is_classifier(estimator):
-            return None
+            from pgmpy.distributions.nominal import NominalDistribution
+
+            return NominalDistribution(probs=[0.1, 0.2], categories=["1", "2"])  # TODO: Change this value
