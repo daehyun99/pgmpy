@@ -52,6 +52,7 @@ optional = [
   "litellm>=1.61.15",
   "pygraphviz",
   "matplotlib",
+  "pygam",
 ]
 tests = [
   "xdoctest>=0.11.0",
