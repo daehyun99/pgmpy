@@ -5,7 +5,7 @@ from skbase.utils.dependencies import _check_soft_dependencies
 from skpro.distributions.normal import Normal
 from skpro.regression.gam import GAMRegressor
 
-from pgmpy.parameter.adapter.skpro import SkproAdapter
+from pgmpy.parameter.adapter.SkproAdapter import SkproAdapter
 
 
 def _conditional_mean(X):

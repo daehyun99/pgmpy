@@ -1,6 +1,6 @@
 from ._base import BaseParameter
-from .adapter.sklearn import SklearnAdapter
-from .adapter.skpro import SkproAdapter
+from .adapter.SklearnAdapter import SklearnAdapter
+from .adapter.SkproAdapter import SkproAdapter
 
 __all__ = [
     "BaseParameter",
