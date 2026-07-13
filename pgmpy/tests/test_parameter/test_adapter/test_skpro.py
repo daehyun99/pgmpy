@@ -60,11 +60,10 @@ def nonlinear_data():
 
 
 @pytest.fixture(scope="module")
-@pytest.mark.skipif(
-    not _check_soft_dependencies("pygam", severity="none"),
-    reason="execute only if required dependency present",
-)
 def fitted_parameter(nonlinear_data):
+    if not _check_soft_dependencies("pygam", severity="none"):
+        pytest.skip("execute only if required dependency present")
+
     X_train, y_train, _, _ = nonlinear_data
 
     parameter = SkproAdapter(
@@ -78,11 +77,14 @@ def fitted_parameter(nonlinear_data):
     return parameter
 
 
+class TestSkproAdapter: ...
+
+
 @pytest.mark.skipif(
     not _check_soft_dependencies("pygam", severity="none"),
     reason="execute only if required dependency present",
 )
-class TestSkproAdapter:
+class TestSkproAdapterPygam:
     def test_base_parameter_metadata(self):
         estimator = GAMRegressor()
         parameter = SkproAdapter(estimator=estimator)
