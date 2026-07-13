@@ -5,7 +5,7 @@ from .._base import BaseParameter
 
 class SkproAdapter(_DelegatedProbaRegressor, BaseParameter):
     _tags = {
-        "variable_type": "continous",
+        "variable_type": "continuous",
         "produces_factor": False,
         "is_linear_gaussian": False,
         "missing": False,
