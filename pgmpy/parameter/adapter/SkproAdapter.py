@@ -1,6 +1,6 @@
 from skpro.regression.base._delegate import _DelegatedProbaRegressor
 
-from .._base import BaseParameter
+from pgmpy.parameter._base import BaseParameter
 
 
 class SkproAdapter(_DelegatedProbaRegressor, BaseParameter):

@@ -1,7 +1,7 @@
 from sklearn.base import is_classifier, is_regressor
 from skpro.regression.base._delegate import _DelegatedProbaRegressor
 
-from .._base import BaseParameter
+from pgmpy.parameter._base import BaseParameter
 
 
 class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
