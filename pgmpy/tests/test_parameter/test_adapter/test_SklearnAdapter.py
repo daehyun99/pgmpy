@@ -90,7 +90,7 @@ def nonlinear_data():
 
 
 class TestSklearnAdapter:
-    def test_base_parameter_classifier(self):
+    def test_base_parameter_regressor(self):
         estimator = LinearRegression()
         parameter = SklearnAdapter(estimator=estimator)
 
@@ -108,7 +108,7 @@ class TestSklearnAdapter:
         assert parameter.get_class_tag("can_be_root") is False
         assert parameter.get_class_tag("python_dependencies") == ()
 
-    def test_base_parameter_regressor(self):
+    def test_base_parameter_classifier(self):
         estimator = LogisticRegression()
         parameter = SklearnAdapter(estimator=estimator)
 

@@ -48,7 +48,7 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
 
             mu = estimator.predict(X)
             sigma = 1.0  # TODO: Change this value
-            return Normal(mu, sigma)
+            return Normal(mu, sigma, index=X.index)
 
         elif is_classifier(estimator):
             from pgmpy.distributions.nominal import NominalDistribution
