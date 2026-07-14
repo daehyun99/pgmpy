@@ -22,7 +22,17 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
         if is_regressor(estimator):
             self.set_tags(variable_type="continuous")
         elif is_classifier(estimator):
+            if not callable(getattr(estimator, "predict_proba", None)):
+                raise TypeError(
+                    "Currently, only classifier models that implement predict_proba() "
+                    "are supported. "
+                    f"Received: {type(estimator).__name__}"
+                )
             self.set_tags(variable_type="discrete")
+        else:
+            raise TypeError(
+                f"estimator must be a scikit-learn classifier or regressor. Received: {type(estimator).__name__}"
+            )
 
     def _fit(self, X, y, sample_weight=None):
 
@@ -43,4 +53,6 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
         elif is_classifier(estimator):
             from pgmpy.distributions.nominal import NominalDistribution
 
-            return NominalDistribution(probs=[0.1, 0.2], categories=["1", "2"])  # TODO: Change this value
+            probs = estimator.predict_proba(X)
+
+            return NominalDistribution(probs=probs, categories=estimator.classes_, index=X.index)
