@@ -10,18 +10,17 @@ from skpro.regression.linear import GLMRegressor
 from pgmpy.parameter.adapter.SkproAdapter import SkproAdapter
 
 
-def _conditional_mean(X):
-    """
-    Y | A, B, C ~ Normal(
-        1.25 + 2.50 sin(A) + 0.75 B**2 - 1.50 C,
-        0.20**2
-    )
-    """
-    return 1.25 + 2.50 * np.sin(X["A"]) + 0.75 * X["B"] ** 2 - 1.50 * X["C"]
-
-
 @pytest.fixture(scope="module")
 def nonlinear_data():
+    def _conditional_mean(X):
+        """
+        Y | A, B, C ~ Normal(
+            1.25 + 2.50 sin(A) + 0.75 B**2 - 1.50 C,
+            0.20**2
+        )
+        """
+        return 1.25 + 2.50 * np.sin(X["A"]) + 0.75 * X["B"] ** 2 - 1.50 * X["C"]
+
     rng = np.random.default_rng(seed=42)
 
     X_train = pd.DataFrame(
