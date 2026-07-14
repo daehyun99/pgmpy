@@ -77,7 +77,7 @@ def fitted_GLM_parameter(nonlinear_data):
 
     parameter.fit(X_train_spline, y_train)
 
-    return parameter
+    return parameter, spline
 
 
 class TestSkproAdapter:
@@ -125,9 +125,8 @@ class TestSkproAdapter:
         fitted_GLM_parameter,
     ):
         _, _, X_test, _ = nonlinear_data
-        spline = SplineTransformer(n_knots=5, degree=3)
-        X_test_spline = spline.fit_transform(X_test)
-        parameter = fitted_GLM_parameter
+        parameter, spline = fitted_GLM_parameter
+        X_test_spline = spline.transform(X_test)
 
         results = parameter.predict_proba(X_test_spline)
 
@@ -149,9 +148,8 @@ class TestSkproAdapter:
         fitted_GLM_parameter,
     ):
         _, _, X_test, expected_test_mean = nonlinear_data
-        spline = SplineTransformer(n_knots=5, degree=3)
-        X_test_spline = spline.fit_transform(X_test)
-        parameter = fitted_GLM_parameter
+        parameter, spline = fitted_GLM_parameter
+        X_test_spline = spline.transform(X_test)
 
         pred = parameter.predict_proba(X_test_spline)
         pred_mean = pred.mean()["Y"].to_numpy()
