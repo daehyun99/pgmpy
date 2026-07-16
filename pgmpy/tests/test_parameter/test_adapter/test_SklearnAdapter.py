@@ -96,7 +96,6 @@ class TestSklearnAdapter:
 
         assert parameter.__class__.__name__ == "SklearnAdapter"
         assert parameter.estimator is estimator
-        assert parameter.estimator_ is estimator
         assert parameter._get_delegate() is estimator
         assert parameter.get_params(deep=False)["estimator"] is estimator
 
@@ -114,7 +113,6 @@ class TestSklearnAdapter:
 
         assert parameter.__class__.__name__ == "SklearnAdapter"
         assert parameter.estimator is estimator
-        assert parameter.estimator_ is estimator
         assert parameter._get_delegate() is estimator
         assert parameter.get_params(deep=False)["estimator"] is estimator
 
@@ -134,7 +132,6 @@ class TestSklearnAdapter:
         parameter.fit(X, y)
 
         assert parameter.is_fitted is True
-        assert hasattr(parameter, "estimator_")
 
     def test_fit_regressor(self, nonlinear_data):
         X, y, _, _ = nonlinear_data
@@ -144,7 +141,6 @@ class TestSklearnAdapter:
         parameter.fit(X, y)
 
         assert parameter.is_fitted is True
-        assert hasattr(parameter, "estimator_")
 
     def test_predict_proba_classifier(self, discrete_data):
         X, y = discrete_data
@@ -169,3 +165,20 @@ class TestSklearnAdapter:
 
         assert isinstance(results, Normal)
         assert results.index.equals(X.index)
+
+    def test_fails(self):
+        # Case 1: Not regression or classifier model
+        from sklearn.cluster._bicluster import SpectralBiclustering
+
+        estimator = SpectralBiclustering()
+
+        with pytest.raises(TypeError):
+            parameter = SklearnAdapter(estimator=estimator)
+
+        # Case 2: Do not have `predict_proba()` method in classifier model
+        from sklearn.linear_model import RidgeClassifier
+
+        estimator = RidgeClassifier()
+
+        with pytest.raises(TypeError):
+            parameter = SklearnAdapter(estimator=estimator)
