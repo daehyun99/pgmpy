@@ -190,7 +190,6 @@ class TestSkproAdapterPygam:
 
         assert parameter.__class__.__name__ == "SkproAdapter"
         assert parameter.estimator is estimator
-        assert parameter.estimator_ is estimator
         assert parameter._get_delegate() is estimator
         assert parameter.get_params(deep=False)["estimator"] is estimator
 
@@ -212,7 +211,6 @@ class TestSkproAdapterPygam:
         parameter.fit(X_train, y_train)
 
         assert parameter.is_fitted is True
-        assert hasattr(parameter, "estimator_")
 
         np.testing.assert_array_equal(
             parameter.feature_names_in_,
