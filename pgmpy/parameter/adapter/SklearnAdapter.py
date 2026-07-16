@@ -13,10 +13,10 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
         "can_be_root": False,
         "python_dependencies": (),
     }
+    _delegate_name = "estimator"
 
     def __init__(self, estimator):
         self.estimator = estimator
-        self.estimator_ = estimator
         super().__init__()
 
         if is_regressor(estimator):
