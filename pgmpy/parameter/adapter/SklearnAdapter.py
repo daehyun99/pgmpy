@@ -1,3 +1,4 @@
+import numpy as np
 from sklearn.base import is_classifier, is_regressor
 from skpro.regression.base._delegate import _DelegatedProbaRegressor
 
@@ -38,7 +39,19 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
 
         estimator = self._get_delegate()
         self.columns_ = y.columns[0]
-        estimator.fit(X=X, y=y, sample_weight=sample_weight)
+        y_arr = y.to_numpy(dtype=float).reshape(-1)
+        estimator.fit(X=X, y=y_arr, sample_weight=sample_weight)
+
+        if is_regressor(estimator):
+            residuals = y_arr - estimator.predict(X).reshape(-1)
+
+            if sample_weight is None:
+                sample_weight = np.ones(len(y), dtype=float)
+            else:
+                sample_weight = np.asarray(sample_weight, dtype=float).reshape(-1)
+
+            self.std_ = np.sqrt(np.sum(sample_weight * residuals**2) / (np.sum(sample_weight)))
+
         return self
 
     def _predict_proba(self, X):
@@ -48,7 +61,7 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
             from skpro.distributions.normal import Normal
 
             mu = estimator.predict(X)
-            sigma = 1.0  # TODO: Change this value
+            sigma = self.std_
             return Normal(mu, sigma, index=X.index, columns=[self.columns_])
 
         elif is_classifier(estimator):
