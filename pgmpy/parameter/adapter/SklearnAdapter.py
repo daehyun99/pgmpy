@@ -39,10 +39,10 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
 
         estimator = self._get_delegate()
         self.columns_ = y.columns[0]
-        y_arr = y.to_numpy(dtype=float).reshape(-1)
-        estimator.fit(X=X, y=y_arr, sample_weight=sample_weight)
+        estimator.fit(X=X, y=y, sample_weight=sample_weight)
 
         if is_regressor(estimator):
+            y_arr = y.to_numpy(dtype=float).reshape(-1)
             residuals = y_arr - estimator.predict(X).reshape(-1)
 
             if sample_weight is None:
