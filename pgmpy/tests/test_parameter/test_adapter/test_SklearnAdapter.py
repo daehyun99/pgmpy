@@ -165,3 +165,20 @@ class TestSklearnAdapter:
 
         assert isinstance(results, Normal)
         assert results.index.equals(X.index)
+
+    def test_fails(self):
+        # Case 1: Not regression or classifier model
+        from sklearn.cluster._bicluster import SpectralBiclustering
+
+        estimator = SpectralBiclustering()
+
+        with pytest.raises(TypeError):
+            parameter = SklearnAdapter(estimator=estimator)
+
+        # Case 2: Do not have `predict_proba()` method in classifier model
+        from sklearn.linear_model import RidgeClassifier
+
+        estimator = RidgeClassifier()
+
+        with pytest.raises(TypeError):
+            parameter = SklearnAdapter(estimator=estimator)

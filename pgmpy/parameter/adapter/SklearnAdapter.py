@@ -37,6 +37,7 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
     def _fit(self, X, y, sample_weight=None):
 
         estimator = self._get_delegate()
+        self.columns = y.columns[0]
         estimator.fit(X=X, y=y, sample_weight=sample_weight)
         return self
 
@@ -48,11 +49,12 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
 
             mu = estimator.predict(X)
             sigma = 1.0  # TODO: Change this value
-            return Normal(mu, sigma, index=X.index)
+            return Normal(mu, sigma, index=X.index, columns=[self.columns])
 
         elif is_classifier(estimator):
             from pgmpy.distributions.nominal import NominalDistribution
 
             probs = estimator.predict_proba(X)
-
-            return NominalDistribution(probs=probs, categories=estimator.classes_, index=X.index)
+            return NominalDistribution(
+                probs=probs, categories=estimator.classes_, index=X.index, columns=[self.columns]
+            )
