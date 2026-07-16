@@ -173,7 +173,7 @@ class TestSklearnAdapter:
         estimator = SpectralBiclustering()
 
         with pytest.raises(TypeError):
-            parameter = SklearnAdapter(estimator=estimator)
+            SklearnAdapter(estimator=estimator)
 
         # Case 2: Do not have `predict_proba()` method in classifier model
         from sklearn.linear_model import RidgeClassifier
@@ -181,4 +181,4 @@ class TestSklearnAdapter:
         estimator = RidgeClassifier()
 
         with pytest.raises(TypeError):
-            parameter = SklearnAdapter(estimator=estimator)
+            SklearnAdapter(estimator=estimator)
