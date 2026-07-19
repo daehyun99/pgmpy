@@ -1,6 +1,7 @@
 import networkx as nx
 import numpy as np
 import pandas as pd
+from skpro.distributions import Empirical
 
 from ._base import BaseInference
 
@@ -41,9 +42,9 @@ class LikelihoodWeighting(BaseInference):
 
         Returns
         -------
-        pandas.DataFrame
-            One row per generated sample, containing ``variables`` and a
-            normalized ``"weight"`` column.
+        skpro.distributions.Empirical
+            Empirical distribution over ``variables`` whose samples are
+            weighted by their normalized importance weights.
         """
         if isinstance(variables, str):
             variables = [variables]
@@ -109,6 +110,7 @@ class LikelihoodWeighting(BaseInference):
         if not np.isfinite(max_log_weight):
             raise ValueError("The evidence has zero probability under the model.")
         weights = np.exp(log_weights - max_log_weight)
-        result = pd.DataFrame(samples)
-        result["weight"] = weights / weights.sum()
-        return result
+        sample_index = pd.MultiIndex.from_product([[0], range(n_samples)], names=["instance", "sample"])
+        result = pd.DataFrame(samples, index=sample_index)
+        normalized_weights = pd.Series(weights / weights.sum(), index=sample_index)
+        return Empirical(spl=result, weights=normalized_weights)
