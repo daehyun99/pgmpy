@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from skpro.distributions import Empirical
 
 from pgmpy.base._base import _CoreGraph
 from pgmpy.parameter import TabularCPD
@@ -18,15 +19,18 @@ def _binary_chain():
     return model
 
 
-def test_query_returns_normalized_weighted_samples_for_evidence():
-    samples = LikelihoodWeighting().query(_binary_chain(), variables=["A"], evidence={"B": 1}, n_samples=2_000, seed=42)
+def test_query_returns_empirical_distribution_for_evidence():
+    distribution = LikelihoodWeighting().query(
+        _binary_chain(), variables=["A"], evidence={"B": 1}, n_samples=2_000, seed=42
+    )
 
-    assert list(samples.columns) == ["A", "weight"]
-    assert samples["weight"].sum() == pytest.approx(1.0)
-    assert np.average(samples["A"].astype(float), weights=samples["weight"]) == pytest.approx(1.0)
+    assert isinstance(distribution, Empirical)
+    assert list(distribution.spl.columns) == ["A"]
+    assert distribution.weights.sum() == pytest.approx(1.0)
+    assert np.average(distribution.spl["A"].astype(float), weights=distribution.weights) == pytest.approx(1.0)
 
 
 def test_query_applies_interventions_without_likelihood_weighting_them():
-    samples = LikelihoodWeighting().query(_binary_chain(), variables=["B"], do={"A": 0}, n_samples=2_000, seed=42)
+    distribution = LikelihoodWeighting().query(_binary_chain(), variables=["B"], do={"A": 0}, n_samples=2_000, seed=42)
 
-    assert np.average(samples["B"].astype(float), weights=samples["weight"]) == pytest.approx(0.0, abs=0.05)
+    assert np.average(distribution.spl["B"].astype(float), weights=distribution.weights) == pytest.approx(0.0, abs=0.05)
