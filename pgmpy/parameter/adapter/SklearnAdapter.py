@@ -39,6 +39,7 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
 
         estimator = self._get_delegate()
         self.columns_ = y.columns[0]
+        self.evidences_ = list(X.columns)
         estimator.fit(X=X, y=y, sample_weight=sample_weight)
 
         if is_regressor(estimator):

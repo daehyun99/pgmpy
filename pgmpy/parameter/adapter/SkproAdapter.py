@@ -22,6 +22,7 @@ class SkproAdapter(_DelegatedProbaRegressor, BaseParameter):
     def _fit(self, X, y, sample_weight=None):
 
         estimator = self._get_delegate()
+        self.evidences_ = list(X.columns)
         estimator.fit(X=X, y=y, C=sample_weight)
         return self
 
