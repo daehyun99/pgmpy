@@ -162,6 +162,7 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
         roles: dict[str, str | Iterable[Hashable]] | None = None,
     ):
         super().__init__()
+        self.cpds = {}
         if edge_list:
             edge_list = list(edge_list)  # materialize: _validate_edges below would exhaust a generator
             self._validate_edges(edge_list=edge_list)
@@ -179,6 +180,27 @@ class _CoreGraph(nx.MultiGraph, _GraphAlgorithms, _GraphRolesMixin, _GraphPlotti
 
         for role, vars in roles.items():
             self.with_role(role=role, variables=vars, inplace=True)
+
+    def add_cpd(self, node: Hashable, cpd: Any) -> None:
+        """Associate a fitted conditional distribution with a graph node.
+
+        Parameters
+        ----------
+        node : hashable
+            Node for which ``cpd`` defines a conditional distribution.
+        cpd : pgmpy.parameter.BaseParameter
+            Fitted parameter object used to sample the node given its parents.
+        """
+        if node not in self.nodes:
+            raise ValueError(f"Node {node!r} is not present in the graph.")
+        self.cpds[node] = cpd
+
+    def get_cpd(self, node: Hashable) -> Any:
+        """Return the conditional distribution associated with ``node``."""
+        try:
+            return self.cpds[node]
+        except KeyError as error:
+            raise ValueError(f"No CPD is associated with node {node!r}.") from error
 
     def add_edge(
         self,
