@@ -99,13 +99,12 @@ class TestSklearnAdapter:
         assert parameter._get_delegate() is estimator
         assert parameter.get_params(deep=False)["estimator"] is estimator
 
-        assert parameter.get_tag("variable_type") == "continuous"
+        assert parameter.get_tag("parameter_type") == "regressor"
         assert parameter.get_class_tag("produces_factor") is False
         assert parameter.get_class_tag("is_linear_gaussian") is False
         assert parameter.get_class_tag("missing") is False
         assert parameter.get_class_tag("supports_fit_joint") is False
         assert parameter.get_class_tag("can_be_root") is False
-        assert parameter.get_class_tag("python_dependencies") == ()
 
     def test_base_parameter_classifier(self):
         estimator = LogisticRegression()
@@ -116,13 +115,12 @@ class TestSklearnAdapter:
         assert parameter._get_delegate() is estimator
         assert parameter.get_params(deep=False)["estimator"] is estimator
 
-        assert parameter.get_tag("variable_type") == "discrete"
+        assert parameter.get_tag("parameter_type") == "classifier"
         assert parameter.get_class_tag("produces_factor") is False
         assert parameter.get_class_tag("is_linear_gaussian") is False
         assert parameter.get_class_tag("missing") is False
         assert parameter.get_class_tag("supports_fit_joint") is False
         assert parameter.get_class_tag("can_be_root") is False
-        assert parameter.get_class_tag("python_dependencies") == ()
 
     def test_fit_classifier(self, discrete_data):
         X, y = discrete_data

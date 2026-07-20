@@ -5,13 +5,12 @@ from pgmpy.parameter._base import BaseParameter
 
 class SkproAdapter(_DelegatedProbaRegressor, BaseParameter):
     _tags = {
-        "variable_type": "continuous",
+        "parameter_type": "regressor",
         "produces_factor": False,
         "is_linear_gaussian": False,
-        "missing": False,
         "supports_fit_joint": False,
+        "missing": False,
         "can_be_root": False,
-        "python_dependencies": (),
     }
     _delegate_name = "estimator"
 
