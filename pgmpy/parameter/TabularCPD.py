@@ -34,10 +34,6 @@ class TabularCPD(BaseParameter):
         correspond to target states and columns correspond to evidence-state
         configurations.
 
-    columns_ : list
-        Name of the variable whose distribution is represented by the learned
-        table. Populated by `fit`.
-
     categories_ : dict
         Mapping from the target variable name to its learned or supplied states.
         Populated by `fit`.
@@ -137,7 +133,6 @@ class TabularCPD(BaseParameter):
                 fill_value=0,
             )
 
-            self.columns_ = [X.columns[0]]
             self.CPT_ = counts.div(counts.sum()).to_frame(name="prob")
 
         else:
@@ -170,7 +165,6 @@ class TabularCPD(BaseParameter):
                 .rename_axis(index=None)
             )
 
-            self.columns_ = [y.columns[0]]
             self.CPT_ = counts.div(
                 counts.sum(axis=0),
                 axis=1,
@@ -190,8 +184,8 @@ class TabularCPD(BaseParameter):
 
             return NominalDistribution(
                 probs=probabilities,
-                categories=self.categories_[self.columns_[0]],
-                columns=self.columns_,
+                categories=self.categories_[next(iter(self.categories_))],
+                columns=[next(iter(self.categories_))],
             )
 
         row_evidence = pd.MultiIndex.from_frame(X.loc[:, self.evidences_.keys()])
@@ -204,13 +198,12 @@ class TabularCPD(BaseParameter):
 
         return NominalDistribution(
             probs=probabilities,
-            categories=self.categories_[self.columns_[0]],
-            columns=self.columns_,
+            categories=self.categories_[next(iter(self.categories_))],
+            columns=[next(iter(self.categories_))],
         )  # (len(X), variable_card)
 
     def set_fitted_params(self, CPT, columns, categories, evidences, is_fitted):
         self.CPT_ = CPT
-        self.columns_ = columns
         self.categories_ = categories
         self.evidences_ = evidences
         self._is_fitted = is_fitted

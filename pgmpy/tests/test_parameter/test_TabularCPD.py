@@ -143,7 +143,7 @@ class TestTabularCPD:
             ),
         )
         np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
-        assert parameter.columns_ == ["y"]
+        assert next(iter(parameter.categories_)) == "y"
 
         # Case 2: root node with MLE, sample_weight case
         _, y = discrete_data
@@ -167,7 +167,7 @@ class TestTabularCPD:
             ),
         )
         np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
-        assert parameter.columns_ == ["y"]
+        assert next(iter(parameter.categories_)) == "y"
 
         # Case 3: not root node with MLE case
         X, y = discrete_data
@@ -205,7 +205,7 @@ class TestTabularCPD:
             atol=1e-8,
         )
         np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
-        assert parameter.columns_ == ["y"]
+        assert next(iter(parameter.categories_)) == "y"
 
         # Case 4: not root node with MLE, sample_weight case
         X, y = discrete_data
@@ -269,7 +269,7 @@ class TestTabularCPD:
             atol=1e-8,
         )
         np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
-        assert parameter.columns_ == ["y"]
+        assert next(iter(parameter.categories_)) == "y"
 
     def test_predict_proba(self, discrete_data):
         X, y = discrete_data
@@ -320,7 +320,6 @@ class TestTabularCPD:
 
         assert hasattr(parameter, "CPT_") is False
         assert hasattr(parameter, "categories_") is False
-        assert hasattr(parameter, "columns_") is False
         assert hasattr(parameter, "evidences_") is False
         assert parameter.is_fitted is False
 
@@ -344,6 +343,5 @@ class TestTabularCPD:
 
         assert hasattr(parameter, "CPT_")
         assert hasattr(parameter, "categories_")
-        assert hasattr(parameter, "columns_")
         assert hasattr(parameter, "evidences_")
         assert parameter.is_fitted is True
