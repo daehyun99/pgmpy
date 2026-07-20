@@ -38,12 +38,11 @@ class TestLinearGaussianCPD:
         parameter = LinearGaussianCPD()
 
         assert parameter.__class__.__name__ == "LinearGaussianCPD"
-        assert parameter.get_class_tag("variable_type") == "continuous"
+        assert parameter.get_class_tag("parameter_type") == "regressor"
         assert parameter.get_class_tag("produces_factor") is False
         assert parameter.get_class_tag("missing") is False
         assert parameter.get_class_tag("is_linear_gaussian") is True
         assert parameter.get_class_tag("supports_fit_joint") is False
-        assert parameter.get_class_tag("python_dependencies") == ()
 
     def test_fit(self, continue_data):
         # Case 1-1: root node with MLE case

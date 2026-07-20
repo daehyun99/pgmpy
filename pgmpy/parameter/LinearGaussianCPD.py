@@ -69,13 +69,12 @@ class LinearGaussianCPD(BaseParameter):
     """
 
     _tags = {
-        "variable_type": "continuous",
+        "parameter_type": "regressor",
         "produces_factor": False,
         "is_linear_gaussian": True,
-        "missing": False,
         "supports_fit_joint": False,
+        "missing": False,
         "can_be_root": True,
-        "python_dependencies": (),
     }
 
     def __init__(self, estimator="mle", evidences=None):
