@@ -68,12 +68,11 @@ class TabularCPD(BaseParameter):
     """
 
     _tags = {
-        "variable_type": "discrete",
+        "parameter_type": "classifier",
         "produces_factor": True,
         "is_linear_gaussian": False,
-        "missing": False,
         "supports_fit_joint": False,
-        "python_dependencies": ("skpro"),
+        "missing": False,
     }
 
     def __init__(

@@ -119,12 +119,11 @@ class TestTabularCPD:
         parameter = TabularCPD()
 
         assert parameter.__class__.__name__ == "TabularCPD"
-        assert parameter.get_class_tag("variable_type") == "discrete"
+        assert parameter.get_class_tag("parameter_type") == "classifier"
         assert parameter.get_class_tag("produces_factor") is True
         assert parameter.get_class_tag("missing") is False
         assert parameter.get_class_tag("is_linear_gaussian") is False
         assert parameter.get_class_tag("supports_fit_joint") is False
-        assert parameter.get_class_tag("python_dependencies") == ("skpro")
 
     def test_fit(self, discrete_data):
         # Case 1: root node with MLE case
