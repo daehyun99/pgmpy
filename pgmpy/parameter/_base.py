@@ -7,30 +7,19 @@ class BaseParameter(_BaseEstimator):
     """Base class for all parameter classes in pgmpy."""
 
     _tags = {
-        "variable_type": str,
-        "produces_factor": bool,
-        "is_linear_gaussian": bool,
+        "parameter_type": str,  # classifier, regressor
+        "produces_factor": bool,  # Only for TabularCPD
+        "is_linear_gaussian": bool,  # Only for LinearGaussianCPD
+        "supports_fit_joint": bool,  # Only for FunctionalCPD
         "missing": bool,
-        "supports_fit_joint": bool,
         "can_be_root": bool,
-        "python_dependencies": tuple,
     }
 
     def __init__(self):
         super().__init__()
 
     def fit(self, X, y=None, sample_weight=None):
-        """API docs"""
-        X, y, sample_weight = self._check_data(X, y, sample_weight)
-        self._fit(X, y, sample_weight)
-        self._is_fitted = True
-        return self
-
-    def _fit(self, X, y, sample_weight):
         """Fit parameter to training data.
-
-        Writes to self:
-            Sets fitted model attributes ending in "_".
 
         Parameters
         ----------
@@ -43,10 +32,26 @@ class BaseParameter(_BaseEstimator):
         -------
         self : reference to self
         """
+        X, y, sample_weight = self._check_data(X, y, sample_weight)
+        self._fit(X, y, sample_weight)
+        self._is_fitted = True
+        return self
+
+    def _fit(self, X, y=None, sample_weight=None):
         raise NotImplementedError
 
     def predict_proba(self, X):
-        """API docs"""
+        """Predict distribution over labels for data from features.
+
+        Parameters
+        ----------
+        X : pandas DataFrame, must have same columns as X in `fit`
+            data to predict labels for
+
+        Returns
+        -------
+        y : skpro's Distribution class
+        """
         if not self._is_fitted:
             raise RuntimeError(
                 f"This {self.__class__.__name__} instance is not fitted yet. Call 'fit' before calling 'predict_proba'."
@@ -56,24 +61,6 @@ class BaseParameter(_BaseEstimator):
         return y_pred
 
     def _predict_proba(self, X):
-        """Predict distribution over labels for data from features.
-
-        State required:
-            Requires state to be "fitted".
-
-        Accesses in self:
-            Fitted model attributes ending in "_"
-
-        Parameters
-        ----------
-        X : pandas DataFrame, must have same columns as X in `fit`
-            data to predict labels for
-
-        Returns
-        -------
-        y : skpro BaseDistribution, same length as `X`
-            labels predicted for `X`
-        """
         raise NotImplementedError
 
     def _check_data(self, X, y=None, sample_weight=None):
