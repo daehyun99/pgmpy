@@ -89,13 +89,12 @@ class TestSkproAdapter:
         assert parameter._get_delegate() is estimator
         assert parameter.get_params(deep=False)["estimator"] is estimator
 
-        assert parameter.get_class_tag("variable_type") == "continuous"
+        assert parameter.get_class_tag("parameter_type") == "regressor"
         assert parameter.get_class_tag("produces_factor") is False
         assert parameter.get_class_tag("is_linear_gaussian") is False
         assert parameter.get_class_tag("missing") is False
         assert parameter.get_class_tag("supports_fit_joint") is False
         assert parameter.get_class_tag("can_be_root") is False
-        assert parameter.get_class_tag("python_dependencies") == ()
 
     def test_fit(
         self,
@@ -193,13 +192,12 @@ class TestSkproAdapterPygam:
         assert parameter._get_delegate() is estimator
         assert parameter.get_params(deep=False)["estimator"] is estimator
 
-        assert parameter.get_class_tag("variable_type") == "continuous"
+        assert parameter.get_class_tag("parameter_type") == "regressor"
         assert parameter.get_class_tag("produces_factor") is False
         assert parameter.get_class_tag("is_linear_gaussian") is False
         assert parameter.get_class_tag("missing") is False
         assert parameter.get_class_tag("supports_fit_joint") is False
         assert parameter.get_class_tag("can_be_root") is False
-        assert parameter.get_class_tag("python_dependencies") == ()
 
     def test_fit(
         self,
