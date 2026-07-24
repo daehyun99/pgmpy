@@ -16,7 +16,7 @@ class TestDistributionAdapter:
         assert parameter.distribution is distribution
         assert parameter.get_params(deep=False)["distribution"] is distribution
 
-        assert parameter.get_class_tag("parameter_type") == "regressor"
+        assert parameter.get_class_tag("parameter_type") == "distribution"
         assert parameter.get_class_tag("produces_factor") is False
         assert parameter.get_class_tag("is_linear_gaussian") is False
         assert parameter.get_class_tag("missing") is False
@@ -30,9 +30,7 @@ class TestDistributionAdapter:
             (Poisson(mu=3.0), Poisson, 3.0),
         ],
     )
-    def test_predict_proba_broadcasts_distribution(
-        self, distribution, expected_type, expected_mean
-    ):
+    def test_predict_proba_broadcasts_distribution(self, distribution, expected_type, expected_mean):
         X = pd.DataFrame({"A": [0.0, 1.0, 2.0]}, index=pd.Index(["a", "b", "c"]))
         y = pd.DataFrame({"Y": [1.0, 2.0, 3.0]}, index=X.index)
         parameter = DistributionAdapter(distribution=distribution)

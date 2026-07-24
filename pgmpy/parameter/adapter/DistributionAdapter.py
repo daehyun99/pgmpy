@@ -17,7 +17,7 @@ class DistributionAdapter(BaseParameter):
     """
 
     _tags = {
-        "parameter_type": "regressor",
+        "parameter_type": "distribution",
         "produces_factor": False,
         "is_linear_gaussian": False,
         "supports_fit_joint": False,
@@ -28,8 +28,7 @@ class DistributionAdapter(BaseParameter):
     def __init__(self, distribution: BaseDistribution):
         if not isinstance(distribution, BaseDistribution):
             raise TypeError(
-                "distribution must be an instance of a skpro distribution. "
-                f"Received: {type(distribution).__name__}"
+                f"distribution must be an instance of a skpro distribution. Received: {type(distribution).__name__}"
             )
 
         self.distribution = distribution
@@ -37,8 +36,7 @@ class DistributionAdapter(BaseParameter):
 
     def _fit(self, X, y=None, sample_weight=None):
         """Store the target column name for the predicted distribution."""
-        self.columns_ = y.columns
-        return self
+        raise NotImplementedError
 
     def _predict_proba(self, X):
         """Broadcast the fixed distribution to the rows of ``X``."""
