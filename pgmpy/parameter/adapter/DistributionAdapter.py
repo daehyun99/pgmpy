@@ -4,18 +4,6 @@ from pgmpy.parameter._base import BaseParameter
 
 
 class DistributionAdapter(BaseParameter):
-    """Adapt a fixed skpro distribution for use as a pgmpy parameter.
-
-    The supplied scalar distribution is broadcast to the instances passed to
-    :meth:`predict_proba`. This is useful for specifying a fixed conditional
-    distribution, including distributions for root nodes.
-
-    Parameters
-    ----------
-    distribution : skpro.distributions.base.BaseDistribution
-        Scalar skpro distribution to broadcast for every prediction instance.
-    """
-
     _tags = {
         "parameter_type": "distribution",
         "produces_factor": False,
@@ -36,7 +24,6 @@ class DistributionAdapter(BaseParameter):
         self._is_fitted = True
 
     def _fit(self, X, y=None, sample_weight=None):
-        """Store the target column name for the predicted distribution."""
         raise NotImplementedError
 
     def _predict_proba(self, X):
