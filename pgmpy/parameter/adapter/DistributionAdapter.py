@@ -33,6 +33,7 @@ class DistributionAdapter(BaseParameter):
 
         self.distribution = distribution
         super().__init__()
+        self._is_fitted = True
 
     def _fit(self, X, y=None, sample_weight=None):
         """Store the target column name for the predicted distribution."""
@@ -41,5 +42,5 @@ class DistributionAdapter(BaseParameter):
     def _predict_proba(self, X):
         """Broadcast the fixed distribution to the rows of ``X``."""
         distribution_params = self.distribution.get_params(deep=False)
-        distribution_params.update(index=X.index, columns=self.columns_)
+        distribution_params.update(index=X.index)
         return type(self.distribution)(**distribution_params)

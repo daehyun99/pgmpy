@@ -23,25 +23,30 @@ class TestDistributionAdapter:
         assert parameter.get_class_tag("supports_fit_joint") is False
         assert parameter.get_class_tag("can_be_root") is True
 
+    def test_fit(self):
+        distribution = Normal(mu=1.5, sigma=2.0)
+        parameter = DistributionAdapter(distribution=distribution)
+        X = pd.DataFrame({"A": [0.0, 1.0, 2.0]}, index=pd.Index(["a", "b", "c"]))
+        with pytest.raises(NotImplementedError):
+            parameter.fit(X)
+
     @pytest.mark.parametrize(
         ("distribution", "expected_type", "expected_mean"),
         [
-            (Normal(mu=1.5, sigma=2.0), Normal, 1.5),
-            (Poisson(mu=3.0), Poisson, 3.0),
+            (Normal(mu=1.5, sigma=2.0, columns=["y"]), Normal, 1.5),
+            (Poisson(mu=3.0, columns=["y"]), Poisson, 3.0),
         ],
     )
     def test_predict_proba_broadcasts_distribution(self, distribution, expected_type, expected_mean):
         X = pd.DataFrame({"A": [0.0, 1.0, 2.0]}, index=pd.Index(["a", "b", "c"]))
-        y = pd.DataFrame({"Y": [1.0, 2.0, 3.0]}, index=X.index)
         parameter = DistributionAdapter(distribution=distribution)
 
-        parameter.fit(X, y)
         result = parameter.predict_proba(X)
 
         assert parameter.is_fitted is True
         assert isinstance(result, expected_type)
         assert result.index.equals(X.index)
-        assert result.columns.equals(pd.Index(["Y"]))
+        assert result.columns.equals(pd.Index(["y"]))
         np.testing.assert_allclose(result.mean().to_numpy(), expected_mean)
 
     def test_rejects_non_skpro_distribution(self):
