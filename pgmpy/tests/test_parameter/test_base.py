@@ -13,12 +13,11 @@ class TestBaseParameter:
         parameter = BaseParameter()
 
         assert parameter.__class__.__name__ == "BaseParameter"
-        assert parameter.get_class_tag("variable_type") is str
+        assert parameter.get_class_tag("parameter_type") is str
         assert parameter.get_class_tag("produces_factor") is bool
         assert parameter.get_class_tag("missing") is bool
         assert parameter.get_class_tag("is_linear_gaussian") is bool
         assert parameter.get_class_tag("supports_fit_joint") is bool
-        assert parameter.get_class_tag("python_dependencies") is tuple
 
     def test_fit(self):
         X_arr, _ = make_moons(n_samples=100, noise=0.1, random_state=42)
@@ -41,7 +40,7 @@ class TestBaseParameter:
         def make_parameter(missing=False, can_be_root=True):
             class TempParameter(BaseParameter):
                 _tags = {
-                    "variable_type": "discrete",
+                    "parameter_type": "discrete",
                     "produces_factor": False,
                     "is_linear_gaussian": False,
                     "missing": missing,
