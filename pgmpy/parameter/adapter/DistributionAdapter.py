@@ -34,7 +34,8 @@ class DistributionAdapter(BaseParameter):
 
             return type(self.distribution)(**distribution_params)
         else:
-            # NOTE: Only `KernelMixture` and `NominalDistribution` have `"broadcast_init" == "off"`. This logic handles those classes.
+            # NOTE: Only `KernelMixture` and `NominalDistribution` have `"broadcast_init" == "off"`.
+            # This logic handles those classes.
 
             if self.distribution.__class__.__name__ == "NominalDistribution":
                 # NOTE: Logic for `NominalDistribution`
