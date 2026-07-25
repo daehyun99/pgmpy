@@ -29,5 +29,21 @@ class DistributionAdapter(BaseParameter):
     def _predict_proba(self, X):
         """Broadcast the fixed distribution to the rows of ``X``."""
         distribution_params = self.distribution.get_params(deep=False)
-        distribution_params.update(index=X.index)
-        return type(self.distribution)(**distribution_params)
+        if self.distribution.get_tag("broadcast_init") == "on":
+            distribution_params.update(index=X.index)
+
+            return type(self.distribution)(**distribution_params)
+        else:
+            # NOTE: Only `KernelMixture` and `NominalDistribution` have `"broadcast_init" == "off"`. This logic handles those classes.
+
+            if self.distribution.__class__.__name__ == "NominalDistribution":
+                # NOTE: Logic for `NominalDistribution`
+                distribution_params.update(
+                    index=X.index,
+                    probs=[self.distribution.probs[0] for i in range(len(X))],
+                    categories=self.distribution.categories,
+                )
+            elif self.distribution.__class__.__name__ == "KernelMixture":
+                # TODO: Implement logic for `skpro.distributions.KernelMixture`
+                ...
+            return type(self.distribution)(**distribution_params)

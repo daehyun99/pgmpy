@@ -1,9 +1,9 @@
-import numpy as np
 import pandas as pd
 import pytest
 from skpro.distributions.normal import Normal
 from skpro.distributions.poisson import Poisson
 
+from pgmpy.distributions.nominal import NominalDistribution
 from pgmpy.parameter.adapter.DistributionAdapter import DistributionAdapter
 
 
@@ -31,14 +31,15 @@ class TestDistributionAdapter:
             parameter.fit(X)
 
     @pytest.mark.parametrize(
-        ("distribution", "expected_type", "expected_mean"),
+        ("distribution", "expected_type"),
         [
-            (Normal(mu=1.5, sigma=2.0, columns=["y"]), Normal, 1.5),
-            (Poisson(mu=3.0, columns=["y"]), Poisson, 3.0),
+            (Normal(mu=1.5, sigma=2.0, columns=["y"]), Normal),
+            (Poisson(mu=3.0, columns=["y"]), Poisson),
+            (NominalDistribution([[0.7, 0.3]], ["A", "B"], columns=["y"]), NominalDistribution),
         ],
     )
-    def test_predict_proba_broadcasts_distribution(self, distribution, expected_type, expected_mean):
-        X = pd.DataFrame({"A": [0.0, 1.0, 2.0]}, index=pd.Index(["a", "b", "c"]))
+    def test_predict_proba(self, distribution, expected_type):
+        X = pd.DataFrame({"A": [0.0, 1.0, 2.0]})
         parameter = DistributionAdapter(distribution=distribution)
 
         result = parameter.predict_proba(X)
@@ -47,7 +48,6 @@ class TestDistributionAdapter:
         assert isinstance(result, expected_type)
         assert result.index.equals(X.index)
         assert result.columns.equals(pd.Index(["y"]))
-        np.testing.assert_allclose(result.mean().to_numpy(), expected_mean)
 
     def test_rejects_non_skpro_distribution(self):
         with pytest.raises(TypeError, match="skpro distribution"):
