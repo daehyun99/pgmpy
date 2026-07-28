@@ -19,7 +19,7 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
         self.estimator = estimator
         super().__init__()
         if is_regressor(estimator):
-            self.set_tags(parameter_type="regressor")
+            self.set_tags(variable_type="continuous")
         elif is_classifier(estimator):
             if not callable(getattr(estimator, "predict_proba", None)):
                 raise TypeError(
@@ -27,7 +27,7 @@ class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
                     "are supported. "
                     f"Received: {type(estimator).__name__}"
                 )
-            self.set_tags(parameter_type="classifier")
+            self.set_tags(variable_type="discrete")
         else:
             raise TypeError(
                 f"estimator must be a scikit-learn classifier or regressor. Received: {type(estimator).__name__}"
