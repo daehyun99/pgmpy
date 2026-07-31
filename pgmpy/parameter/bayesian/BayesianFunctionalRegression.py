@@ -16,19 +16,16 @@ def to_tensor(arr, device, reshape=False):
     FYI: `pgmpy.utils.compat_fns` only support tensor <-> numpy
 
     """
+    tensor = torch.as_tensor(
+        arr.to_numpy(),
+        dtype=torch.float32,
+        device=device,
+    )
+
     if reshape:
-        arr_tensor = torch.as_tensor(
-            arr.to_numpy().reshape(-1),
-            dtype=torch.float32,
-            device=device,
-        )
-    else:
-        arr_tensor = torch.tensor(
-            arr.to_numpy(),
-            dtype=torch.float32,
-            device=device,
-        )
-    return arr_tensor
+        tensor = tensor.reshape(-1)
+
+    return tensor
 
 
 class BayesianFunctionalRegression(BaseParameter):
@@ -79,7 +76,7 @@ class BayesianFunctionalRegression(BaseParameter):
         self.device = device
         self.log = log
 
-        self.converter_ = PyroToSkpro(self.posterior_type, self.device)
+        self.converter_ = PyroToSkpro(self.posterior_type)
         self._is_fitted = False
 
     def fit(self, X, y):

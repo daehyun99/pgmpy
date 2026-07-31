@@ -6,9 +6,8 @@ class PyroToSkpro:
         "normal": "_convert_normal",
     }
 
-    def __init__(self, posterior_type: str, device):
+    def __init__(self, posterior_type: str):
         self.posterior_type = posterior_type
-        self.device = device
 
     def convert(self, samples, index, columns, name="obs"):
         converter_name = self._CONVERTERS.get(self.posterior_type)
@@ -22,12 +21,8 @@ class PyroToSkpro:
 
     def _convert_normal(self, samples, index, columns, name="obs"):
         y_samples = samples[name]
-        if self.device == "cuda":
-            mean = y_samples.mean(dim=0).detach().reshape(-1, 1).cpu().numpy()
-            sigma = y_samples.std(dim=0, unbiased=False).detach().reshape(-1, 1).cpu().numpy()
-        else:
-            mean = y_samples.mean(dim=0).detach().reshape(-1, 1).numpy()
-            sigma = y_samples.std(dim=0, unbiased=False).detach().reshape(-1, 1).numpy()
+        mean = y_samples.mean(dim=0).detach().reshape(-1, 1).cpu().numpy()
+        sigma = y_samples.std(dim=0, unbiased=False).detach().reshape(-1, 1).cpu().numpy()
 
         return SkproNormal(
             mu=mean,
