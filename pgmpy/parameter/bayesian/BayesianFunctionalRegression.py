@@ -43,7 +43,7 @@ class BayesianFunctionalRegression(BaseParameter):
         self,
         model,
         guide,
-        optimizer=pyro.optim.Adam({"lr": 0.3}),
+        optim=pyro.optim.Adam({"lr": 0.3}),
         loss=pyro.infer.Trace_ELBO(),
         num_iterations=1500,
         posterior_name="obs",
@@ -55,7 +55,7 @@ class BayesianFunctionalRegression(BaseParameter):
         # NOTE:
         #   Only support "pyro.infer.SVI"
         #   Only support "posterior_type" == "normal"
-        #   Only support "optimizer" == "pyro.optim.Adam"
+        #   Only support "optim" == "pyro.optim.Adam"
         #   Only support "loss" == "pyro.infer.Trace_ELBO"
         #   Only support "dtype" == "torch.float32"
 
@@ -67,7 +67,7 @@ class BayesianFunctionalRegression(BaseParameter):
 
         self.model = model
         self.guide = guide
-        self.optimizer = optimizer
+        self.optim = optim
         self.loss = loss
         self.num_iterations = num_iterations
         self.posterior_name = posterior_name
@@ -88,7 +88,7 @@ class BayesianFunctionalRegression(BaseParameter):
         svi = pyro.infer.SVI(
             model=self.model,
             guide=self.guide,
-            optim=self.optimizer,
+            optim=self.optim,
             loss=self.loss,
         )
 
