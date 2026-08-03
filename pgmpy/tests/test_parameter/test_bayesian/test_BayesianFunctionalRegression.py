@@ -81,7 +81,18 @@ def model():
 
 
 class TestBayesianFunctionalRegression:
-    @pytest.mark.slow
+    def test_base_parameter_default(self, model):
+        parameter = BayesianFunctionalRegression(model, estimator="mcmc")
+
+        assert parameter.__class__.__name__ == "BayesianFunctionalRegression"
+        assert parameter.get_class_tag("variable_type") == "continuous"
+        assert parameter.get_class_tag("produces_factor") is False
+        assert parameter.get_class_tag("missing") is False
+        assert parameter.get_class_tag("is_linear_gaussian") is False
+        assert parameter.get_class_tag("supports_fit_joint") is False
+        assert parameter.get_class_tag("can_be_root") is False
+        assert parameter.get_class_tag("python_dependencies") == ("pyro-ppl")
+
     def test_svi_fit_normal(self, data, model):
         X, y = data
 
@@ -93,7 +104,7 @@ class TestBayesianFunctionalRegression:
             num_samples=300,
         )
 
-        estimator = BayesianFunctionalRegression(
+        parameter = BayesianFunctionalRegression(
             model=model,
             guide=guide,
             estimator="svi",
@@ -105,22 +116,22 @@ class TestBayesianFunctionalRegression:
             log=False,
         )
 
-        result = estimator.fit(X, y)
+        result = parameter.fit(X, y)
 
-        assert result is estimator
-        assert estimator._is_fitted
-        assert estimator.columns_ == "x3"
-        assert estimator.parallel_ is False
+        assert result is parameter
+        assert parameter._is_fitted
+        assert parameter.columns_ == "x3"
+        assert parameter.parallel_ is False
 
         X_tensor = torch.as_tensor(
             X.to_numpy(),
             dtype=torch.float32,
-            device=estimator.device,
+            device=parameter.device,
         )
         y_tensor = torch.as_tensor(
             y.to_numpy(),
             dtype=torch.float32,
-            device=estimator.device,
+            device=parameter.device,
         ).reshape(-1)
 
         estimated_parameters = guide.median(X_tensor, y_tensor)
@@ -133,31 +144,38 @@ class TestBayesianFunctionalRegression:
         assert estimated_intercept == pytest.approx(0.3, abs=0.15)
         assert estimated_sigma == pytest.approx(0.7, abs=0.15)
 
-        distribution = estimator.predict_proba(X.iloc[:20])
+        distribution = parameter.predict_proba(X.iloc[:20])
 
         assert isinstance(distribution, SkproNormal)
         assert distribution.shape == (20, 1)
 
-    @pytest.mark.slow
     def test_mcmc_fit_normal(self, data, model):
         X, y = data
 
-        estimator = BayesianFunctionalRegression(
+        posterior = PyroToSkpro(
+            posterior_type="normal",
+            name="obs",
+            num_samples=300,
+        )
+
+        parameter = BayesianFunctionalRegression(
             model=model,
             estimator="mcmc",
+            num_iterations=100,
+            posterior=posterior,
             device="cpu",
             log=False,
         )
 
-        result = estimator.fit(X, y)
+        result = parameter.fit(X, y)
 
-        assert result is estimator
-        assert estimator._is_fitted
-        assert estimator.columns_ == "x3"
-        assert estimator.parallel_ is False
-        assert hasattr(estimator, "mcmc_")
+        assert result is parameter
+        assert parameter._is_fitted
+        assert parameter.columns_ == "x3"
+        assert parameter.parallel_ is False
+        assert hasattr(parameter, "mcmc_")
 
-        posterior_samples = estimator.mcmc_.get_samples()
+        posterior_samples = parameter.mcmc_.get_samples()
 
         for parameter_name in ["intercept", "beta", "sigma"]:
             assert parameter_name in posterior_samples
@@ -182,7 +200,20 @@ class TestBayesianFunctionalRegression:
         )
 
         X_test = X.iloc[:20]
-        distribution = estimator.predict_proba(X_test)
+        distribution = parameter.predict_proba(X_test)
 
         assert isinstance(distribution, SkproNormal)
         assert distribution.shape == (20, 1)
+
+    def test_fails(self, data, model):
+        X, y = data
+        with pytest.raises(TypeError):
+            BayesianFunctionalRegression()
+
+        with pytest.raises(ValueError):
+            BayesianFunctionalRegression(model, estimator="svi")
+
+        with pytest.raises(TypeError):
+            guide = pyro.infer.autoguide.AutoNormal(model)
+            parameter = BayesianFunctionalRegression(model, guide, estimator="svi")
+            parameter.fit()

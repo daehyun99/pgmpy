@@ -57,9 +57,6 @@ class BayesianFunctionalRegression(BaseParameter):
         super().__init__()
         _check_soft_dependencies(self.get_tag("python_dependencies"))
 
-        if not model:
-            raise ValueError("You should set ...")
-
         if (estimator == "svi") and (guide is None):
             raise ValueError("You should set ...")
 
@@ -74,15 +71,15 @@ class BayesianFunctionalRegression(BaseParameter):
         self.log = log
         self._is_fitted = False
 
-    def fit(self, X, y):
+    def fit(self, X, y=None):
         X_tensor = to_tensor(X, self.device)
         y_tensor = to_tensor(y, self.device, reshape=True)
 
-        if self.optim == None:
+        if self.optim is None:
             optim = pyro.optim.Adam({"lr": 0.3})
         else:
             optim = self.optim
-        if self.loss == None:
+        if self.loss is None:
             loss = pyro.infer.Trace_ELBO()
         else:
             loss = self.loss
