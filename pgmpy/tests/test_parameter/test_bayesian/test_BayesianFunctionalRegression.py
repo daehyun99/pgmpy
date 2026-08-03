@@ -1,1 +1,188 @@
-class TestBayesianFunctionalRegression: ...
+import numpy as np
+import pandas as pd
+import pytest
+
+torch = pytest.importorskip("torch")
+pyro = pytest.importorskip("pyro")
+dist = pytest.importorskip("pyro.distributions")
+
+from skpro.distributions.normal import Normal as SkproNormal
+
+from pgmpy.distributions.converter.PyroToSkpro import PyroToSkpro
+from pgmpy.parameter.bayesian.BayesianFunctionalRegression import BayesianFunctionalRegression
+
+
+@pytest.fixture
+def data():
+    pyro.set_rng_seed(42)
+    rng = np.random.default_rng(42)
+
+    beta = 0.8
+    intercept = 0.3
+    noise_scale = 0.7
+    n_samples = 1000
+
+    x1 = rng.normal(0.2, 0.9, size=n_samples)
+    x2 = rng.normal((x1 * 0.5) + 0.5, 0.6)
+    x3 = rng.normal((x2 * beta) + intercept, noise_scale)
+
+    data = pd.DataFrame(
+        {
+            "x1": x1,
+            "x2": x2,
+            "x3": x3,
+        }
+    )
+
+    X = data[["x2"]]
+    y = data[["x3"]]
+    return X, y
+
+
+@pytest.fixture
+def model():
+    def model(X, y=None):
+        device = X.device
+
+        beta = pyro.sample(
+            "beta",
+            dist.Normal(
+                torch.tensor(0.0, device=device),
+                torch.tensor(2.0, device=device),
+            ),
+        )
+
+        intercept = pyro.sample(
+            "intercept",
+            dist.Normal(
+                torch.tensor(0.0, device=device),
+                torch.tensor(2.0, device=device),
+            ),
+        )
+
+        sigma = pyro.sample(
+            "sigma",
+            dist.LogNormal(
+                torch.tensor(0.0, device=device),
+                torch.tensor(1.0, device=device),
+            ),
+        )
+
+        mean = intercept + beta * X[:, 0]
+
+        with pyro.plate("data", X.shape[0]):
+            pyro.sample(
+                "obs",
+                dist.Normal(mean, sigma),
+                obs=y,
+            )
+
+    return model
+
+
+class TestBayesianFunctionalRegression:
+    @pytest.mark.slow
+    def test_svi_fit_normal(self, data, model):
+        X, y = data
+
+        guide = pyro.infer.autoguide.AutoNormal(model)
+
+        posterior = PyroToSkpro(
+            posterior_type="normal",
+            name="obs",
+            num_samples=300,
+        )
+
+        estimator = BayesianFunctionalRegression(
+            model=model,
+            guide=guide,
+            estimator="svi",
+            optim=pyro.optim.Adam({"lr": 0.05}),
+            loss=pyro.infer.Trace_ELBO(),
+            num_iterations=500,
+            posterior=posterior,
+            device="cpu",
+            log=False,
+        )
+
+        result = estimator.fit(X, y)
+
+        assert result is estimator
+        assert estimator._is_fitted
+        assert estimator.columns_ == "x3"
+        assert estimator.parallel_ is False
+
+        X_tensor = torch.as_tensor(
+            X.to_numpy(),
+            dtype=torch.float32,
+            device=estimator.device,
+        )
+        y_tensor = torch.as_tensor(
+            y.to_numpy(),
+            dtype=torch.float32,
+            device=estimator.device,
+        ).reshape(-1)
+
+        estimated_parameters = guide.median(X_tensor, y_tensor)
+
+        estimated_beta = estimated_parameters["beta"].item()
+        estimated_intercept = estimated_parameters["intercept"].item()
+        estimated_sigma = estimated_parameters["sigma"].item()
+
+        assert estimated_beta == pytest.approx(0.8, abs=0.15)
+        assert estimated_intercept == pytest.approx(0.3, abs=0.15)
+        assert estimated_sigma == pytest.approx(0.7, abs=0.15)
+
+        distribution = estimator.predict_proba(X.iloc[:20])
+
+        assert isinstance(distribution, SkproNormal)
+        assert distribution.shape == (20, 1)
+
+    @pytest.mark.slow
+    def test_mcmc_fit_normal(self, data, model):
+        X, y = data
+
+        estimator = BayesianFunctionalRegression(
+            model=model,
+            estimator="mcmc",
+            device="cpu",
+            log=False,
+        )
+
+        result = estimator.fit(X, y)
+
+        assert result is estimator
+        assert estimator._is_fitted
+        assert estimator.columns_ == "x3"
+        assert estimator.parallel_ is False
+        assert hasattr(estimator, "mcmc_")
+
+        posterior_samples = estimator.mcmc_.get_samples()
+
+        for parameter_name in ["intercept", "beta", "sigma"]:
+            assert parameter_name in posterior_samples
+            assert posterior_samples[parameter_name].shape[0] == 1000
+            assert torch.isfinite(posterior_samples[parameter_name]).all()
+
+        estimated_intercept = posterior_samples["intercept"].mean().item()
+        estimated_beta = posterior_samples["beta"].mean().item()
+        estimated_sigma = posterior_samples["sigma"].mean().item()
+
+        assert estimated_intercept == pytest.approx(
+            0.3,
+            abs=0.1,
+        )
+        assert estimated_beta == pytest.approx(
+            0.8,
+            abs=0.1,
+        )
+        assert estimated_sigma == pytest.approx(
+            0.7,
+            abs=0.1,
+        )
+
+        X_test = X.iloc[:20]
+        distribution = estimator.predict_proba(X_test)
+
+        assert isinstance(distribution, SkproNormal)
+        assert distribution.shape == (20, 1)

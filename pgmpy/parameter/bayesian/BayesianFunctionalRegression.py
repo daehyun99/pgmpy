@@ -36,67 +36,77 @@ class BayesianFunctionalRegression(BaseParameter):
         "missing": False,
         "supports_fit_joint": False,
         "can_be_root": False,
-        "python_dependencies": ["pyro-ppl"],
+        "python_dependencies": ("pyro-ppl"),
     }
 
     def __init__(
         self,
         model,
-        guide,
-        optim=pyro.optim.Adam({"lr": 0.3}),
-        loss=pyro.infer.Trace_ELBO(),
+        guide=None,
+        estimator="svi",  # "mcmc"
+        optim=None,
+        loss=None,
         num_iterations=1500,
-        posterior_name="obs",
-        posterior_type="normal",
-        posterior_samples=2000,
+        posterior=None,
         device="cpu",
         log=True,
     ):
         # NOTE:
-        #   Only support "pyro.infer.SVI"
-        #   Only support "posterior_type" == "normal"
-        #   Only support "optim" == "pyro.optim.Adam"
-        #   Only support "loss" == "pyro.infer.Trace_ELBO"
         #   Only support "dtype" == "torch.float32"
 
         super().__init__()
         _check_soft_dependencies(self.get_tag("python_dependencies"))
 
-        if (not model) and (not guide):
+        if not model:
+            raise ValueError("You should set ...")
+
+        if (estimator == "svi") and (guide is None):
             raise ValueError("You should set ...")
 
         self.model = model
         self.guide = guide
+        self.estimator = estimator
         self.optim = optim
         self.loss = loss
         self.num_iterations = num_iterations
-        self.posterior_name = posterior_name
-        self.posterior_type = posterior_type
-        self.posterior_samples = posterior_samples
+        self.posterior = posterior
         self.device = device
         self.log = log
-
-        self.converter_ = PyroToSkpro(self.posterior_type)
         self._is_fitted = False
 
     def fit(self, X, y):
         X_tensor = to_tensor(X, self.device)
         y_tensor = to_tensor(y, self.device, reshape=True)
 
+        if self.optim == None:
+            optim = pyro.optim.Adam({"lr": 0.3})
+        else:
+            optim = self.optim
+        if self.loss == None:
+            loss = pyro.infer.Trace_ELBO()
+        else:
+            loss = self.loss
+
         pyro.clear_param_store()
 
-        svi = pyro.infer.SVI(
-            model=self.model,
-            guide=self.guide,
-            optim=self.optim,
-            loss=self.loss,
-        )
+        if self.estimator.lower() == "svi":
+            svi = pyro.infer.SVI(
+                model=self.model,
+                guide=self.guide,
+                optim=optim,
+                loss=loss,
+            )
 
-        for j in range(self.num_iterations):
-            loss = svi.step(X_tensor, y_tensor)
+            for j in range(self.num_iterations):
+                loss = svi.step(X_tensor, y_tensor)
 
-            if self.log and j % 100 == 0:
-                print(f"[iteration {j + 1:04d}] loss: {loss / X_tensor.shape[0]:.4f}")
+                if self.log and j % 100 == 0:
+                    print(f"[iteration {j + 1:04d}] loss: {loss / X_tensor.shape[0]:.4f}")
+
+        elif self.estimator.lower() == "mcmc":
+            nuts_kernel = pyro.infer.NUTS(self.model)
+            self.mcmc_ = pyro.infer.MCMC(nuts_kernel, num_samples=1000, warmup_steps=200)
+            self.mcmc_.run(X_tensor, y_tensor)
 
         self._is_fitted = True
         self.columns_ = y.columns[0]
@@ -110,16 +120,31 @@ class BayesianFunctionalRegression(BaseParameter):
         index = X.index
         X_tensor = to_tensor(X, self.device)
 
-        predictive = pyro.infer.Predictive(
-            model=self.model,
-            guide=self.guide,
-            num_samples=self.posterior_samples,
-            return_sites=(self.posterior_name,),
-            parallel=self.parallel_,
-        )
+        if self.posterior is None:
+            posterior = PyroToSkpro("normal", "obs", 2000)
+        else:
+            posterior = self.posterior
+
+        if self.estimator.lower() == "svi":
+            predictive = pyro.infer.Predictive(
+                model=self.model,
+                guide=self.guide,
+                num_samples=posterior.num_samples,
+                return_sites=(posterior.name,),
+                parallel=self.parallel_,
+            )
+
+        elif self.estimator.lower() == "mcmc":
+            predictive = pyro.infer.Predictive(
+                model=self.model,
+                posterior_samples=self.mcmc_.get_samples(),
+                num_samples=posterior.num_samples,
+                return_sites=(posterior.name,),
+                parallel=self.parallel_,
+            )
 
         with torch.no_grad():
             samples = predictive(X_tensor)
 
-        SkproDistribution = self.converter_.convert(samples, index, [self.columns_], self.posterior_name)
+        SkproDistribution = posterior.convert(samples, index, [self.columns_], posterior.name)
         return SkproDistribution

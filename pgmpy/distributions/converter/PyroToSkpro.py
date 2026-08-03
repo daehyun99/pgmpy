@@ -6,8 +6,10 @@ class PyroToSkpro:
         "normal": "_convert_normal",
     }
 
-    def __init__(self, posterior_type: str):
+    def __init__(self, posterior_type: str = "normal", name: str = "obs", num_samples: int = 2000):
         self.posterior_type = posterior_type
+        self.name = name
+        self.num_samples = num_samples
 
     def convert(self, samples, index, columns, name="obs"):
         converter_name = self._CONVERTERS.get(self.posterior_type)
