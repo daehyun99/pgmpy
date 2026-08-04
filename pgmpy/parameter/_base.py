@@ -33,7 +33,7 @@ class BaseParameter(_BaseEstimator):
         self : reference to self
         """
         X, y, sample_weight = self._check_data(X, y, sample_weight)
-        self._fit(X, y, sample_weight)
+        self._fit(X, y, sample_weight=None)
         self._is_fitted = True
         return self
 

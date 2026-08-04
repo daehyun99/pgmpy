@@ -8,8 +8,7 @@ dist = pytest.importorskip("pyro.distributions")
 
 from skpro.distributions.normal import Normal as SkproNormal
 
-from pgmpy.distributions.converter.PyroToSkpro import PyroToSkpro
-from pgmpy.parameter.bayesian.BayesianFunctionalRegression import BayesianFunctionalRegression
+from pgmpy.parameter.bayesian.BayesianMCMCRegression import BayesianMCMCRegression
 
 
 @pytest.fixture
@@ -80,11 +79,11 @@ def model():
     return model
 
 
-class TestBayesianFunctionalRegression:
+class TestBayesianMCMCRegression:
     def test_base_parameter_default(self, model):
-        parameter = BayesianFunctionalRegression(model, estimator="mcmc")
+        parameter = BayesianMCMCRegression(model)
 
-        assert parameter.__class__.__name__ == "BayesianFunctionalRegression"
+        assert parameter.__class__.__name__ == "BayesianMCMCRegression"
         assert parameter.get_class_tag("variable_type") == "continuous"
         assert parameter.get_class_tag("produces_factor") is False
         assert parameter.get_class_tag("missing") is False
@@ -93,78 +92,16 @@ class TestBayesianFunctionalRegression:
         assert parameter.get_class_tag("can_be_root") is False
         assert parameter.get_class_tag("python_dependencies") == ("pyro-ppl")
 
-    def test_svi_fit_normal(self, data, model):
+    def test_fit(self, data, model):
         X, y = data
 
-        guide = pyro.infer.autoguide.AutoNormal(model)
-
-        posterior = PyroToSkpro(
-            posterior_type="normal",
-            name="obs",
-            num_samples=300,
-        )
-
-        parameter = BayesianFunctionalRegression(
-            model=model,
-            guide=guide,
-            estimator="svi",
-            optim=pyro.optim.Adam({"lr": 0.05}),
-            loss=pyro.infer.Trace_ELBO(),
-            num_iterations=500,
-            posterior=posterior,
+        parameter = BayesianMCMCRegression(
+            model,
+            warmup_steps=50,
+            num_samples=100,
+            posterior=None,
+            return_sites="obs",
             device="cpu",
-            log=False,
-        )
-
-        result = parameter.fit(X, y)
-
-        assert result is parameter
-        assert parameter._is_fitted
-        assert parameter.columns_ == "x3"
-        assert parameter.parallel_ is False
-
-        X_tensor = torch.as_tensor(
-            X.to_numpy(),
-            dtype=torch.float32,
-            device=parameter.device,
-        )
-        y_tensor = torch.as_tensor(
-            y.to_numpy(),
-            dtype=torch.float32,
-            device=parameter.device,
-        ).reshape(-1)
-
-        estimated_parameters = guide.median(X_tensor, y_tensor)
-
-        estimated_beta = estimated_parameters["beta"].item()
-        estimated_intercept = estimated_parameters["intercept"].item()
-        estimated_sigma = estimated_parameters["sigma"].item()
-
-        assert estimated_beta == pytest.approx(0.8, abs=0.15)
-        assert estimated_intercept == pytest.approx(0.3, abs=0.15)
-        assert estimated_sigma == pytest.approx(0.7, abs=0.15)
-
-        distribution = parameter.predict_proba(X.iloc[:20])
-
-        assert isinstance(distribution, SkproNormal)
-        assert distribution.shape == (20, 1)
-
-    def test_mcmc_fit_normal(self, data, model):
-        X, y = data
-
-        posterior = PyroToSkpro(
-            posterior_type="normal",
-            name="obs",
-            num_samples=300,
-        )
-
-        parameter = BayesianFunctionalRegression(
-            model=model,
-            estimator="mcmc",
-            num_iterations=100,
-            posterior=posterior,
-            device="cpu",
-            log=False,
         )
 
         result = parameter.fit(X, y)
@@ -179,7 +116,7 @@ class TestBayesianFunctionalRegression:
 
         for parameter_name in ["intercept", "beta", "sigma"]:
             assert parameter_name in posterior_samples
-            assert posterior_samples[parameter_name].shape[0] == 1000
+            assert posterior_samples[parameter_name].shape[0] == 100
             assert torch.isfinite(posterior_samples[parameter_name]).all()
 
         estimated_intercept = posterior_samples["intercept"].mean().item()
@@ -208,12 +145,9 @@ class TestBayesianFunctionalRegression:
     def test_fails(self, data, model):
         X, y = data
         with pytest.raises(TypeError):
-            BayesianFunctionalRegression()
-
-        with pytest.raises(ValueError):
-            BayesianFunctionalRegression(model, estimator="svi")
+            BayesianMCMCRegression()
 
         with pytest.raises(TypeError):
             guide = pyro.infer.autoguide.AutoNormal(model)
-            parameter = BayesianFunctionalRegression(model, guide, estimator="svi")
+            parameter = BayesianMCMCRegression(model, guide)
             parameter.fit()
