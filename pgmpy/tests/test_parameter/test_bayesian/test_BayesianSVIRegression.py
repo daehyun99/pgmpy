@@ -96,6 +96,17 @@ class TestBayesianSVIRegression:
     def test_fit(self, data, model):
         X, y = data
 
+        # Case 1
+        parameter = BayesianSVIRegression(model=model)
+
+        result = parameter.fit(X, y)
+
+        assert result is parameter
+        assert parameter._is_fitted
+        assert parameter.columns_ == "x3"
+        assert parameter.parallel_ is False
+
+        # Case 2
         guide = pyro.infer.autoguide.AutoNormal(model)
 
         posterior = PyroToSkpro(posterior_type="normal")
@@ -108,7 +119,7 @@ class TestBayesianSVIRegression:
             num_iterations=500,
             posterior=posterior,
             device="cpu",
-            log=False,
+            log=True,
         )
 
         result = parameter.fit(X, y)

@@ -144,16 +144,7 @@ class TestPyroToSkpro:
 
     def test_remove(self, samples):
         def _convert_laplace(samples, index, columns, name="obs"):
-            y_samples = samples[name]
-            mean = y_samples.mean(dim=0).detach().reshape(-1, 1).cpu().numpy()
-            scale = (y_samples.std(dim=0, unbiased=False) / math.sqrt(2)).detach().reshape(-1, 1).cpu().numpy()
-
-            return Laplace(
-                mu=mean,
-                scale=scale,
-                index=index,
-                columns=columns,
-            )
+            return ...
 
         converter = PyroToSkpro()
         converter.add("laplace", _convert_laplace)

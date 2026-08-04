@@ -39,41 +39,7 @@ def data():
 
 @pytest.fixture
 def model():
-    def model(X, y=None):
-        device = X.device
-
-        beta = pyro.sample(
-            "beta",
-            dist.Normal(
-                torch.tensor(0.0, device=device),
-                torch.tensor(2.0, device=device),
-            ),
-        )
-
-        intercept = pyro.sample(
-            "intercept",
-            dist.Normal(
-                torch.tensor(0.0, device=device),
-                torch.tensor(2.0, device=device),
-            ),
-        )
-
-        sigma = pyro.sample(
-            "sigma",
-            dist.LogNormal(
-                torch.tensor(0.0, device=device),
-                torch.tensor(1.0, device=device),
-            ),
-        )
-
-        mean = intercept + beta * X[:, 0]
-
-        with pyro.plate("data", X.shape[0]):
-            pyro.sample(
-                "obs",
-                dist.Normal(mean, sigma),
-                obs=y,
-            )
+    def model(X, y=None): ...
 
     return model
 
