@@ -86,13 +86,13 @@ class BasePyroRegression(BaseParameter):
         X_tensor = to_tensor(X, self.device)
 
         if self.posterior is None:
-            posterior = PyroToSkpro("normal", "obs", 2000)
+            posterior = PyroToSkpro("normal")
         else:
             posterior = self.posterior
 
         samples = self._predict_approx(X_tensor)
 
-        SkproDistribution = posterior.convert(samples, index, [self.columns_], posterior.name)
+        SkproDistribution = posterior.convert(samples, index, [self.columns_], self.return_sites)
         return SkproDistribution
 
     def _predict_approx(X_tensor):

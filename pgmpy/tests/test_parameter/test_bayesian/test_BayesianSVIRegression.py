@@ -98,11 +98,7 @@ class TestBayesianSVIRegression:
 
         guide = pyro.infer.autoguide.AutoNormal(model)
 
-        posterior = PyroToSkpro(
-            posterior_type="normal",
-            name="obs",
-            num_samples=300,
-        )
+        posterior = PyroToSkpro(posterior_type="normal")
 
         parameter = BayesianSVIRegression(
             model=model,
