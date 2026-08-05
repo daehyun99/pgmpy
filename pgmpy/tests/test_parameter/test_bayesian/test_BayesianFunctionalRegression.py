@@ -9,7 +9,7 @@ dist = pytest.importorskip("pyro.distributions")
 from skpro.distributions.normal import Normal as SkproNormal
 
 from pgmpy.distributions.converter.PyroToSkpro import PyroToSkpro
-from pgmpy.parameter.bayesian.BayesianSVIRegression import BayesianSVIRegression
+from pgmpy.parameter.bayesian.BayesianFunctionalRegression import BayesianFunctionalRegression
 
 
 @pytest.fixture
@@ -80,11 +80,11 @@ def model():
     return model
 
 
-class TestBayesianSVIRegression:
+class TestBayesianFunctionalRegression:
     def test_base_parameter_default(self, model):
-        parameter = BayesianSVIRegression(model)
+        parameter = BayesianFunctionalRegression(model)
 
-        assert parameter.__class__.__name__ == "BayesianSVIRegression"
+        assert parameter.__class__.__name__ == "BayesianFunctionalRegression"
         assert parameter.get_class_tag("variable_type") == "continuous"
         assert parameter.get_class_tag("produces_factor") is False
         assert parameter.get_class_tag("missing") is False
@@ -93,11 +93,20 @@ class TestBayesianSVIRegression:
         assert parameter.get_class_tag("can_be_root") is False
         assert parameter.get_class_tag("python_dependencies") == ("pyro-ppl")
 
-    def test_fit(self, data, model):
+    def test_fails(self, data, model):
+        X, y = data
+        with pytest.raises(TypeError):
+            BayesianFunctionalRegression()
+
+        with pytest.raises(TypeError):
+            parameter = BayesianFunctionalRegression(model)
+            parameter.fit()
+
+    def test_fit_svi(self, data, model):
         X, y = data
 
         # Case 1
-        parameter = BayesianSVIRegression(model=model)
+        parameter = BayesianFunctionalRegression(model=model, estimator="svi")
 
         result = parameter.fit(X, y)
 
@@ -111,8 +120,9 @@ class TestBayesianSVIRegression:
 
         posterior = PyroToSkpro(posterior_type="normal")
 
-        parameter = BayesianSVIRegression(
+        parameter = BayesianFunctionalRegression(
             model=model,
+            estimator="svi",
             guide=guide,
             optim=pyro.optim.Adam({"lr": 0.05}),
             loss=pyro.infer.Trace_ELBO(),
@@ -155,12 +165,52 @@ class TestBayesianSVIRegression:
         assert isinstance(distribution, SkproNormal)
         assert distribution.shape == (20, 1)
 
-    def test_fails(self, data, model):
+    def test_fit_mcmc(self, data, model):
         X, y = data
-        with pytest.raises(TypeError):
-            BayesianSVIRegression()
 
-        with pytest.raises(TypeError):
-            guide = pyro.infer.autoguide.AutoNormal(model)
-            parameter = BayesianSVIRegression(model, guide)
-            parameter.fit()
+        parameter = BayesianFunctionalRegression(
+            model,
+            estimator="mcmc",
+            warmup_steps=50,
+            num_samples=100,
+            return_sites="obs",
+            device="cpu",
+        )
+
+        result = parameter.fit(X, y)
+
+        assert result is parameter
+        assert parameter._is_fitted
+        assert parameter.columns_ == "x3"
+        assert parameter.parallel_ is False
+        assert hasattr(parameter, "mcmc_")
+
+        posterior_samples = parameter.mcmc_.get_samples()
+
+        for parameter_name in ["intercept", "beta", "sigma"]:
+            assert parameter_name in posterior_samples
+            assert posterior_samples[parameter_name].shape[0] == 100
+            assert torch.isfinite(posterior_samples[parameter_name]).all()
+
+        estimated_intercept = posterior_samples["intercept"].mean().item()
+        estimated_beta = posterior_samples["beta"].mean().item()
+        estimated_sigma = posterior_samples["sigma"].mean().item()
+
+        assert estimated_intercept == pytest.approx(
+            0.3,
+            abs=0.1,
+        )
+        assert estimated_beta == pytest.approx(
+            0.8,
+            abs=0.1,
+        )
+        assert estimated_sigma == pytest.approx(
+            0.7,
+            abs=0.1,
+        )
+
+        X_test = X.iloc[:20]
+        distribution = parameter.predict_proba(X_test)
+
+        assert isinstance(distribution, SkproNormal)
+        assert distribution.shape == (20, 1)
