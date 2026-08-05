@@ -6,6 +6,42 @@ from pgmpy.parameter._base import BaseParameter
 
 
 class SklearnAdapter(_DelegatedProbaRegressor, BaseParameter):
+    """
+    Parameter adapter class for scikit-learn regression and classification models.
+
+    Parameters
+    ----------
+    estimator : object
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from pgmpy.parameter.adapter.SklearnAdapter import SklearnAdapter
+    >>> from sklearn.linear_model import LinearRegression
+    >>> rng = np.random.default_rng(seed=42)
+    >>> n = 1000
+    >>> A = rng.normal(size=n)
+    >>> B = rng.normal(size=n)
+    >>> C = rng.normal(size=n)
+    >>> mean_y = 1 + 2 * A + 5 * B + 7 * C
+    >>> X = pd.DataFrame(
+    ...     {
+    ...         "A": A,
+    ...         "B": B,
+    ...         "C": C,
+    ...     }
+    ... )
+    >>> y = pd.DataFrame({"y": rng.normal(loc=mean_y, scale=3)})
+    >>> cpd = SklearnAdapter(LinearRegression())
+    >>> cpd.fit(X, y)
+    SklearnAdapter(estimator=LinearRegression())
+    >>> normal = cpd.predict_proba(X[:5])
+    >>> normal # doctest: +SKIP
+    Normal
+
+    """
+
     _tags = {
         "produces_factor": False,
         "is_linear_gaussian": False,

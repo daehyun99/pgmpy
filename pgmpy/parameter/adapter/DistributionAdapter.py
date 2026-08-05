@@ -4,6 +4,32 @@ from pgmpy.parameter._base import BaseParameter
 
 
 class DistributionAdapter(BaseParameter):
+    """
+    Parameter adapter class for skpro distribution class.
+
+    Parameters
+    ----------
+    distribution : object
+
+    Examples
+    --------
+    >>> from skpro.distributions.normal import Normal
+    >>> from pgmpy.parameter.adapter.DistributionAdapter import DistributionAdapter
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> rng = np.random.default_rng(seed=42)
+    >>> X = pd.DataFrame(
+    ...     {
+    ...         "A": rng.normal(size=10),
+    ...     }
+    ... )
+    >>> normal = DistributionAdapter(Normal(0, 1))
+    >>> dist = normal.predict_proba(X)
+    >>> dist # doctest: +SKIP
+    Normal()
+
+    """
+
     _tags = {
         "parameter_type": "distribution",
         "produces_factor": False,
