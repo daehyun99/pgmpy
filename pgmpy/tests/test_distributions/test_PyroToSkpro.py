@@ -99,7 +99,7 @@ class TestPyroToSkpro:
             atol=1e-7,
         )
 
-    def test_set_converter(self, samples):
+    def test_set(self, samples):
         def _convert_laplace(samples, index, columns, name="obs"):
             y_samples = samples[name]
             mean = y_samples.mean(dim=0).detach().reshape(-1, 1).cpu().numpy()
@@ -114,7 +114,7 @@ class TestPyroToSkpro:
 
         converter = PyroToSkpro()
         converter.add("laplace", _convert_laplace)
-        converter.set_converter("laplace")
+        converter.set("laplace")
         laplace = converter.convert(samples, pd.RangeIndex(0, 2), ["laplace"], "obs")
 
         assert isinstance(laplace, Laplace)
@@ -148,7 +148,18 @@ class TestPyroToSkpro:
 
         converter = PyroToSkpro()
         converter.add("laplace", _convert_laplace)
-        converter.set_converter("laplace")
+        converter.set("laplace")
         converter.remove("laplace")
         with pytest.raises(ValueError):
             converter.convert(samples, pd.RangeIndex(0, 2), ["laplace"], "obs")
+
+    def test_get(self, samples):
+        def _convert_laplace(samples, index, columns, name="obs"):
+            return ...
+
+        converter = PyroToSkpro()
+
+        assert converter.get() == ["normal"]
+
+        converter.add("laplace", _convert_laplace)
+        assert converter.get() == ["normal", "laplace"]

@@ -53,3 +53,9 @@ class PyroToSkpro:
     ):
         self._converters.pop(posterior_type)
         return self
+
+    def get(self):
+        """
+        Returns a list of all available conversion methods.
+        """
+        return list(self._converters.keys())
