@@ -29,6 +29,8 @@ def to_tensor(arr, device, reshape=False):
 
 
 class BasePyroRegression(BaseParameter):
+    """Base class for parameter classes using `pyro` in pgmpy."""
+
     _tags = {
         "variable_type": "continuous",
         "produces_factor": False,
@@ -58,9 +60,6 @@ class BasePyroRegression(BaseParameter):
         self._is_fitted = False
 
     def _fit(self, X, y=None, sample_weight=None):
-        """
-        API Docs
-        """
         X_tensor = to_tensor(X, self.device)
         y_tensor = to_tensor(y, self.device, reshape=True)
 
@@ -79,9 +78,6 @@ class BasePyroRegression(BaseParameter):
         raise NotImplementedError
 
     def _predict_proba(self, X):
-        """
-        API Docs
-        """
         index = X.index
         X_tensor = to_tensor(X, self.device)
 

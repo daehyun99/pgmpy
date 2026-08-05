@@ -7,6 +7,75 @@ pyro = _safe_import("pyro", pkg_name="pyro-ppl")
 
 
 class BayesianSVIRegression(BasePyroRegression):
+    """
+    Bayesian Functional Regression class with SVI.
+
+    Parameters
+    ----------
+    model : callable
+    guide : callable, optional
+    optim : object, optional
+    loss : object, optional
+    num_iterations : int, optional
+    num_samples : int, optional
+    posterior : object, optional
+    return_sites : str, optional
+    device : str, optional
+    log : bool, optional
+
+    Example
+    -------
+    >>> from pgmpy.parameter.bayesian.BayesianSVIRegression import BayesianSVIRegression
+    >>> from skbase.utils.dependencies import _safe_import
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> torch = _safe_import("torch")
+    >>> pyro = _safe_import("pyro", pkg_name="pyro-ppl")
+    >>> rng = np.random.default_rng(42)
+    >>> n_samples = 10_000
+
+    >>> A = rng.normal(
+    ...     loc=0.0,
+    ...     scale=1.0,
+    ...     size=n_samples,
+    ... )
+
+    >>> B = (
+    ...     A + rng.normal(
+    ...         loc=1.0,
+    ...         scale=0.5,
+    ...         size=n_samples,
+    ...     )
+    ... )
+
+    >>> X = pd.DataFrame(
+    ...     {
+    ...         "A": A,
+    ...     }
+    ... )
+    >>> y = pd.DataFrame(
+    ...     {
+    ...         "B": B,
+    ...     }
+    ... )
+
+    >>> def model(X_tensor, y_tensor=None):
+    ...     intercept = pyro.sample("intercept", dist.Normal(0.0, 10.0))
+    ...     coeff = pyro.sample("coeff", dist.Normal(0.0, 1.0))
+    ...     sigma = pyro.sample("sigma", dist.Uniform(0.0, 10.0))
+    ...     mean = intercept + coeff * X_tensor[:, 0]
+    ...     with pyro.plate("data", len(X_tensor[:, 0])):
+    ...         pyro.sample("obs", dist.Normal(mean, sigma), obs=y_tensor)
+
+    >>> regressor = BayesianSVIRegression(
+    ...     model=model,
+    ... )
+    >>> regressor.fit(X, y)
+    >>> normal = regressor.predict_proba(X[:5])
+    >>> normal # doctest: +SKIP
+    Normal()
+    """
+
     _tags = {
         "variable_type": "continuous",
         "produces_factor": False,
