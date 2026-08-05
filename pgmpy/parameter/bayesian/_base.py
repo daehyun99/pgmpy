@@ -57,7 +57,6 @@ class BasePyroRegression(BaseParameter):
         self.return_sites = return_sites
         self.num_samples = num_samples
         self.device = device
-        self._is_fitted = False
 
     def _fit(self, X, y=None, sample_weight=None):
         X_tensor = to_tensor(X, self.device)
@@ -66,7 +65,6 @@ class BasePyroRegression(BaseParameter):
         pyro.clear_param_store()
         self._fit_approx(X_tensor, y_tensor)
 
-        self._is_fitted = True
         self.columns_ = y.columns[0]
         if self.device == "cpu":
             self.parallel_ = False

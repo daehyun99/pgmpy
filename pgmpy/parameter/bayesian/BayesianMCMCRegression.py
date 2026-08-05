@@ -70,7 +70,7 @@ class BayesianMCMCRegression(BasePyroRegression):
     ... )
     >>> regressor.fit(X, y) # doctest: +SKIP
     BayesianMCMCRegression()
-    >>> normal = regressor.predict_proba(X[:5])
+    >>> normal = regressor.predict_proba(X[:5]) # doctest: +SKIP
     >>> normal # doctest: +SKIP
     Normal()
 

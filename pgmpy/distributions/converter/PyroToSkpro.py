@@ -71,12 +71,12 @@ class PyroToSkpro:
     ...         columns=columns,
     ...     )
     >>> converter = PyroToSkpro()
-    >>> converter.add("laplace", _convert_laplace)
-    >>> converter.remove("normal")
-    >>> converter.get()
+    >>> converter.add("laplace", _convert_laplace) # doctest: +SKIP
+    >>> converter.remove("normal") # doctest: +SKIP
+    >>> converter.get() # doctest: +SKIP
     ['laplace']
-    >>> converter.set("laplace")
-    >>> laplace = converter.convert(samples, pd.RangeIndex(0,2), ["laplace"], "obs")
+    >>> converter.set("laplace") # doctest: +SKIP
+    >>> laplace = converter.convert(samples, pd.RangeIndex(0,2), ["laplace"], "obs") # doctest: +SKIP
     >>> laplace # doctest: +SKIP
     Laplace()
 

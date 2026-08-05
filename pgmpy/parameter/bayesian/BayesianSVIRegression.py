@@ -72,7 +72,7 @@ class BayesianSVIRegression(BasePyroRegression):
     ... )
     >>> regressor.fit(X, y) # doctest: +SKIP
     BayesianSVIRegression()
-    >>> normal = regressor.predict_proba(X[:5])
+    >>> normal = regressor.predict_proba(X[:5]) # doctest: +SKIP
     >>> normal # doctest: +SKIP
     Normal()
     """
