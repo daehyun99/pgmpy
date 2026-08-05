@@ -56,12 +56,12 @@ class BayesianMCMCRegression(BasePyroRegression):
     ... )
 
     >>> def model(X_tensor, y_tensor=None):
-    ...     intercept = pyro.sample("intercept", dist.Normal(0.0, 10.0))
-    ...     coeff = pyro.sample("coeff", dist.Normal(0.0, 1.0))
-    ...     sigma = pyro.sample("sigma", dist.Uniform(0.0, 10.0))
+    ...     intercept = pyro.sample("intercept", pyro.distributions.Normal(0.0, 10.0))
+    ...     coeff = pyro.sample("coeff", pyro.distributions.Normal(0.0, 1.0))
+    ...     sigma = pyro.sample("sigma", pyro.distributions.Uniform(0.0, 10.0))
     ...     mean = intercept + coeff * X_tensor[:, 0]
     ...     with pyro.plate("data", len(X_tensor[:, 0])):
-    ...         pyro.sample("obs", dist.Normal(mean, sigma), obs=y_tensor)
+    ...         pyro.sample("obs", pyro.distributions.Normal(mean, sigma), obs=y_tensor)
 
     >>> regressor = BayesianMCMCRegression(
     ...     model=model,

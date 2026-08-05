@@ -3,7 +3,8 @@ from skpro.distributions.normal import Normal as SkproNormal
 
 def _convert_normal(samples, index, columns, name="obs"):
     """
-    Convert the posterior samples obtained from MCMC and SVI using Pyro into the Normal distribution format provided by skpro.
+    Convert the posterior samples obtained from MCMC and SVI using Pyro
+    into the Normal distribution format provided by skpro.
     """
     y_samples = samples[name]
     mean = y_samples.mean(dim=0).detach().reshape(-1, 1).cpu().numpy()
@@ -21,7 +22,8 @@ class PyroToSkpro:
     """
     Convert the posterior samples obtained from MCMC and SVI using Pyro into the distribution format provided by skpro.
 
-    `add()` adds a new conversion method, while `set()` specifies which conversion method to use when `convert()` is called.
+    `add()` adds a new conversion method,
+    while `set()` specifies which conversion method to use when `convert()` is called.
     `remove()` deletes a specific conversion method, and `get()` returns the list of available conversion methods.
 
 
@@ -51,9 +53,10 @@ class PyroToSkpro:
     The currently implemented converter classes can be viewed using `get()`.
 
     >>> converter.get()
-    ["normal"]
+    ['normal']
 
-    You can add a custom converter, retrieve the distribution produced by that converter, and manage it using the `add()`, `set()`, and `remove()` methods.
+    You can add a custom converter, retrieve the distribution produced by that converter,
+    and manage it using the `add()`, `set()`, and `remove()` methods.
     The example below demonstrates how to add and use a custom converter that produces a Laplace distribution.
     >>> from skpro.distributions.laplace import Laplace
 
