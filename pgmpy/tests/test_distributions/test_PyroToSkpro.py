@@ -3,14 +3,13 @@ import math
 import numpy as np
 import pandas as pd
 import pytest
-from skbase.utils.dependencies import _safe_import
 from skpro.distributions.laplace import Laplace
 from skpro.distributions.normal import Normal
 
 from pgmpy.distributions.converter.PyroToSkpro import PyroToSkpro
 
-torch = _safe_import("torch")
-pyro = _safe_import("pyro", pkg_name="pyro-ppl")
+torch = pytest.importorskip("torch")
+pyro = pytest.importorskip("pyro")
 
 
 @pytest.fixture

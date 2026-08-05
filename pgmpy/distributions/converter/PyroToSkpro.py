@@ -61,10 +61,10 @@ class PyroToSkpro:
     >>> from skpro.distributions.laplace import Laplace
 
     >>> def _convert_laplace(samples, index, columns, name="obs"):
-    >>>     y_samples = samples[name]
-    >>>     mean = y_samples.mean(dim=0).detach().reshape(-1, 1).cpu().numpy()
-    >>>     scale = y_samples.std(dim=0, unbiased=False).detach().reshape(-1, 1).cpu().numpy()
-    >>>     return Laplace(
+    ...     y_samples = samples[name]
+    ...     mean = y_samples.mean(dim=0).detach().reshape(-1, 1).cpu().numpy()
+    ...     scale = y_samples.std(dim=0, unbiased=False).detach().reshape(-1, 1).cpu().numpy()
+    ...     return Laplace(
     ...         mu=mean,
     ...         scale=scale,
     ...         index=index,
@@ -74,7 +74,7 @@ class PyroToSkpro:
     >>> converter.add("laplace", _convert_laplace)
     >>> converter.remove("normal")
     >>> converter.get()
-    ["laplace"]
+    ['laplace']
     >>> converter.set("laplace")
     >>> laplace = converter.convert(samples, pd.RangeIndex(0,2), ["laplace"], "obs")
     >>> laplace # doctest: +SKIP
