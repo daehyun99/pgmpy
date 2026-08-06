@@ -8,7 +8,6 @@ dist = pytest.importorskip("pyro.distributions")
 
 from skpro.distributions.normal import Normal as SkproNormal
 
-from pgmpy.distributions.converter.PyroToSkpro import PyroToSkpro
 from pgmpy.parameter.bayesian.BayesianFunctionalRegression import BayesianFunctionalRegression
 
 
@@ -118,8 +117,6 @@ class TestBayesianFunctionalRegression:
         # Case 2
         guide = pyro.infer.autoguide.AutoNormal(model)
 
-        posterior = PyroToSkpro(posterior_type="normal")
-
         parameter = BayesianFunctionalRegression(
             model=model,
             estimator="svi",
@@ -127,9 +124,9 @@ class TestBayesianFunctionalRegression:
             optim=pyro.optim.Adam({"lr": 0.05}),
             loss=pyro.infer.Trace_ELBO(),
             num_iterations=500,
-            posterior=posterior,
+            posterior="normal",
             device="cpu",
-            log=True,
+            svi_log=True,
         )
 
         result = parameter.fit(X, y)

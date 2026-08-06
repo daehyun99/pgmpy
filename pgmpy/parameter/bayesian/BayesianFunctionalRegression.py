@@ -1,3 +1,5 @@
+from typing import Literal
+
 from skbase.utils.dependencies import _check_soft_dependencies, _safe_import
 
 from pgmpy.distributions.converter.PyroToSkpro import PyroToSkpro
@@ -32,34 +34,34 @@ class BayesianFunctionalRegression(BaseParameter):
     """Base class for parameter classes using `pyro` in pgmpy.
 
 
-    Bayesian Functional Regression class with MCMC sampling.
 
     Parameters
     ----------
     model : callable
-    warmup_steps : int, optional
     num_samples : int, optional
+    estimator : str
+
+    Bayesian Functional Regression class with MCMC sampling.
+
+    Parameters for MCMC sampling
+    ----------
+    warmup_steps : int, optional
     posterior : object, optional
     return_sites : str, optional
     device : str, optional
 
-
     Bayesian Functional Regression class with SVI.
 
-    Parameters
+    Parameters for SVI
     ----------
-    model : callable
     guide : callable, optional
     optim : object, optional
     loss : object, optional
     num_iterations : int, optional
-    num_samples : int, optional
     posterior : object, optional
     return_sites : str, optional
     device : str, optional
-    log : bool, optional
-
-
+    svi_log : bool, optional
 
     Example
     -------
@@ -180,15 +182,42 @@ class BayesianFunctionalRegression(BaseParameter):
         "python_dependencies": ("pyro-ppl"),
     }
 
-    def __init__(self, model, estimator="svi", num_samples=1000, **kwargs):
+    def __init__(
+        self,
+        model,
+        estimator: Literal["svi", "mcmc"] = "svi",
+        num_samples=1000,
+        *,
+        posterior="normal",
+        return_sites="obs",
+        device="cpu",
+        # MCMC
+        warmup_steps=200,
+        # SVI
+        guide=None,
+        optim=pyro.optim.Adam({"lr": 0.3}),
+        loss=pyro.infer.Trace_ELBO(),
+        num_iterations=1500,
+        svi_log=False,
+    ):
         super().__init__()
         _check_soft_dependencies(self.get_tag("python_dependencies"))
 
         self.model = model
         self.estimator = estimator
         self.num_samples = num_samples
-        self.kwargs = kwargs
-        self.device = self.kwargs.get("device", "cpu")
+
+        self.posterior = posterior
+        self.return_sites = return_sites
+        self.device = device
+
+        self.warmup_steps = warmup_steps
+
+        self.guide = guide
+        self.optim = optim
+        self.loss = loss
+        self.num_iterations = num_iterations
+        self.svi_log = svi_log
 
     def _fit(self, X, y=None, sample_weight=None):
         X_tensor = to_tensor(X, self.device)
@@ -196,16 +225,16 @@ class BayesianFunctionalRegression(BaseParameter):
 
         pyro.clear_param_store()
         if self.estimator == "mcmc":
-            self.warmup_steps_ = self.kwargs.get("warmup_steps", 200)
+            self.warmup_steps_ = self.warmup_steps
 
             nuts_kernel = pyro.infer.NUTS(self.model)
             self.mcmc_ = pyro.infer.MCMC(nuts_kernel, num_samples=self.num_samples, warmup_steps=self.warmup_steps_)
             self.mcmc_.run(X_tensor, y_tensor)
 
         elif self.estimator == "svi":
-            self.guide_ = self.kwargs.get("guide", pyro.infer.autoguide.AutoNormal(self.model))
-            self.optim_ = self.kwargs.get("optim", pyro.optim.Adam({"lr": 0.3}))
-            self.loss_ = self.kwargs.get("loss", pyro.infer.Trace_ELBO())
+            self.guide_ = self.guide if self.guide is not None else pyro.infer.autoguide.AutoNormal(self.model)
+            self.optim_ = self.optim
+            self.loss_ = self.loss
 
             svi = pyro.infer.SVI(
                 model=self.model,
@@ -214,12 +243,13 @@ class BayesianFunctionalRegression(BaseParameter):
                 loss=self.loss_,
             )
 
-            for j in range(self.kwargs.get("num_iterations", 1500)):
+            for j in range(self.num_iterations):
                 loss = svi.step(X_tensor, y_tensor)
 
-                if self.kwargs.get("log", True) and j % 100 == 0:
+                if self.svi_log and j % 100 == 0:
                     print(f"[iteration {j + 1:04d}] loss: {loss / X_tensor.shape[0]:.4f}")
 
+        self.posterior_ = PyroToSkpro(self.posterior)
         self.columns_ = y.columns[0]
         if self.device == "cpu":
             self.parallel_ = False
@@ -231,15 +261,12 @@ class BayesianFunctionalRegression(BaseParameter):
         index = X.index
         X_tensor = to_tensor(X, self.device)
 
-        self.posterior_ = self.kwargs.get("posterior", PyroToSkpro("normal"))
-        self.return_sites_ = self.kwargs.get("return_sites", "obs")
-
         if self.estimator == "mcmc":
             predictive = pyro.infer.Predictive(
                 model=self.model,
                 posterior_samples=self.mcmc_.get_samples(),
                 num_samples=self.num_samples,
-                return_sites=(self.return_sites_,),
+                return_sites=(self.return_sites,),
                 parallel=self.parallel_,
             )
         elif self.estimator == "svi":
@@ -247,12 +274,12 @@ class BayesianFunctionalRegression(BaseParameter):
                 model=self.model,
                 guide=self.guide_,
                 num_samples=self.num_samples,
-                return_sites=(self.return_sites_,),
+                return_sites=(self.return_sites,),
                 parallel=self.parallel_,
             )
 
         with torch.no_grad():
             samples = predictive(X_tensor)
 
-        SkproDistribution = self.posterior_.convert(samples, index, [self.columns_], self.return_sites_)
+        SkproDistribution = self.posterior_.convert(samples, index, [self.columns_], self.return_sites)
         return SkproDistribution
