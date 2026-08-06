@@ -33,35 +33,60 @@ def to_tensor(arr, device, reshape=False):
 class BayesianFunctionalRegression(BaseParameter):
     """Base class for parameter classes using `pyro` in pgmpy.
 
-
-
     Parameters
     ----------
     model : callable
-    num_samples : int, optional
-    estimator : str
+        Pyro probabilistic model used for inference. The callable must accept the
+        predictor tensor as its first argument and may accept the response tensor
+        as its second argument.
 
-    Bayesian Functional Regression class with MCMC sampling.
+    estimator : {"svi", "mcmc"}, default="svi"
+        Inference algorithm used to estimate the posterior distribution.
+        `"svi"` uses stochastic variational inference, while `"mcmc"` uses
+        Markov chain Monte Carlo sampling.
 
-    Parameters for MCMC sampling
-    ----------
-    warmup_steps : int, optional
-    posterior : object, optional
-    return_sites : str, optional
-    device : str, optional
+    num_samples : int, default=1000
+        Number of posterior predictive samples to draw. When `estimator="mcmc"`,
+        this is also the number of posterior samples generated during fitting.
 
-    Bayesian Functional Regression class with SVI.
+    posterior : str, default="normal"
+        Posterior distribution specification passed to
+        :class:`PyroToSkpro` for converting Pyro samples into an skpro
+        distribution.
 
-    Parameters for SVI
-    ----------
+    return_sites : str, default="obs"
+        Name of the Pyro sample site whose posterior predictive samples are
+        returned.
+
+    device : str or torch.device, default="cpu"
+        Device on which input tensors and Pyro computations are placed, such as
+        `"cpu"` or `"cuda"`.
+
+    warmup_steps : int, default=200
+        Number of MCMC warm-up steps. Used only when `estimator="mcmc"`.
+
     guide : callable, optional
-    optim : object, optional
-    loss : object, optional
-    num_iterations : int, optional
-    posterior : object, optional
-    return_sites : str, optional
-    device : str, optional
-    svi_log : bool, optional
+        Pyro guide used for variational inference. When `None`,
+        :class:`pyro.infer.autoguide.AutoNormal` is constructed from `model`.
+        Used only when `estimator="svi"`.
+
+    optim : pyro.optim.PyroOptim, optional
+        Pyro optimizer used for variational inference. By default,
+        :class:`pyro.optim.Adam` is used with a learning rate of `0.3`.
+        Used only when `estimator="svi"`.
+
+    loss : pyro.infer.ELBO, optional
+        Loss function used for variational inference. By default,
+        :class:`pyro.infer.Trace_ELBO` is used. Used only when
+        `estimator="svi"`.
+
+    num_iterations : int, default=1500
+        Number of optimization iterations performed during stochastic
+        variational inference. Used only when `estimator="svi"`.
+
+    svi_log : bool, default=False
+        Whether to print the average SVI loss every 100 iterations. Used only when
+        `estimator="svi"`.
 
     Example
     -------
@@ -72,7 +97,7 @@ class BayesianFunctionalRegression(BaseParameter):
     >>> torch = _safe_import("torch")
     >>> pyro = _safe_import("pyro", pkg_name="pyro-ppl")
     >>> rng = np.random.default_rng(42)
-    >>> n_samples = 10_000
+    >>> n_samples = 1000
 
     >>> A = rng.normal(
     ...     loc=0.0,
@@ -107,69 +132,33 @@ class BayesianFunctionalRegression(BaseParameter):
     ...     with pyro.plate("data", len(X_tensor[:, 0])):
     ...         pyro.sample("obs", pyro.distributions.Normal(mean, sigma), obs=y_tensor)
 
-    >>> regressor = BayesianFunctionalRegression(
+    >>> mcmc_regressor = BayesianFunctionalRegression(
     ...     model=model,
+    ...     estimator="mcmc",
     ...     warmup_steps=10,
     ...     num_samples=100,
     ... )
-    >>> regressor.fit(X, y) # doctest: +SKIP
-    BayesianMCMCRegression()
-    >>> normal = regressor.predict_proba(X[:5]) # doctest: +SKIP
+    >>> mcmc_regressor.fit(X, y) # doctest: +SKIP
+    BayesianFunctionalRegression()
+    >>> normal = mcmc_regressor.predict_proba(X[:5]) # doctest: +SKIP
     >>> normal # doctest: +SKIP
     Normal()
 
-    Example
-    -------
-    >>> from pgmpy.parameter.bayesian.BayesianSVIRegression import BayesianSVIRegression
-    >>> from skbase.utils.dependencies import _safe_import
-    >>> import numpy as np
-    >>> import pandas as pd
-    >>> torch = _safe_import("torch")
-    >>> pyro = _safe_import("pyro", pkg_name="pyro-ppl")
-    >>> rng = np.random.default_rng(42)
-    >>> n_samples = 10_000
-
-    >>> A = rng.normal(
-    ...     loc=0.0,
-    ...     scale=1.0,
-    ...     size=n_samples,
-    ... )
-
-    >>> B = (
-    ...     A + rng.normal(
-    ...         loc=1.0,
-    ...         scale=0.5,
-    ...         size=n_samples,
-    ...     )
-    ... )
-
-    >>> X = pd.DataFrame(
-    ...     {
-    ...         "A": A,
-    ...     }
-    ... )
-    >>> y = pd.DataFrame(
-    ...     {
-    ...         "B": B,
-    ...     }
-    ... )
-
-    >>> def model(X_tensor, y_tensor=None):
-    ...     intercept = pyro.sample("intercept", pyro.distributions.Normal(0.0, 10.0))
-    ...     coeff = pyro.sample("coeff", pyro.distributions.Normal(0.0, 1.0))
-    ...     sigma = pyro.sample("sigma", pyro.distributions.Uniform(0.0, 10.0))
-    ...     mean = intercept + coeff * X_tensor[:, 0]
-    ...     with pyro.plate("data", len(X_tensor[:, 0])):
-    ...         pyro.sample("obs", pyro.distributions.Normal(mean, sigma), obs=y_tensor)
-
-    >>> regressor = BayesianSVIRegression(
+    >>> svi_regressor = BayesianFunctionalRegression(
     ...     model=model,
+    ...     estimator="svi",
+    ...     guide=pyro.infer.autoguide.AutoNormal(model),
+    ...     optim=pyro.optim.Adam({"lr": 0.3}),
+    ...     loss=pyro.infer.Trace_ELBO(),
+    ...     num_iterations=500,
+    ...     svi_log=True,
     ... )
-    >>> regressor.fit(X, y) # doctest: +SKIP
-    BayesianSVIRegression()
-    >>> normal = regressor.predict_proba(X[:5]) # doctest: +SKIP
+    >>> svi_regressor.fit(X, y) # doctest: +SKIP
+    BayesianFunctionalRegression()
+    >>> normal = svi_regressor.predict_proba(X[:5]) # doctest: +SKIP
     >>> normal # doctest: +SKIP
     Normal()
+
     """
 
     _tags = {
