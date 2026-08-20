@@ -63,6 +63,18 @@ class BaseParameter(_BaseEstimator):
     def _predict_proba(self, X):
         raise NotImplementedError
 
+    def sample(self, X):
+        if not self._is_fitted:
+            raise RuntimeError(
+                f"This {self.__class__.__name__} instance is not fitted yet. Call 'fit' before calling 'sample'."
+            )
+        X, _, _ = self._check_data(X)
+        samples = self._sample(X)
+        return samples
+
+    def _sample(self, X):
+        raise NotImplementedError
+
     def _check_data(self, X, y=None, sample_weight=None):
         """check train data with tag"""
         # Check X

@@ -36,6 +36,14 @@ class TestBaseParameter:
         with pytest.raises(RuntimeError):
             parameter.predict_proba(X)
 
+    def test_sample(self):
+        X_arr, _ = make_moons(n_samples=100, noise=0.1, random_state=42)
+        X = pd.DataFrame(X_arr[:, 0].reshape(-1, 1), columns=["x"])
+        parameter = BaseParameter()
+
+        with pytest.raises(RuntimeError):
+            parameter.sample(X)
+
     def test_check_data(self):
         def make_parameter(missing=False, can_be_root=True):
             class TempParameter(BaseParameter):
