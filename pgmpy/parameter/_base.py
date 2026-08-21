@@ -8,12 +8,13 @@ class BaseParameter(_BaseEstimator):
     """Base class for all parameter classes in pgmpy."""
 
     _tags = {
-        "parameter_type": str,  # classifier, regressor
-        "produces_factor": bool,  # Only for TabularCPD
-        "is_linear_gaussian": bool,  # Only for LinearGaussianCPD
-        "supports_fit_joint": bool,  # Only for FunctionalCPD
-        "missing": bool,
-        "can_be_root": bool,
+        "object_type": str,  # {"parameter:continuous", "parameter:discrete", "parameter:mixture"}
+        "fit_mode": set,  # {"supervise", "unsupervise", "untraninable"}
+        "python_dependencies": set,
+        "local:plug_in": set,
+        "global:plug_in": set,
+        "local:full_bayesian": set,
+        "global:full_bayesian": set,
     }
 
     def __init__(self):
@@ -25,9 +26,8 @@ class BaseParameter(_BaseEstimator):
         Parameters
         ----------
         X : pandas DataFrame
-            feature instances to fit regressor to
-        y : pandas DataFrame, must be same length as X
-            labels to fit regressor to
+
+        y : pandas DataFrame
 
         Returns
         -------
@@ -35,6 +35,12 @@ class BaseParameter(_BaseEstimator):
         """
         X, y, sample_weight = self._check_fit_data(X, y, sample_weight)
         self._fit(X, y, sample_weight)
+
+        if hasattr(self, "object_type_") is False:
+            raise AttributeError(f"{self.__class__.__name__}._fit() must set the 'object_type_' attribute.")
+        if hasattr(self, "fit_mode_") is False:
+            raise AttributeError(f"{self.__class__.__name__}._fit() must set the 'fit_mode_' attribute.")
+
         self._is_fitted = True
         return self
 
@@ -47,7 +53,8 @@ class BaseParameter(_BaseEstimator):
         Parameters
         ----------
         X : pandas DataFrame, must have same columns as X in `fit`
-            data to predict labels for
+
+        n_samples : int
 
         Returns
         -------
@@ -61,6 +68,19 @@ class BaseParameter(_BaseEstimator):
         raise NotImplementedError
 
     def sample(self, X=None, n_samples=None):
+        """Sample labels from the predicted distribution for data from features.
+
+        Parameters
+        ----------
+        X : pandas DataFrame, must have same columns as X in `fit`
+
+        n_samples : int
+
+        Returns
+        -------
+        y : pandas DataFrame
+            samples drawn from the predicted distribution
+        """
         X, _, _ = self._check_sample_data(X)
         samples = self._sample(X)
         return samples

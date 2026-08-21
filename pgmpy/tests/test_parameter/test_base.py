@@ -13,11 +13,13 @@ class TestBaseParameter:
         parameter = BaseParameter()
 
         assert parameter.__class__.__name__ == "BaseParameter"
-        assert parameter.get_class_tag("parameter_type") is str
-        assert parameter.get_class_tag("produces_factor") is bool
-        assert parameter.get_class_tag("missing") is bool
-        assert parameter.get_class_tag("is_linear_gaussian") is bool
-        assert parameter.get_class_tag("supports_fit_joint") is bool
+        assert parameter.get_class_tag("object_type") is str
+        assert parameter.get_class_tag("fit_mode") is set
+        assert parameter.get_class_tag("python_dependencies") is set
+        assert parameter.get_class_tag("local:plug_in") is set
+        assert parameter.get_class_tag("global:plug_in") is set
+        assert parameter.get_class_tag("local:full_bayesian") is set
+        assert parameter.get_class_tag("global:full_bayesian") is set
 
     def test_fit(self):
         X_arr, _ = make_moons(n_samples=100, noise=0.1, random_state=42)
