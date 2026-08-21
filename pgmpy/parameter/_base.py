@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from skbase.base import BaseEstimator as _BaseEstimator
 
 from pgmpy.causal_discovery._base import BaseCausalDiscovery
@@ -8,7 +9,7 @@ class BaseParameter(_BaseEstimator):
     """Base class for all parameter classes in pgmpy."""
 
     _tags = {
-        "object_type": str,  # {"parameter:continuous", "parameter:discrete", "parameter:mixture"}
+        "object_type": str,  # {"continuous", "discrete", "mixture"}
         "fit_mode": set,  # {"supervise", "unsupervise", "untraninable"}
         "python_dependencies": set,
         "local:plug_in": set,
@@ -90,16 +91,42 @@ class BaseParameter(_BaseEstimator):
 
     def _check_fit_data(self, X, y=None, sample_weight=None):
         """check train data with tag"""
-        transformer = BaseCausalDiscovery()
-        X = transformer._check_fit_data(X)
-
-        if y is None:
+        if (y is None) and ("unsupervise" in self.get_class_tag("fit_mode")):
+            transformer = BaseCausalDiscovery()
+            X = transformer._check_fit_data(X)
+            self.fit_mode_ = "unsupervise"
             self.evidences_ = None
             self.variables_ = transformer.feature_names_in_
-        else:
+            if (self.get_class_tag("object_type") == "continuous") and (
+                pd.api.types.is_numeric_dtype(X[self.variables_[0]])
+            ):
+                self.object_type_ = "continuous"
+            elif (self.get_class_tag("object_type") == "discrete") and (
+                pd.api.types.is_string_dtype(X[self.variables_[0]])
+            ):
+                self.object_type_ = "discrete"
+            else:
+                raise ValueError
+
+        elif (y is not None) and ("supervise" in self.get_class_tag("fit_mode")):
+            transformer = BaseCausalDiscovery()
+            X = transformer._check_fit_data(X)
+            self.fit_mode_ = "supervise"
             self.evidences_ = transformer.feature_names_in_
             y = transformer._check_fit_data(y)
             self.variables_ = transformer.feature_names_in_
+            if (self.get_class_tag("object_type") == "continuous") and (
+                pd.api.types.is_numeric_dtype(y[self.variables_[0]])
+            ):
+                self.object_type_ = "continuous"
+            elif (self.get_class_tag("object_type") == "discrete") and (
+                pd.api.types.is_string_dtype(y[self.variables_[0]])
+            ):
+                self.object_type_ = "discrete"
+            else:
+                raise ValueError
+        else:
+            raise ValueError
 
         # TODO: Implement missing data in suvervised, unsuvervised learning
 

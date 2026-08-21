@@ -6,6 +6,26 @@ from sklearn.datasets import make_moons
 from pgmpy.parameter._base import BaseParameter
 
 
+def make_parameter(object_type="continuous", fit_mode="unsupervise"):
+    class TempParameter(BaseParameter):
+        _tags = {
+            "object_type": object_type,  # {"continuous", "discrete", "mixture"}
+            "fit_mode": fit_mode,  # {"supervise", "unsupervise", "untraninable"}
+            "python_dependencies": set(),
+            "local:plug_in": set(),
+            "global:plug_in": set(),
+            "local:full_bayesian": set(),
+            "global:full_bayesian": set(),
+        }
+
+        def __init__(self, object_type="continuous", fit_mode="unsupervise"):
+            super().__init__()
+            self.set_tags(object_type=object_type, fit_mode=fit_mode)
+
+    parameter = TempParameter(object_type, fit_mode)
+    return parameter
+
+
 class TestBaseParameter:
     """Test BaseParameter class"""
 
@@ -25,7 +45,7 @@ class TestBaseParameter:
         X_arr, _ = make_moons(n_samples=100, noise=0.1, random_state=42)
         X = pd.DataFrame(X_arr[:, 0].reshape(-1, 1), columns=["x"])
         y = pd.DataFrame(X_arr[:, 1].reshape(-1, 1), columns=["y"])
-        parameter = BaseParameter()
+        parameter = make_parameter(fit_mode="supervise")
 
         with pytest.raises(NotImplementedError):
             parameter.fit(X, y)
@@ -47,25 +67,6 @@ class TestBaseParameter:
             parameter.sample(X)
 
     def test_check_fit_data(self):
-        def make_parameter(missing=False, can_be_root=True):
-            class TempParameter(BaseParameter):
-                _tags = {
-                    "parameter_type": "discrete",
-                    "produces_factor": False,
-                    "is_linear_gaussian": False,
-                    "missing": missing,
-                    "supports_fit_joint": False,
-                    "can_be_root": can_be_root,
-                    "python_dependencies": (),
-                }
-
-                def __init__(self, missing=False, can_be_root=True):
-                    super().__init__()
-                    self.set_tags(missing=missing, can_be_root=can_be_root)
-
-            parameter = TempParameter(missing, can_be_root)
-            return parameter
-
         # Case 1: valid unsupervised data
         parameter = make_parameter()
         X = pd.DataFrame({"x": [1.0, 2.0, 3.0]})
@@ -94,7 +95,7 @@ class TestBaseParameter:
             parameter._check_fit_data(X)
 
         # Case 6: X missing values are rejected
-        parameter = make_parameter(missing=False)
+        parameter = make_parameter()
         X = pd.DataFrame({"x": [1.0, np.nan, 3.0]})
 
         with pytest.raises(ValueError):
@@ -111,7 +112,7 @@ class TestBaseParameter:
         # np.testing.assert_array_equal(out_weight, np.ones(3))
 
         # Case 8: valid supervised data
-        parameter = make_parameter()
+        parameter = make_parameter(object_type="discrete", fit_mode="supervise")
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame({"target": ["a", "b", "a"]})
 
@@ -142,7 +143,7 @@ class TestBaseParameter:
             parameter._check_fit_data(X, y)
 
         # Case 16: valid sample weight
-        parameter = make_parameter()
+        parameter = make_parameter(object_type="discrete", fit_mode="supervise")
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame({"target": ["a", "b", "a"]})
         sample_weight = [0.5, 1.0, 2.0]
@@ -152,7 +153,7 @@ class TestBaseParameter:
         np.testing.assert_array_equal(out_weight, np.array([0.5, 1.0, 2.0]))
 
         # Case 17: sample weight is flattened
-        parameter = make_parameter()
+        parameter = make_parameter(object_type="discrete", fit_mode="supervise")
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame({"target": ["a", "b", "a"]})
         sample_weight = np.array([[0.5], [1.0], [2.0]])
@@ -162,7 +163,7 @@ class TestBaseParameter:
         np.testing.assert_array_equal(out_weight, np.array([0.5, 1.0, 2.0]))
 
         # Case 18: sample weight length must match
-        parameter = make_parameter()
+        parameter = make_parameter(object_type="discrete", fit_mode="supervise")
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame({"target": ["a", "b", "a"]})
 
@@ -170,7 +171,7 @@ class TestBaseParameter:
             parameter._check_fit_data(X, y, sample_weight=[1.0, 2.0])
 
         # Case 19: sample weight cannot be negative
-        parameter = make_parameter()
+        parameter = make_parameter(object_type="discrete", fit_mode="supervise")
         X = pd.DataFrame({"x1": [1.0, 2.0, 3.0]})
         y = pd.DataFrame({"target": ["a", "b", "a"]})
 
