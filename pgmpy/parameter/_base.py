@@ -48,20 +48,18 @@ class BaseParameter(_BaseEstimator):
     def _fit(self, X, y=None, sample_weight=None):
         raise NotImplementedError
 
-    def predict_proba(self, X=None, n_samples=None):
+    def predict_proba(self, X=None):
         """Predict distribution over labels for data from features.
 
         Parameters
         ----------
         X : pandas DataFrame, must have same columns as X in `fit`
 
-        n_samples : int
-
         Returns
         -------
         y : skpro's Distribution class
         """
-        X, _, _ = self._check_predict_proba_data(X)
+        X = self._check_predict_proba_data(X)
         y_pred = self._predict_proba(X)
         return y_pred
 

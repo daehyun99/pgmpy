@@ -177,3 +177,117 @@ class TestBaseParameter:
 
         with pytest.raises(ValueError, match="sample_weight cannot contain negative values"):
             parameter._check_fit_data(X, y, sample_weight=[1.0, -1.0, 2.0])
+
+    def test_check_predict_proba_data(self):
+        discrete_X = pd.DataFrame(
+            {
+                "X": ["A", "B", "C"],
+            }
+        )
+        continous_X = pd.DataFrame(
+            {
+                "X": [0.1, 0.5, 0.3],
+            }
+        )
+
+        parameter = make_parameter()
+        with pytest.raises(RuntimeError):
+            parameter.predict_proba()
+
+        parameter._is_fitted = True
+        with pytest.raises(ValueError):
+            parameter.predict_proba()
+
+        # # Case : unsupervise, continuous
+        parameter = make_parameter(object_type="continuous", fit_mode="unsupervise")
+        parameter._is_fitted = True
+
+        with pytest.raises(NotImplementedError):
+            parameter.predict_proba(continous_X)
+
+        # # Case : unsupervise, discrete
+        parameter = make_parameter(object_type="discrete", fit_mode="unsupervise")
+        parameter._is_fitted = True
+
+        with pytest.raises(NotImplementedError):
+            parameter.predict_proba(discrete_X)
+
+        # # Case : supervise, continuous
+        parameter = make_parameter(object_type="continuous", fit_mode="supervise")
+        parameter._is_fitted = True
+
+        with pytest.raises(NotImplementedError):
+            parameter.predict_proba(continous_X)
+
+        with pytest.raises(ValueError):
+            parameter.predict_proba(discrete_X)
+
+        # # Case : supervise, discrete
+        parameter = make_parameter(object_type="discrete", fit_mode="supervise")
+        parameter._is_fitted = True
+
+        with pytest.raises(NotImplementedError):
+            parameter.predict_proba(continous_X)
+
+        with pytest.raises(ValueError):
+            parameter.predict_proba(discrete_X)
+
+    def test_sample_data(self):
+        discrete_X = pd.DataFrame(
+            {
+                "X": ["A", "B", "C"],
+            }
+        )
+        continous_X = pd.DataFrame(
+            {
+                "X": [0.1, 0.5, 0.3],
+            }
+        )
+
+        parameter = make_parameter()
+        with pytest.raises(RuntimeError):
+            parameter.sample()
+
+        parameter._is_fitted = True
+        with pytest.raises(ValueError):
+            parameter.sample()
+
+        # # Case : unsupervise, continuous
+        parameter = make_parameter(object_type="continuous", fit_mode="unsupervise")
+        parameter._is_fitted = True
+
+        with pytest.raises(ValueError):
+            parameter.sample(continous_X)
+
+        with pytest.raises(NotImplementedError):
+            parameter.sample(n_samples=3)
+
+        # # Case : unsupervise, discrete
+        parameter = make_parameter(object_type="discrete", fit_mode="unsupervise")
+        parameter._is_fitted = True
+
+        with pytest.raises(ValueError):
+            parameter.sample(discrete_X)
+
+        with pytest.raises(NotImplementedError):
+            parameter.sample(n_samples=3)
+
+        # # Case : supervise, continuous
+        parameter = make_parameter(object_type="continuous", fit_mode="supervise")
+        parameter._is_fitted = True
+
+        with pytest.raises(NotImplementedError):
+            parameter.sample(continous_X)
+
+        with pytest.raises(ValueError):
+            parameter.sample(n_samples=3)
+
+        # # Case : supervise, discrete
+        parameter = make_parameter(object_type="discrete", fit_mode="supervise")
+        parameter._is_fitted = True
+
+        with pytest.raises(NotImplementedError):
+            parameter.sample(discrete_X)
+
+        with pytest.raises(ValueError):
+            parameter.sample(n_samples=3)
