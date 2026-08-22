@@ -172,5 +172,7 @@ class BaseParameter(_BaseEstimator):
         elif self.fit_mode_ == "supervise":
             if X is None:
                 raise ValueError
+            transformer = BaseCausalDiscovery()
+            X = transformer._check_fit_data(X)
 
         return X, n_samples
