@@ -152,9 +152,12 @@ class BaseParameter(_BaseEstimator):
             )
         if self.fit_mode_ in {"unsupervise", "untrainable"}:
             raise NotImplementedError
+        elif self.fit_mode_ == "supervise":
+            if X is None:
+                raise ValueError
+            transformer = BaseCausalDiscovery()
+            X = transformer._check_fit_data(X)
 
-        transformer = BaseCausalDiscovery()
-        X = transformer._check_fit_data(X)
         return X
 
     def _check_sample_data(self, X=None, n_samples=None):
