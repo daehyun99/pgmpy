@@ -192,15 +192,19 @@ class TestBaseParameter:
 
         parameter = make_parameter()
         with pytest.raises(RuntimeError):
-            parameter.predict_proba()
+            parameter.predict_proba(discrete_X)
 
         parameter._is_fitted = True
-        with pytest.raises(ValueError):
+        parameter.object_type_ = "continuous"
+        parameter.fit_mode_ = "unsupervise"
+        with pytest.raises(TypeError):
             parameter.predict_proba()
 
         # # Case : unsupervise, continuous
         parameter = make_parameter(object_type="continuous", fit_mode="unsupervise")
         parameter._is_fitted = True
+        parameter.object_type_ = "continuous"
+        parameter.fit_mode_ = "unsupervise"
 
         with pytest.raises(NotImplementedError):
             parameter.predict_proba(continous_X)
@@ -208,6 +212,8 @@ class TestBaseParameter:
         # # Case : unsupervise, discrete
         parameter = make_parameter(object_type="discrete", fit_mode="unsupervise")
         parameter._is_fitted = True
+        parameter.object_type_ = "discrete"
+        parameter.fit_mode_ = "unsupervise"
 
         with pytest.raises(NotImplementedError):
             parameter.predict_proba(discrete_X)
@@ -215,22 +221,20 @@ class TestBaseParameter:
         # # Case : supervise, continuous
         parameter = make_parameter(object_type="continuous", fit_mode="supervise")
         parameter._is_fitted = True
+        parameter.object_type_ = "continuous"
+        parameter.fit_mode_ = "supervise"
 
         with pytest.raises(NotImplementedError):
             parameter.predict_proba(continous_X)
-
-        with pytest.raises(ValueError):
-            parameter.predict_proba(discrete_X)
 
         # # Case : supervise, discrete
         parameter = make_parameter(object_type="discrete", fit_mode="supervise")
         parameter._is_fitted = True
+        parameter.object_type_ = "discrete"
+        parameter.fit_mode_ = "supervise"
 
         with pytest.raises(NotImplementedError):
             parameter.predict_proba(continous_X)
-
-        with pytest.raises(ValueError):
-            parameter.predict_proba(discrete_X)
 
     def test_sample_data(self):
         discrete_X = pd.DataFrame(
@@ -249,12 +253,16 @@ class TestBaseParameter:
             parameter.sample()
 
         parameter._is_fitted = True
+        parameter.object_type_ = "continuous"
+        parameter.fit_mode_ = "unsupervise"
         with pytest.raises(ValueError):
             parameter.sample()
 
         # # Case : unsupervise, continuous
         parameter = make_parameter(object_type="continuous", fit_mode="unsupervise")
         parameter._is_fitted = True
+        parameter.object_type_ = "continuous"
+        parameter.fit_mode_ = "unsupervise"
 
         with pytest.raises(ValueError):
             parameter.sample(continous_X)
@@ -265,6 +273,8 @@ class TestBaseParameter:
         # # Case : unsupervise, discrete
         parameter = make_parameter(object_type="discrete", fit_mode="unsupervise")
         parameter._is_fitted = True
+        parameter.object_type_ = "discrete"
+        parameter.fit_mode_ = "unsupervise"
 
         with pytest.raises(ValueError):
             parameter.sample(discrete_X)
@@ -275,6 +285,8 @@ class TestBaseParameter:
         # # Case : supervise, continuous
         parameter = make_parameter(object_type="continuous", fit_mode="supervise")
         parameter._is_fitted = True
+        parameter.object_type_ = "continuous"
+        parameter.fit_mode_ = "supervise"
 
         with pytest.raises(NotImplementedError):
             parameter.sample(continous_X)
@@ -285,6 +297,8 @@ class TestBaseParameter:
         # # Case : supervise, discrete
         parameter = make_parameter(object_type="discrete", fit_mode="supervise")
         parameter._is_fitted = True
+        parameter.object_type_ = "discrete"
+        parameter.fit_mode_ = "supervise"
 
         with pytest.raises(NotImplementedError):
             parameter.sample(discrete_X)

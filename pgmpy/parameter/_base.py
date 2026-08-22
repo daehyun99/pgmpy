@@ -48,7 +48,7 @@ class BaseParameter(_BaseEstimator):
     def _fit(self, X, y=None, sample_weight=None):
         raise NotImplementedError
 
-    def predict_proba(self, X=None):
+    def predict_proba(self, X):
         """Predict distribution over labels for data from features.
 
         Parameters
@@ -80,11 +80,11 @@ class BaseParameter(_BaseEstimator):
         y : pandas DataFrame
             samples drawn from the predicted distribution
         """
-        X, _, _ = self._check_sample_data(X)
-        samples = self._sample(X)
+        X, n_samples = self._check_sample_data(X, n_samples)
+        samples = self._sample(X, n_samples)
         return samples
 
-    def _sample(self, X):
+    def _sample(self, X, n_samples):
         raise NotImplementedError
 
     def _check_fit_data(self, X, y=None, sample_weight=None):
@@ -113,11 +113,11 @@ class BaseParameter(_BaseEstimator):
             self.evidences_ = transformer.feature_names_in_
             y = transformer._check_fit_data(y)
             self.variables_ = transformer.feature_names_in_
-            if (self.get_class_tag("object_type") == "continuous") and (
+            if ("continuous" in self.get_class_tag("object_type")) and (
                 pd.api.types.is_numeric_dtype(y[self.variables_[0]])
             ):
                 self.object_type_ = "continuous"
-            elif (self.get_class_tag("object_type") == "discrete") and (
+            elif ("discrete" in self.get_class_tag("object_type")) and (
                 pd.api.types.is_string_dtype(y[self.variables_[0]])
             ):
                 self.object_type_ = "discrete"
@@ -143,31 +143,32 @@ class BaseParameter(_BaseEstimator):
 
         return X, y, sample_weight
 
-    def _check_predict_proba_data(self, X=None, n_samples=None):
+    def _check_predict_proba_data(self, X):
         if not self._is_fitted:
             raise RuntimeError(
                 f"This {self.__class__.__name__} instance is not fitted yet. Call 'fit' before calling 'predict_proba'."
             )
+        if self.fit_mode_ in {"unsupervise", "untrainable"}:
+            raise NotImplementedError
+
+        transformer = BaseCausalDiscovery()
+        X = transformer._check_fit_data(X)
+        return X
 
     def _check_sample_data(self, X=None, n_samples=None):
         if not self._is_fitted:
             raise RuntimeError(
                 f"This {self.__class__.__name__} instance is not fitted yet. Call 'fit' before calling 'sample'."
             )
-        # Supervised
-        if (X is None) or (len(X) == len(n_samples)):
+        if (X is None) and (n_samples is None):
             raise ValueError
-        else:
-            if len(X) == 1:
-                # broadcast
-                ...
 
-            else:
-                ...
+        if self.fit_mode_ in {"unsupervise", "untrainable"}:
+            if X is not None:
+                raise ValueError
 
-        # Unsupervised
-        if (X is not None) or (n_samples is None):
-            raise ValueError
-        else:
-            # sampling
-            ...
+        elif self.fit_mode_ == "supervise":
+            if X is None:
+                raise ValueError
+
+        return X, n_samples
