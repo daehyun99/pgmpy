@@ -95,11 +95,11 @@ class BaseParameter(_BaseEstimator):
             self.fit_mode_ = "unsupervise"
             self.evidences_ = None
             self.variables_ = transformer.feature_names_in_
-            if (self.get_class_tag("object_type") == "continuous") and (
+            if ("continuous" in self.get_class_tag("object_type")) and (
                 pd.api.types.is_numeric_dtype(X[self.variables_[0]])
             ):
                 self.object_type_ = "continuous"
-            elif (self.get_class_tag("object_type") == "discrete") and (
+            elif ("discrete" in self.get_class_tag("object_type")) and (
                 pd.api.types.is_string_dtype(X[self.variables_[0]])
             ):
                 self.object_type_ = "discrete"
