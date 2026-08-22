@@ -79,10 +79,12 @@ class BaseParameter(_BaseEstimator):
         -------
         y : pandas DataFrame
             samples drawn from the predicted distribution
+
+        log_proba : log pdf or log pmf
         """
         X, n_samples = self._check_sample_data(X, n_samples)
-        samples = self._sample(X, n_samples)
-        return samples
+        samples, log_proba = self._sample(X, n_samples)
+        return samples, log_proba
 
     def _sample(self, X, n_samples):
         raise NotImplementedError
