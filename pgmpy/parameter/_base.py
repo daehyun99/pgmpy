@@ -110,7 +110,7 @@ class BaseParameter(_BaseEstimator):
 
         Returns
         -------
-        y : pandas.DataFrame or torch.Tensor
+        y : numpy.ndarray or torch.Tensor
             Samples drawn from the distribution.
 
         log_proba : numpy.ndarray or torch.Tensor
