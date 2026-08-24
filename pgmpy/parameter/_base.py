@@ -22,17 +22,29 @@ class BaseParameter(_BaseEstimator):
         super().__init__()
 
     def fit(self, X, y=None, sample_weight=None):
-        """Fit parameter to training data.
+        """Fit parameters to training data.
+
+        If a parameter corresponds to a root node of the Bayesian network,
+        only unsupervised learning is supported.
+        If a parameter does not correspond to a root node of the Bayesian network,
+        only supervised learning is supported.
 
         Parameters
         ----------
-        X : pandas DataFrame
+        X : pandas.DataFrame
+            Input data for supervised or unsupervised learning.
 
-        y : pandas DataFrame
+        y : pandas.DataFrame, (default=None)
+            Target labels for supervised learning.
+            Must be None for unsupervised learning.
+
+        sample_weight : numpy.ndarray, (default=None)
+            Sample weights. If None, all samples are given equal weight.
 
         Returns
         -------
-        self : reference to self
+        self : pgmpy parameter class
+            Returns the parameter instance with the fitted attributes.
         """
         X, y, sample_weight = self._check_fit_data(X, y, sample_weight)
         self._fit(X, y, sample_weight)
@@ -49,15 +61,25 @@ class BaseParameter(_BaseEstimator):
         raise NotImplementedError
 
     def predict_proba(self, X):
-        """Predict distribution over labels for data from features.
+        """Return the predicted conditional probability distribution for the given data.
+
+        Only supported when the parameter was fitted using supervised learning.
+        If the parameter was fitted using unsupervised learning, refer to the ``sample()`` method instead.
 
         Parameters
         ----------
-        X : pandas DataFrame, must have same columns as X in `fit`
+        X : pandas.DataFrame
+            Input data used to predict the conditional probability distribution.
+            Must have the same columns as the training data.
 
         Returns
         -------
-        y : skpro's Distribution class
+        y : skpro distribution class
+            Predicted conditional probability distribution.
+
+        See Also
+        --------
+        sample : Generate samples from the distribution and their corresponding log probabilities.
         """
         X = self._check_predict_proba_data(X)
         y_pred = self._predict_proba(X)
@@ -67,20 +89,36 @@ class BaseParameter(_BaseEstimator):
         raise NotImplementedError
 
     def sample(self, X=None, n_samples=None):
-        """Sample labels from the predicted distribution for data from features.
+        """Draw samples from the probability distribution or conditional probability distribution.
+
+        If the parameter was fitted using supervised learning, samples are drawn from
+        the conditional probability distribution given X.
+        If the parameter was fitted using unsupervised learning, samples are drawn from
+        the (unconditional) probability distribution.
 
         Parameters
         ----------
-        X : pandas DataFrame, must have same columns as X in `fit`
+        X : pandas.DataFrame, (default=None)
+            Required when the parameter was fitted with supervised learning.
+            Raises an error if the parameter was fitted with unsupervised learning;
+            use ``n_samples`` instead.
 
-        n_samples : int
+        n_samples : int, (default=None)
+            Required when the parameter was fitted with unsupervised learning.
+            Raises an error if the parameter was fitted with supervised learning;
+            use ``X`` instead.
 
         Returns
         -------
-        y : pandas DataFrame
-            samples drawn from the predicted distribution
+        y : pandas.DataFrame or torch.Tensor
+            Samples drawn from the distribution.
 
-        log_proba : log pdf or log pmf
+        log_proba : numpy.ndarray or torch.Tensor
+            Log pdf or log pmf values corresponding to the drawn samples.
+
+        See Also
+        --------
+        predict_proba : Return the predicted conditional probability distribution.
         """
         X, n_samples = self._check_sample_data(X, n_samples)
         samples, log_proba = self._sample(X, n_samples)
@@ -152,9 +190,12 @@ class BaseParameter(_BaseEstimator):
             )
         if self.fit_mode_ in {"unsupervise", "untrainable"}:
             raise NotImplementedError
+        elif self.fit_mode_ == "supervise":
+            if X is None:
+                raise ValueError
+            transformer = BaseCausalDiscovery()
+            X = transformer._check_fit_data(X)
 
-        transformer = BaseCausalDiscovery()
-        X = transformer._check_fit_data(X)
         return X
 
     def _check_sample_data(self, X=None, n_samples=None):
@@ -172,5 +213,7 @@ class BaseParameter(_BaseEstimator):
         elif self.fit_mode_ == "supervise":
             if X is None:
                 raise ValueError
+            transformer = BaseCausalDiscovery()
+            X = transformer._check_fit_data(X)
 
         return X, n_samples
