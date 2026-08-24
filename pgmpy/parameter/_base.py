@@ -144,7 +144,10 @@ class BaseParameter(_BaseEstimator):
             ):
                 self.object_type_ = "discrete"
             else:
-                raise ValueError
+                raise ValueError(
+                    f"This {self.__class__.__name__} instance only supports data of type "
+                    f"{self.get_class_tag('object_type')}."
+                )
 
         elif (y is not None) and ("supervise" in self.get_class_tag("fit_mode")):
             transformer = BaseCausalDiscovery()
@@ -162,11 +165,16 @@ class BaseParameter(_BaseEstimator):
             ):
                 self.object_type_ = "discrete"
             else:
-                raise ValueError
+                raise ValueError(
+                    f"This {self.__class__.__name__} instance only supports data of type "
+                    f"{self.get_class_tag('object_type')}."
+                )
         else:
-            raise ValueError
+            raise ValueError(
+                f"This {self.__class__.__name__} instance only supports {self.get_class_tag('fit_mode')} learning."
+            )
 
-        # TODO: Implement missing data in suvervised, unsuvervised learning
+        # TODO: Implement missing data in suvervised, unsuvervised learning (EM algo)
 
         # Check sample_weight
         n_samples = len(X)
@@ -189,10 +197,10 @@ class BaseParameter(_BaseEstimator):
                 f"This {self.__class__.__name__} instance is not fitted yet. Call 'fit' before calling 'predict_proba'."
             )
         if self.fit_mode_ in {"unsupervise", "untrainable"}:
-            raise NotImplementedError
+            raise NotImplementedError(
+                f"This {self.__class__.__name__} instance is {self.fit_mode_}. It does not support `predict_proba()`."
+            )
         elif self.fit_mode_ == "supervise":
-            if X is None:
-                raise ValueError
             transformer = BaseCausalDiscovery()
             X = transformer._check_fit_data(X)
 
@@ -203,17 +211,18 @@ class BaseParameter(_BaseEstimator):
             raise RuntimeError(
                 f"This {self.__class__.__name__} instance is not fitted yet. Call 'fit' before calling 'sample'."
             )
-        if (X is None) and (n_samples is None):
-            raise ValueError
 
-        if self.fit_mode_ in {"unsupervise", "untrainable"}:
-            if X is not None:
-                raise ValueError
+        if (X is None) and (n_samples) and (self.fit_mode_ in {"unsupervise", "untrainable"}):
+            return X, n_samples
 
-        elif self.fit_mode_ == "supervise":
-            if X is None:
-                raise ValueError
+        elif (X) and (n_samples is None) and (self.fit_mode_ in {"supervise"}):
             transformer = BaseCausalDiscovery()
             X = transformer._check_fit_data(X)
+            return X, n_samples
+        else:
+            raise ValueError(
+                f"This {self.__class__.__name__} instance supports {self.fit_mode_}. "
+                f"Please use `X` or `n_samples` accordingly."
+            )
 
         return X, n_samples
