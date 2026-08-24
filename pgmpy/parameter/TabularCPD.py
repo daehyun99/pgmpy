@@ -209,19 +209,7 @@ class TabularCPD(BaseParameter):
             samples = dist.sample().to_numpy()
             return samples, np.array(dist.log_pmf(samples))
         elif self.fit_mode_ == "supervise":
-            row_evidence = pd.MultiIndex.from_frame(X.loc[:, self.evidences_.keys()])
-            cpt_column_index = pd.MultiIndex.from_product(
-                [self.evidences_[name] for name in list(self.evidences_.keys())],
-                names=list(self.evidences_.keys()),
-            )
-            column_positions = cpt_column_index.get_indexer(row_evidence)
-            probabilities = self.CPT_[:, column_positions].T
-
-            dist = NominalDistribution(
-                probs=probabilities,
-                categories=self.categories_[next(iter(self.categories_))],
-                columns=[next(iter(self.categories_))],
-            )  # (len(X), variable_card)
+            dist = self._predict_proba(X)
             samples = dist.sample().to_numpy()
             return samples, np.array(dist.log_pmf(samples))
 
