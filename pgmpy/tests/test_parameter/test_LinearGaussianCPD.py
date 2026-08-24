@@ -38,11 +38,13 @@ class TestLinearGaussianCPD:
         parameter = LinearGaussianCPD()
 
         assert parameter.__class__.__name__ == "LinearGaussianCPD"
-        assert parameter.get_class_tag("parameter_type") == "regressor"
-        assert parameter.get_class_tag("produces_factor") is False
-        assert parameter.get_class_tag("missing") is False
-        assert parameter.get_class_tag("is_linear_gaussian") is True
-        assert parameter.get_class_tag("supports_fit_joint") is False
+        assert parameter.get_class_tag("object_type") == {"continuous"}
+        assert parameter.get_class_tag("fit_mode") == {"supervise", "unsupervise"}
+        assert parameter.get_class_tag("python_dependencies") == set()
+        assert parameter.get_class_tag("local:plug_in") == {"mle", "unbias"}
+        assert parameter.get_class_tag("global:plug_in") == set()
+        assert parameter.get_class_tag("local:full_bayesian") == set()
+        assert parameter.get_class_tag("global:full_bayesian") == set()
 
     def test_fit(self, continue_data):
         # Case 1-1: root node with MLE case
@@ -236,6 +238,39 @@ class TestLinearGaussianCPD:
         pred_mu = np.asarray(pred.mean()).reshape(-1)
 
         np.testing.assert_allclose(pred_mu, expected_mu)
+
+        parameter = LinearGaussianCPD()
+
+        parameter.fit(y)
+        with pytest.raises(NotImplementedError):
+            parameter.predict_proba(y)
+
+    def test_sample(self, continue_data):
+        X, y = continue_data
+
+        parameter = LinearGaussianCPD()
+        parameter.fit(y)
+
+        samples, log_pdf = parameter.sample(n_samples=5)
+
+        assert isinstance(samples, np.ndarray)
+        assert samples.shape == (5, 1)
+        assert isinstance(log_pdf, np.ndarray)
+        assert log_pdf.shape == (5, 1)
+
+        # Case ２: non-root node case
+        parameter = LinearGaussianCPD()
+        parameter.fit(X, y)
+        samples, log_pdf = parameter.sample(X[:5])
+
+        assert isinstance(samples, np.ndarray)
+        assert samples.shape == (5, 1)
+        assert isinstance(log_pdf, np.ndarray)
+        assert log_pdf.shape == (5, 1)
+
+        with pytest.raises(RuntimeError):
+            parameter = LinearGaussianCPD()
+            parameter.sample(X)
 
     def test_set_fitted_params(self):
         parameter = LinearGaussianCPD()
