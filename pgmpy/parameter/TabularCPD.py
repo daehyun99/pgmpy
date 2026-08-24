@@ -54,8 +54,8 @@ class TabularCPD(BaseParameter):
     ...         "x1": rng.integers(0, 3, size=n_samples),
     ...         "x2": rng.integers(0, 2, size=n_samples),
     ...     }
-    ... )
-    >>> y = pd.DataFrame({"y": rng.integers(0, 2, size=n_samples)})
+    ... ).astype(str)
+    >>> y = pd.DataFrame({"y": rng.integers(0, 2, size=n_samples)}).astype(str)
     >>> cpd = TabularCPD()
     >>> cpd.fit(X, y)
     TabularCPD()
