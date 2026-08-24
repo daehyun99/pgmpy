@@ -215,7 +215,7 @@ class BaseParameter(_BaseEstimator):
         if (X is None) and (n_samples) and (self.fit_mode_ in {"unsupervise", "untrainable"}):
             return X, n_samples
 
-        elif (X) and (n_samples is None) and (self.fit_mode_ in {"supervise"}):
+        elif (X is not None) and (n_samples is None) and (self.fit_mode_ in {"supervise"}):
             transformer = BaseCausalDiscovery()
             X = transformer._check_fit_data(X)
             return X, n_samples
