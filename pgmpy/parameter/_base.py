@@ -192,7 +192,7 @@ class BaseParameter(_BaseEstimator):
         return X, y, sample_weight
 
     def _check_predict_proba_data(self, X):
-        if not self._is_fitted:
+        if not self.is_fitted:
             raise RuntimeError(
                 f"This {self.__class__.__name__} instance is not fitted yet. Call 'fit' before calling 'predict_proba'."
             )
@@ -207,7 +207,7 @@ class BaseParameter(_BaseEstimator):
         return X
 
     def _check_sample_data(self, X=None, n_samples=None):
-        if not self._is_fitted:
+        if not self.is_fitted:
             raise RuntimeError(
                 f"This {self.__class__.__name__} instance is not fitted yet. Call 'fit' before calling 'sample'."
             )
