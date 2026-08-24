@@ -105,9 +105,9 @@ def discrete_data():
             "x1": rng.integers(0, 3, size=n_samples),  # {0, 1, 2}
             "x2": rng.integers(0, 2, size=n_samples),  # {0, 1}
         }
-    )
+    ).astype(str)
 
-    y = pd.DataFrame({"y": rng.integers(0, 2, size=n_samples)})
+    y = pd.DataFrame({"y": rng.integers(0, 2, size=n_samples)}).astype(str)
 
     return X, y
 
@@ -119,11 +119,13 @@ class TestTabularCPD:
         parameter = TabularCPD()
 
         assert parameter.__class__.__name__ == "TabularCPD"
-        assert parameter.get_class_tag("parameter_type") == "classifier"
-        assert parameter.get_class_tag("produces_factor") is True
-        assert parameter.get_class_tag("missing") is False
-        assert parameter.get_class_tag("is_linear_gaussian") is False
-        assert parameter.get_class_tag("supports_fit_joint") is False
+        assert parameter.get_class_tag("object_type") == {"discrete"}
+        assert parameter.get_class_tag("fit_mode") == {"supervise", "unsupervise"}
+        assert parameter.get_class_tag("python_dependencies") == set()
+        assert parameter.get_class_tag("local:plug_in") == {"mle"}
+        assert parameter.get_class_tag("global:plug_in") == set()
+        assert parameter.get_class_tag("local:full_bayesian") == set()
+        assert parameter.get_class_tag("global:full_bayesian") == set()
 
     def test_fit(self, discrete_data):
         # Case 1: root node with MLE case
@@ -142,13 +144,13 @@ class TestTabularCPD:
                 ]
             ),
         )
-        np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
+        np.testing.assert_array_equal(parameter.categories_["y"], np.array(["0", "1"]))
         assert next(iter(parameter.categories_)) == "y"
 
         # Case 2: root node with MLE, sample_weight case
         _, y = discrete_data
         sample_weight = np.where(
-            y["y"].to_numpy() == 0,
+            y["y"].to_numpy() == "0",
             0.44,
             0.56,
         )
@@ -166,7 +168,7 @@ class TestTabularCPD:
                 ]
             ),
         )
-        np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
+        np.testing.assert_array_equal(parameter.categories_["y"], np.array(["0", "1"]))
         assert next(iter(parameter.categories_)) == "y"
 
         # Case 3: not root node with MLE case
@@ -204,7 +206,7 @@ class TestTabularCPD:
             rtol=1e-7,
             atol=1e-8,
         )
-        np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
+        np.testing.assert_array_equal(parameter.categories_["y"], np.array(["0", "1"]))
         assert next(iter(parameter.categories_)) == "y"
 
         # Case 4: not root node with MLE, sample_weight case
@@ -228,9 +230,9 @@ class TestTabularCPD:
             [
                 sample_weight_map[(x1, x2, target)]
                 for x1, x2, target in zip(
-                    X["x1"].to_numpy(),
-                    X["x2"].to_numpy(),
-                    y["y"].to_numpy(),
+                    X["x1"].to_numpy().astype(int),
+                    X["x2"].to_numpy().astype(int),
+                    y["y"].to_numpy().astype(int),
                 )
             ],
             dtype=float,
@@ -268,7 +270,7 @@ class TestTabularCPD:
             rtol=1e-7,
             atol=1e-8,
         )
-        np.testing.assert_array_equal(parameter.categories_["y"], np.array([0, 1]))
+        np.testing.assert_array_equal(parameter.categories_["y"], np.array(["0", "1"]))
         assert next(iter(parameter.categories_)) == "y"
 
     def test_predict_proba(self, discrete_data):
@@ -277,19 +279,9 @@ class TestTabularCPD:
         # Case １: root node case
         parameter = TabularCPD()
         parameter.fit(y)
-        dist = parameter.predict_proba(y)
 
-        expected_CPT = np.array(
-            [
-                [56 / 100, 44 / 100],
-                [56 / 100, 44 / 100],
-                [56 / 100, 44 / 100],
-                [56 / 100, 44 / 100],
-                [56 / 100, 44 / 100],
-            ]
-        )
-
-        np.testing.assert_array_equal(dist.probs[:5], expected_CPT)
+        with pytest.raises(NotImplementedError):
+            parameter.predict_proba(y)
 
         # Case ２: non-root node case
         parameter = TabularCPD()
@@ -308,12 +300,39 @@ class TestTabularCPD:
 
         np.testing.assert_array_equal(dist.probs[:5], expected_probs)
         assert dist.__class__.__name__ == "NominalDistribution"
-        assert list(dist.categories) == [0, 1]
+        assert list(dist.categories) == ["0", "1"]
         assert list(dist.columns) == ["y"]
 
         with pytest.raises(RuntimeError):
             parameter = TabularCPD()
             parameter.predict_proba(X)
+
+    def test_sample(self, discrete_data):
+        X, y = discrete_data
+
+        parameter = TabularCPD()
+        parameter.fit(y)
+
+        samples, log_pmf = parameter.sample(n_samples=5)
+
+        assert isinstance(samples, np.ndarray)
+        assert samples.shape == (5, 1)
+        assert isinstance(log_pmf, np.ndarray)
+        assert log_pmf.shape == (5, 1)
+
+        # Case ２: non-root node case
+        parameter = TabularCPD()
+        parameter.fit(X, y)
+        samples, log_pmf = parameter.sample(X[:5])
+
+        assert isinstance(samples, np.ndarray)
+        assert samples.shape == (5, 1)
+        assert isinstance(log_pmf, np.ndarray)
+        assert log_pmf.shape == (5, 1)
+
+        with pytest.raises(RuntimeError):
+            parameter = TabularCPD()
+            parameter.sample(X)
 
     def test_set_fitted_params(self):
         parameter = TabularCPD()
