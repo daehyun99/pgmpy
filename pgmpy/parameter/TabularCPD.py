@@ -64,11 +64,13 @@ class TabularCPD(BaseParameter):
     """
 
     _tags = {
-        "parameter_type": "classifier",
-        "produces_factor": True,
-        "is_linear_gaussian": False,
-        "supports_fit_joint": False,
-        "missing": False,
+        "object_type": {"discrete"},
+        "fit_mode": {"supervise", "unsupervise"},
+        "python_dependencies": set(),
+        "local:plug_in": {"mle"},
+        "global:plug_in": set(),
+        "local:full_bayesian": set(),
+        "global:full_bayesian": set(),
     }
 
     def __init__(
@@ -81,6 +83,8 @@ class TabularCPD(BaseParameter):
         super().__init__()
 
     def _fit(self, X, y=None, sample_weight=None):
+        # TODO : Currently only MLE is supported.
+        # If we expand support for Bayesian Estimate, a distinction will be necessary.
         if y is None:
             # Unsupervised Learning
             if self.categories is None:
@@ -174,19 +178,6 @@ class TabularCPD(BaseParameter):
         return self
 
     def _predict_proba(self, X):
-        if self.evidences_ is None:
-            # Unsupervised Learning
-            probabilities = np.repeat(
-                np.asarray(self.CPT_).T,
-                repeats=len(X),
-                axis=0,
-            )
-
-            return NominalDistribution(
-                probs=probabilities,
-                categories=self.categories_[next(iter(self.categories_))],
-                columns=[next(iter(self.categories_))],
-            )
 
         row_evidence = pd.MultiIndex.from_frame(X.loc[:, self.evidences_.keys()])
         cpt_column_index = pd.MultiIndex.from_product(
@@ -201,6 +192,38 @@ class TabularCPD(BaseParameter):
             categories=self.categories_[next(iter(self.categories_))],
             columns=[next(iter(self.categories_))],
         )  # (len(X), variable_card)
+
+    def _sample(self, X, n_samples):
+        if self.fit_mode_ == "unsupervise":
+            # Unsupervised Learning
+            probabilities = np.repeat(
+                np.asarray(self.CPT_).T,
+                repeats=n_samples,
+                axis=0,
+            )
+            dist = NominalDistribution(
+                probs=probabilities,
+                categories=self.categories_[next(iter(self.categories_))],
+                columns=[next(iter(self.categories_))],
+            )
+            samples = dist.sample().to_numpy()
+            return samples, np.array(dist.log_pmf(samples))
+        elif self.fit_mode_ == "supervise":
+            row_evidence = pd.MultiIndex.from_frame(X.loc[:, self.evidences_.keys()])
+            cpt_column_index = pd.MultiIndex.from_product(
+                [self.evidences_[name] for name in list(self.evidences_.keys())],
+                names=list(self.evidences_.keys()),
+            )
+            column_positions = cpt_column_index.get_indexer(row_evidence)
+            probabilities = self.CPT_[:, column_positions].T
+
+            dist = NominalDistribution(
+                probs=probabilities,
+                categories=self.categories_[next(iter(self.categories_))],
+                columns=[next(iter(self.categories_))],
+            )  # (len(X), variable_card)
+            samples = dist.sample().to_numpy()
+            return samples, np.array(dist.log_pmf(samples))
 
     def set_fitted_params(self, CPT, columns, categories, evidences, is_fitted):
         self.CPT_ = CPT
