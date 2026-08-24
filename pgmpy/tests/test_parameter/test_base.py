@@ -33,7 +33,7 @@ class TestBaseParameter:
         parameter = BaseParameter()
 
         assert parameter.__class__.__name__ == "BaseParameter"
-        assert parameter.get_class_tag("object_type") is str
+        assert parameter.get_class_tag("object_type") is set
         assert parameter.get_class_tag("fit_mode") is set
         assert parameter.get_class_tag("python_dependencies") is set
         assert parameter.get_class_tag("local:plug_in") is set

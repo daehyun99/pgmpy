@@ -9,7 +9,7 @@ class BaseParameter(_BaseEstimator):
     """Base class for all parameter classes in pgmpy."""
 
     _tags = {
-        "object_type": str,  # {"continuous", "discrete", "mixture"}
+        "object_type": set,  # {"continuous", "discrete", "mixture"}
         "fit_mode": set,  # {"supervise", "unsupervise", "untraninable"}
         "python_dependencies": set,
         "local:plug_in": set,
