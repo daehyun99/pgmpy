@@ -34,10 +34,6 @@ class TabularCPD(BaseParameter):
         correspond to target states and columns correspond to evidence-state
         configurations.
 
-    columns_ : list
-        Name of the variable whose distribution is represented by the learned
-        table. Populated by `fit`.
-
     categories_ : dict
         Mapping from the target variable name to its learned or supplied states.
         Populated by `fit`.
@@ -58,8 +54,8 @@ class TabularCPD(BaseParameter):
     ...         "x1": rng.integers(0, 3, size=n_samples),
     ...         "x2": rng.integers(0, 2, size=n_samples),
     ...     }
-    ... )
-    >>> y = pd.DataFrame({"y": rng.integers(0, 2, size=n_samples)})
+    ... ).astype(str)
+    >>> y = pd.DataFrame({"y": rng.integers(0, 2, size=n_samples)}).astype(str)
     >>> cpd = TabularCPD()
     >>> cpd.fit(X, y)
     TabularCPD()
@@ -68,12 +64,13 @@ class TabularCPD(BaseParameter):
     """
 
     _tags = {
-        "variable_type": "discrete",
-        "produces_factor": True,
-        "is_linear_gaussian": False,
-        "missing": False,
-        "supports_fit_joint": False,
-        "python_dependencies": ("skpro"),
+        "object_type": {"discrete"},
+        "fit_mode": {"supervise", "unsupervise"},
+        "python_dependencies": set(),
+        "local:plug_in": {"mle"},
+        "global:plug_in": set(),
+        "local:full_bayesian": set(),
+        "global:full_bayesian": set(),
     }
 
     def __init__(
@@ -86,6 +83,8 @@ class TabularCPD(BaseParameter):
         super().__init__()
 
     def _fit(self, X, y=None, sample_weight=None):
+        # TODO : Currently only MLE is supported.
+        # If we expand support for Bayesian Estimate, a distinction will be necessary.
         if y is None:
             # Unsupervised Learning
             if self.categories is None:
@@ -138,7 +137,6 @@ class TabularCPD(BaseParameter):
                 fill_value=0,
             )
 
-            self.columns_ = [X.columns[0]]
             self.CPT_ = counts.div(counts.sum()).to_frame(name="prob")
 
         else:
@@ -171,7 +169,6 @@ class TabularCPD(BaseParameter):
                 .rename_axis(index=None)
             )
 
-            self.columns_ = [y.columns[0]]
             self.CPT_ = counts.div(
                 counts.sum(axis=0),
                 axis=1,
@@ -181,19 +178,6 @@ class TabularCPD(BaseParameter):
         return self
 
     def _predict_proba(self, X):
-        if self.evidences_ is None:
-            # Unsupervised Learning
-            probabilities = np.repeat(
-                np.asarray(self.CPT_).T,
-                repeats=len(X),
-                axis=0,
-            )
-
-            return NominalDistribution(
-                probs=probabilities,
-                categories=self.categories_[self.columns_[0]],
-                columns=self.columns_,
-            )
 
         row_evidence = pd.MultiIndex.from_frame(X.loc[:, self.evidences_.keys()])
         cpt_column_index = pd.MultiIndex.from_product(
@@ -205,13 +189,32 @@ class TabularCPD(BaseParameter):
 
         return NominalDistribution(
             probs=probabilities,
-            categories=self.categories_[self.columns_[0]],
-            columns=self.columns_,
+            categories=self.categories_[next(iter(self.categories_))],
+            columns=[next(iter(self.categories_))],
         )  # (len(X), variable_card)
+
+    def _sample(self, X, n_samples):
+        if self.fit_mode_ == "unsupervise":
+            # Unsupervised Learning
+            probabilities = np.repeat(
+                np.asarray(self.CPT_).T,
+                repeats=n_samples,
+                axis=0,
+            )
+            dist = NominalDistribution(
+                probs=probabilities,
+                categories=self.categories_[next(iter(self.categories_))],
+                columns=[next(iter(self.categories_))],
+            )
+            samples = dist.sample().to_numpy()
+            return samples, np.array(dist.log_pmf(samples))
+        elif self.fit_mode_ == "supervise":
+            dist = self._predict_proba(X)
+            samples = dist.sample().to_numpy()
+            return samples, np.array(dist.log_pmf(samples))
 
     def set_fitted_params(self, CPT, columns, categories, evidences, is_fitted):
         self.CPT_ = CPT
-        self.columns_ = columns
         self.categories_ = categories
         self.evidences_ = evidences
         self._is_fitted = is_fitted
