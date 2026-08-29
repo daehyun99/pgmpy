@@ -17,12 +17,6 @@ plt.style.use("default")
 
 class BayesianLinearRegression(BaseParameter):
     _tags = {
-        "variable_type": "continuous",
-        "produces_factor": False,
-        "is_linear_gaussian": False,
-        "missing": False,
-        "supports_fit_joint": False,
-        "can_be_root": False,
         "python_dependencies": ("pyro-ppl"),
     }
     def __init__(
