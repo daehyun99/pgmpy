@@ -69,13 +69,13 @@ class LinearGaussianCPD(BaseParameter):
     """
 
     _tags = {
-        "variable_type": "continuous",
-        "produces_factor": False,
-        "is_linear_gaussian": True,
-        "missing": False,
-        "supports_fit_joint": False,
-        "can_be_root": True,
-        "python_dependencies": (),
+        "object_type": {"continuous"},
+        "fit_mode": {"supervise", "unsupervise"},
+        "python_dependencies": set(),
+        "local:plug_in": {"mle", "unbias"},
+        "global:plug_in": set(),
+        "local:full_bayesian": set(),
+        "global:full_bayesian": set(),
     }
 
     def __init__(self, estimator="mle", evidences=None):
@@ -126,18 +126,25 @@ class LinearGaussianCPD(BaseParameter):
         return self
 
     def _predict_proba(self, X):
-        n = len(X)
-        if len(self.beta_) == 1:
-            # Unsupervised
-            mu = np.full(n, self.beta_[0], dtype=float)
-            mu = np.asarray(mu, dtype=float).reshape(-1, 1)
-        else:
-            # Supervised
-            intercept = self.beta_[0]
-            coef = self.beta_[1:]
-            mu = intercept + X.loc[:, self.evidences_].to_numpy() @ coef
-            mu = np.asarray(mu, dtype=float).reshape(-1, 1)
+        intercept = self.beta_[0]
+        coef = self.beta_[1:]
+        mu = intercept + X.loc[:, self.evidences_].to_numpy() @ coef
+        mu = np.asarray(mu, dtype=float).reshape(-1, 1)
         return Normal(mu=mu, sigma=self.std_, index=X.index)
+
+    def _sample(self, X, n_samples):
+        if self.fit_mode_ == "unsupervise":
+            # Unsupervised Learning
+            mu = np.full(n_samples, self.beta_[0], dtype=float)
+            mu = np.asarray(mu, dtype=float).reshape(-1, 1)
+            dist = Normal(mu=mu, sigma=self.std_)
+            samples = dist.sample().to_numpy()
+            return samples, np.array(dist.log_pdf(samples))
+
+        elif self.fit_mode_ == "supervise":
+            dist = self._predict_proba(X)
+            samples = dist.sample().to_numpy()
+            return samples, np.array(dist.log_pdf(samples))
 
     def set_fitted_params(self, beta, std, evidences, is_fitted):
         self.beta_ = beta
