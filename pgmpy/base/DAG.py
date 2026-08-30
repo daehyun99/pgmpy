@@ -382,7 +382,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         will be automatically added. Node names can be any hashable python
         object.
 
-        **The behavior of adding weights is different than networkx.
+        **The behavior of adding weights is different than networkx.**
 
         Parameters
         ----------
@@ -682,7 +682,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         model : A DAG object, for which you want to check I-equivalence
 
         Returns
-        --------
+        -------
         I-equivalence: boolean
             True if both are I-equivalent, False otherwise
 
@@ -717,7 +717,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
             A set of all the immoralities in the model
 
         Examples
-        ---------
+        --------
         >>> from pgmpy.base import DAG
         >>> student = DAG()
         >>> student.add_edges_from(
@@ -810,7 +810,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
 
         References
         ----------
-        - :cite:p:`tian_paz_pearl_1998` (Algorithm 4, page 10).
+        - :footcite:t:`tian_paz_pearl_1998` (Algorithm 4, page 10).
         """
         if (end in self.neighbors(start)) or (start in self.neighbors(end)):
             raise ValueError("No possible separators because start and end are adjacent")
@@ -918,7 +918,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
 
         References
         ----------
-        - :cite:p:`koller_friedman_2009` (page 75, Algorithm 3.1).
+        - :footcite:t:`koller_friedman_2009` (page 75, Algorithm 3.1).
         """
         observed_list: list[Hashable] | tuple[Hashable, Hashable]
         if observed:
@@ -1018,7 +1018,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
 
         References
         ----------
-        - :cite:p:`chickering_2002a` (Figures 4 and 5).
+        - :footcite:t:`chickering_2002a` (Figures 4 and 5).
         """
         # Perform a topological sort on the nodes
         topo_order = list(nx.topological_sort(self))
@@ -1140,11 +1140,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
             f"got {encoding!r}. Other encodings become available once DAG inherits _CoreGraph."
         )
 
-    def do(
-        self,
-        nodes: Hashable | Iterable[Hashable] | tuple[Hashable, Hashable],
-        inplace=False,
-    ):
+    def do(self, nodes: Hashable | Iterable[Hashable], inplace: bool = False):
         """
         Applies the do operator to the graph and returns a new DAG with the
         transformed graph.
@@ -1154,8 +1150,9 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
 
         Parameters
         ----------
-        nodes : list, array-like
-            The names of the nodes to apply the do-operator for.
+        nodes : Hashable or iterable of Hashable
+            The variable(s) to intervene on; all must be present in the graph. A ``str``, ``int``
+            or ``tuple`` is one node; a list, set or frozenset is a collection.
 
         inplace: boolean (default: False)
             If inplace=True, makes the changes to the current object,
@@ -1164,7 +1161,12 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
         Returns
         -------
         Modified DAG: pgmpy.base.DAG
-            A new instance of DAG modified by the do-operator
+            The post-intervention graph: `self` if `inplace=True`, otherwise a modified copy.
+
+        Raises
+        ------
+        ValueError
+            If any node is not present in the graph.
 
         Examples
         --------
@@ -1180,21 +1182,15 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
 
         References
         ----------
-        - :cite:p:`pearl_2009` (page 70).
+        - :footcite:t:`pearl_2009` (page 70).
         """
+        nodes = list(nodes) if isinstance(nodes, (list, set, frozenset)) else [nodes]
+        if missing := (set(nodes) - set(self.nodes())):
+            raise ValueError(f"Nodes not found in the model: {missing}")
+
         dag = self if inplace else self.copy()
-
-        if isinstance(nodes, (str, int)):
-            nodes = [nodes]
-        else:
-            nodes = list(nodes)
-
-        if not set(nodes).issubset(set(self.nodes())):
-            raise ValueError(f"Nodes not found in the model: {set(nodes) - set(self.nodes())}")
-
         for node in nodes:
-            parents = list(dag.predecessors(node))
-            for parent in parents:
+            for parent in list(dag.predecessors(node)):
                 dag.remove_edge(parent, node)
         return dag
 
@@ -1773,7 +1769,7 @@ class DAG(_GraphRolesMixin, nx.DiGraph):
 
         References
         ----------
-        - :cite:p:`ankan_textor_2023`
+        - :footcite:t:`ankan_textor_2023`
         """
 
         # If edges is None, compute for all edges in the DAG
